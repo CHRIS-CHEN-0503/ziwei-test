@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商品毛利計算器</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --primary: #1a2a3a;
+    --accent: #2c5282;
+    --accent-light: #ebf2fa;
+    --border: #d1d5db;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --radius: 8px;
+  }
+
+  body {
+    font-family: "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 28px 0 20px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: .5px; }
+  header p { font-size: .85rem; color: #94a3b8; margin-top: 4px; }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    font-size: .82rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(44,82,130,.3);
+  }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .card-desc {
+    font-size: .8rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+
+  /* Form */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 560px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  input[type="number"], select {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .92rem;
+    color: var(--text);
+    transition: border .2s;
+    background: #fff;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(44,82,130,.1);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #1e4a73; }
+  .btn-secondary { background: var(--bg); color: var(--text-secondary); }
+  .btn-secondary:hover { background: #e5e7eb; }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* Results */
+  .results { display: none; margin-top: 24px; }
+  .results.show { display: block; }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .result-item {
+    background: var(--accent-light);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+  }
+  .result-item .label {
+    font-size: .72rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+  }
+  .result-item .value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .result-item .value.positive { color: var(--success); }
+  .result-item .value.negative { color: var(--danger); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 16px 0;
+  }
+
+  /* Batch table */
+  #batchBody tr { transition: background .15s; }
+  #batchBody tr:hover { background: var(--accent-light); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+  }
+  th, td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  th { font-weight: 600; color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .3px; }
+  td:first-child, th:first-child { text-align: left; }
+
+  .note {
+    font-size: .75rem;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: .75rem;
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>商品毛利計算器</h1>
+  <p>Gross Margin Calculator — 適用於各行業商品定價與毛利分析</p>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="basic">基本毛利</button>
+    <button class="tab-btn" data-tab="reverse">反推售價</button>
+    <button class="tab-btn" data-tab="discount">折扣分析</button>
+    <button class="tab-btn" data-tab="batch">批量計算</button>
+    <button class="tab-btn" data-tab="breakeven">損益兩平</button>
+  </div>
+
+  <!-- ============ Tab 1: Basic ============ -->
+  <div class="card tab-content" id="tab-basic">
+    <div class="card-title">基本毛利計算</div>
+    <div class="card-desc">輸入售價與成本，計算毛利額、毛利率及成本率</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>售價（含稅或未稅）</label>
+        <input type="number" id="b_price" min="0" step="any" placeholder="例：1000">
+      </div>
+      <div class="form-group">
+        <label>成本</label>
+        <input type="number" id="b_cost" min="0" step="any" placeholder="例：650">
+      </div>
+      <div class="form-group">
+        <label>是否含稅</label>
+        <select id="b_tax_toggle">
+          <option value="no">未稅價</option>
+          <option value="yes">含稅價（含 5% 營業稅）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>數量</label>
+        <input type="number" id="b_qty" min="1" step="1" value="1" placeholder="1">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calcBasic()">計算</button>
+      <button class="btn btn-secondary" onclick="resetTab('basic')">清除</button>
+    </div>
+    <div class="results" id="res-basic">
+      <hr class="divider">
+      <div class="results-grid" id="res-basic-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============ Tab 2: Reverse ============ -->
+  <div class="card tab-content hidden" id="tab-reverse">
+    <div class="card-title">依目標毛利率反推售價</div>
+    <div class="card-desc">已知成本與目標毛利率，反算應訂售價</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>成本</label>
+        <input type="number" id="r_cost" min="0" step="any" placeholder="例：650">
+      </div>
+      <div class="form-group">
+        <label>目標毛利率（%）</label>
+        <input type="number" id="r_margin" min="0" max="100" step="any" placeholder="例：35">
+      </div>
+      <div class="form-group">
+        <label>計算基礎</label>
+        <select id="r_method">
+          <option value="margin">以售價為基礎（毛利率）</option>
+          <option value="markup">以成本為基礎（加成率）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>含稅售價？</label>
+        <select id="r_tax">
+          <option value="no">輸出未稅價</option>
+          <option value="yes">輸出含稅價（+5%）</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calcReverse()">計算</button>
+      <button class="btn btn-secondary" onclick="resetTab('reverse')">清除</button>
+    </div>
+    <div class="results" id="res-reverse">
+      <hr class="divider">
+      <div class="results-grid" id="res-reverse-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============ Tab 3: Discount ============ -->
+  <div class="card tab-content hidden" id="tab-discount">
+    <div class="card-title">折扣對毛利的影響</div>
+    <div class="card-desc">分析打折後的毛利變化，評估促銷是否划算</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>原售價</label>
+        <input type="number" id="d_price" min="0" step="any" placeholder="例：1000">
+      </div>
+      <div class="form-group">
+        <label>成本</label>
+        <input type="number" id="d_cost" min="0" step="any" placeholder="例：650">
+      </div>
+      <div class="form-group">
+        <label>折扣（折）</label>
+        <input type="number" id="d_discount" min="0" max="10" step="any" placeholder="例：8 代表八折">
+      </div>
+      <div class="form-group">
+        <label>折扣後預計銷量增幅（%）</label>
+        <input type="number" id="d_volume" min="0" step="any" value="0" placeholder="例：20">
+      </div>
+      <div class="form-group">
+        <label>原銷量（件）</label>
+        <input type="number" id="d_qty" min="1" step="1" value="100" placeholder="100">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calcDiscount()">分析</button>
+      <button class="btn btn-secondary" onclick="resetTab('discount')">清除</button>
+    </div>
+    <div class="results" id="res-discount">
+      <hr class="divider">
+      <div class="results-grid" id="res-discount-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============ Tab 4: Batch ============ -->
+  <div class="card tab-content hidden" id="tab-batch">
+    <div class="card-title">多商品批量計算</div>
+    <div class="card-desc">一次比較多個商品的毛利表現，找出最佳利潤品項</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>商品名稱</label>
+        <input type="text" id="bt_name" placeholder="例：A 商品" style="padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:.92rem;">
+      </div>
+      <div class="form-group">
+        <label>售價</label>
+        <input type="number" id="bt_price" min="0" step="any" placeholder="售價">
+      </div>
+      <div class="form-group">
+        <label>成本</label>
+        <input type="number" id="bt_cost" min="0" step="any" placeholder="成本">
+      </div>
+      <div class="form-group">
+        <label>數量</label>
+        <input type="number" id="bt_qty" min="1" step="1" value="1" placeholder="1">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="addBatchItem()">新增品項</button>
+      <button class="btn btn-secondary" onclick="clearBatch()">清空列表</button>
+    </div>
+    <div class="results show" id="res-batch" style="display:block;">
+      <hr class="divider">
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>品名</th><th>售價</th><th>成本</th><th>數量</th><th>毛利額</th><th>毛利率</th><th>總毛利</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="batchBody"></tbody>
+          <tfoot id="batchFoot"></tfoot>
+        </table>
+      </div>
+      <p class="note" id="batchNote"></p>
+    </div>
+  </div>
+
+  <!-- ============ Tab 5: Break-even ============ -->
+  <div class="card tab-content hidden" id="tab-breakeven">
+    <div class="card-title">損益兩平分析</div>
+    <div class="card-desc">計算至少要賣多少件才能打平固定成本</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>售價（每件）</label>
+        <input type="number" id="be_price" min="0" step="any" placeholder="例：1000">
+      </div>
+      <div class="form-group">
+        <label>變動成本（每件）</label>
+        <input type="number" id="be_vcost" min="0" step="any" placeholder="例：650">
+      </div>
+      <div class="form-group">
+        <label>每月固定成本</label>
+        <input type="number" id="be_fixed" min="0" step="any" placeholder="例：50000（租金、人事…）">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="calcBreakeven()">計算</button>
+      <button class="btn btn-secondary" onclick="resetTab('breakeven')">清除</button>
+    </div>
+    <div class="results" id="res-breakeven">
+      <hr class="divider">
+      <div class="results-grid" id="res-breakeven-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>商品毛利計算器 &copy; 2026 — 僅供參考，實際數據請依公司財務為準</footer>
+
+<script>
+/* ── Tabs ────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+  });
+});
+
+/* ── Helpers ──────────────────────────── */
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const fmt = (n, d=2) => n.toLocaleString('zh-TW', {minimumFractionDigits:d, maximumFractionDigits:d});
+const pct = n => fmt(n, 2) + '%';
+const colorClass = n => n >= 0 ? 'positive' : 'negative';
+
+function renderResults(gridId, items) {
+  const grid = $(gridId);
+  grid.innerHTML = items.map(i =>
+    `<div class="result-item">
+       <div class="label">${i.label}</div>
+       <div class="value ${i.cls || ''}">${i.value}</div>
+     </div>`
+  ).join('');
+  grid.parentElement.classList.add('show');
+}
+
+function resetTab(tab) {
+  const card = $('tab-' + tab);
+  card.querySelectorAll('input[type=number]').forEach(i => { i.value = ''; });
+  const res = $('res-' + tab);
+  if (res) res.classList.remove('show');
+}
+
+/* ── 1. Basic ────────────────────────── */
+function calcBasic() {
+  let price = num('b_price'), cost = num('b_cost'), qty = num('b_qty') || 1;
+  if (!price) return alert('請輸入售價');
+  const taxed = $('b_tax_toggle').value === 'yes';
+  const netPrice = taxed ? price / 1.05 : price;
+  const margin = netPrice - cost;
+  const marginPct = (margin / netPrice) * 100;
+  const markupPct = cost ? (margin / cost) * 100 : 0;
+  const costRatio = (cost / netPrice) * 100;
+
+  renderResults('res-basic-grid', [
+    { label: '未稅售價', value: '$' + fmt(netPrice) },
+    { label: '單件毛利額', value: '$' + fmt(margin), cls: colorClass(margin) },
+    { label: '毛利率（售價基礎）', value: pct(marginPct), cls: colorClass(marginPct) },
+    { label: '加成率（成本基礎）', value: pct(markupPct), cls: colorClass(markupPct) },
+    { label: '成本率', value: pct(costRatio) },
+    { label: '總毛利（×' + qty + '）', value: '$' + fmt(margin * qty), cls: colorClass(margin) },
+  ]);
+}
+
+/* ── 2. Reverse ──────────────────────── */
+function calcReverse() {
+  const cost = num('r_cost'), target = num('r_margin');
+  if (!cost) return alert('請輸入成本');
+  if (target <= 0 || target >= 100) return alert('請輸入 0～100 之間的百分比');
+
+  const method = $('r_method').value;
+  let netPrice;
+  if (method === 'margin') {
+    netPrice = cost / (1 - target / 100);
+  } else {
+    netPrice = cost * (1 + target / 100);
+  }
+  const inclTax = $('r_tax').value === 'yes';
+  const finalPrice = inclTax ? netPrice * 1.05 : netPrice;
+  const margin = netPrice - cost;
+  const marginPct = (margin / netPrice) * 100;
+  const markupPct = (margin / cost) * 100;
+
+  renderResults('res-reverse-grid', [
+    { label: inclTax ? '建議含稅售價' : '建議未稅售價', value: '$' + fmt(finalPrice) },
+    { label: '未稅售價', value: '$' + fmt(netPrice) },
+    { label: '單件毛利額', value: '$' + fmt(margin), cls: 'positive' },
+    { label: '毛利率', value: pct(marginPct), cls: 'positive' },
+    { label: '加成率', value: pct(markupPct), cls: 'positive' },
+  ]);
+}
+
+/* ── 3. Discount ─────────────────────── */
+function calcDiscount() {
+  const price = num('d_price'), cost = num('d_cost');
+  const disc = num('d_discount'), volUp = num('d_volume'), qty = num('d_qty') || 100;
+  if (!price || !disc) return alert('請輸入售價與折扣');
+
+  const discPrice = price * disc / 10;
+  const origMargin = price - cost;
+  const discMargin = discPrice - cost;
+  const origPct = (origMargin / price) * 100;
+  const discPct = discPrice ? (discMargin / discPrice) * 100 : 0;
+
+  const newQty = Math.round(qty * (1 + volUp / 100));
+  const origTotal = origMargin * qty;
+  const discTotal = discMargin * newQty;
+  const totalDiff = discTotal - origTotal;
+
+  renderResults('res-discount-grid', [
+    { label: '折扣後售價', value: '$' + fmt(discPrice) },
+    { label: '原毛利率', value: pct(origPct), cls: colorClass(origPct) },
+    { label: '折扣後毛利率', value: pct(discPct), cls: colorClass(discPct) },
+    { label: '原單件毛利', value: '$' + fmt(origMargin) },
+    { label: '折扣後單件毛利', value: '$' + fmt(discMargin), cls: colorClass(discMargin) },
+    { label: '原總毛利（' + qty + '件）', value: '$' + fmt(origTotal) },
+    { label: '折扣後總毛利（' + newQty + '件）', value: '$' + fmt(discTotal), cls: colorClass(discTotal) },
+    { label: '總毛利差異', value: (totalDiff >= 0 ? '+' : '') + '$' + fmt(totalDiff), cls: colorClass(totalDiff) },
+  ]);
+}
+
+/* ── 4. Batch ────────────────────────── */
+let batchItems = [];
+
+function addBatchItem() {
+  const name = $('bt_name').value.trim() || ('品項 ' + (batchItems.length + 1));
+  const price = num('bt_price'), cost = num('bt_cost'), qty = num('bt_qty') || 1;
+  if (!price) return alert('請輸入售價');
+  batchItems.push({ name, price, cost, qty });
+  $('bt_name').value = '';
+  $('bt_price').value = '';
+  $('bt_cost').value = '';
+  $('bt_qty').value = '1';
+  renderBatch();
+}
+
+function removeBatchItem(i) {
+  batchItems.splice(i, 1);
+  renderBatch();
+}
+
+function renderBatch() {
+  const body = $('batchBody');
+  const foot = $('batchFoot');
+  if (!batchItems.length) { body.innerHTML = ''; foot.innerHTML = ''; $('batchNote').textContent = ''; return; }
+
+  let totalRev = 0, totalCost = 0, totalMargin = 0;
+  body.innerHTML = batchItems.map((it, i) => {
+    const margin = it.price - it.cost;
+    const mPct = (margin / it.price) * 100;
+    const total = margin * it.qty;
+    totalRev += it.price * it.qty;
+    totalCost += it.cost * it.qty;
+    totalMargin += total;
+    return `<tr>
+      <td>${it.name}</td>
+      <td>${fmt(it.price)}</td>
+      <td>${fmt(it.cost)}</td>
+      <td>${it.qty}</td>
+      <td class="${colorClass(margin)}">${fmt(margin)}</td>
+      <td class="${colorClass(mPct)}">${pct(mPct)}</td>
+      <td class="${colorClass(total)}">${fmt(total)}</td>
+      <td><button onclick="removeBatchItem(${i})" style="border:none;background:none;color:var(--danger);cursor:pointer;font-weight:700;">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  const overallPct = totalRev ? (totalMargin / totalRev) * 100 : 0;
+  foot.innerHTML = `<tr style="font-weight:700;">
+    <td>合計</td><td>${fmt(totalRev)}</td><td>${fmt(totalCost)}</td><td></td>
+    <td class="${colorClass(totalMargin)}">${fmt(totalMargin)}</td>
+    <td class="${colorClass(overallPct)}">${pct(overallPct)}</td>
+    <td class="${colorClass(totalMargin)}">${fmt(totalMargin)}</td><td></td>
+  </tr>`;
+
+  const best = batchItems.reduce((a, b) => ((a.price - a.cost) / a.price > (b.price - b.cost) / b.price ? a : b));
+  $('batchNote').textContent = '★ 毛利率最高品項：' + best.name + '（' + pct(((best.price - best.cost) / best.price) * 100) + '）';
+}
+
+function clearBatch() {
+  batchItems = [];
+  renderBatch();
+}
+
+/* ── 5. Break-even ───────────────────── */
+function calcBreakeven() {
+  const price = num('be_price'), vcost = num('be_vcost'), fixed = num('be_fixed');
+  if (!price) return alert('請輸入售價');
+  const contribution = price - vcost;
+  if (contribution <= 0) return alert('售價必須大於變動成本才有正向邊際貢獻');
+
+  const beQty = Math.ceil(fixed / contribution);
+  const beRev = beQty * price;
+  const marginPct = (contribution / price) * 100;
+
+  renderResults('res-breakeven-grid', [
+    { label: '邊際貢獻（每件）', value: '$' + fmt(contribution), cls: 'positive' },
+    { label: '邊際貢獻率', value: pct(marginPct), cls: 'positive' },
+    { label: '損益兩平數量', value: beQty.toLocaleString() + ' 件' },
+    { label: '損益兩平營收', value: '$' + fmt(beRev) },
+    { label: '每月固定成本', value: '$' + fmt(fixed) },
+  ]);
+}
+</script>
+</body>
+</html>
