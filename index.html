@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍎 水果英文大冒險 - Fruit Adventure! 🍌</title>
+    <style>
+        :root {
+            --primary-bg: #e0f7fa;
+            --card-bg: #ffffff;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --text-color: #333;
+            --font-family: 'Comic Sans MS', 'PingFang TC', cursive, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            border: 8px solid #ffeb3b;
+        }
+
+        h1 {
+            color: #ff5722;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px #fff;
+        }
+
+        .score-box {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .fruit-display {
+            height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            background: radial-gradient(circle, #fff 40%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* 水果 CSS 圖案 */
+        .fruit-icon { font-size: 100px; }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background-color: #f0f0f0;
+            border: 4px solid #ddd;
+            border-radius: 20px;
+            padding: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .option-btn:hover {
+            transform: scale(1.05);
+            background-color: #fff;
+            border-color: #2196f3;
+        }
+
+        .option-btn.correct {
+            background-color: var(--success-color);
+            color: white;
+            border-color: #2e7d32;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #c62828;
+        }
+
+        #start-screen, #result-screen {
+            display: none;
+        }
+
+        #game-screen {
+            display: block;
+        }
+
+        .big-btn {
+            background-color: #ff5722;
+            color: white;
+            padding: 20px 40px;
+            font-size: 2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,87,34,0.4);
+            transition: transform 0.2s;
+        }
+
+        .big-btn:hover { transform: scale(1.1); }
+
+        /* 動畫 */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-bounce { animation: bounce 1s infinite; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- 開始畫面 -->
+    <div id="start-screen" style="display: block;">
+        <h1 class="animate-bounce">🍎🍌🍐</h1>
+        <h1>水果大冒險</h1>
+        <p>Fruit Adventure!</p>
+        <button class="big-btn" onclick="startGame()">開始遊戲 GO!</button>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="game-screen" style="display: none;">
+        <div class="score-box">分數: <span id="score">0</span> / <span id="total-q">5</span></div>
+        <div class="fruit-display" id="fruit-target">
+            <!-- 水果圖案由 JS 注入 -->
+            <span class="fruit-icon">🍎</span>
+        </div>
+        <div class="options-container" id="options">
+            <!-- 選項按鈕由 JS 注入 -->
+        </div>
+        <p id="feedback" style="margin-top: 20px; font-weight: bold; min-height: 1.5em;"></p>
+    </div>
+
+    <!-- 結束畫面 -->
+    <div id="result-screen" style="display: none;">
+        <h1>太棒了！ 🎉</h1>
+        <p id="final-score-text" style="font-size: 1.5rem;"></p>
+        <button class="big-btn" onclick="startGame()">再玩一次</button>
+    </div>
+</div>
+
+<script>
+    const fruits = [
+        { name: 'Apple', emoji: '🍎', options: ['Apple', 'Banana', 'Orange', 'Grape'] },
+        { name: 'Banana', emoji: '🍌', options: ['Grape', 'Banana', 'Watermelon', 'Apple'] },
+        { name: 'Orange', emoji: '🍊', options: ['Apple', 'Pear', 'Orange', 'Lemon'] },
+        { name: 'Grape', emoji: '🍇', options: ['Cherry', 'Peach', 'Grape', 'Banana'] },
+        { name: 'Watermelon', emoji: '🍉', options: ['Watermelon', 'Apple', 'Orange', 'Kiwi'] }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const fruitTarget = document.getElementById('fruit-target');
+    const optionsContainer = document.getElementById('options');
+    const scoreElement = document.getElementById('score');
+    const feedbackElement = document.getElementById('feedback');
+
+    function startGame() {
+        score = 0;
+        currentQuestionIndex = 0;
+        startScreen.style.display = 'none';
+        resultScreen.style.display = 'none';
+        gameScreen.style.display = 'block';
+        updateScore();
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const question = fruits[currentQuestionIndex];
+        fruitTarget.innerHTML = `<span class="fruit-icon animate-bounce">${question.emoji}</span>`;
+        optionsContainer.innerHTML = '';
+        feedbackElement.innerText = '';
+        
+        question.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selected, btn) {
+        const correct = fruits[currentQuestionIndex].name;
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+        if (selected === correct) {
+            score++;
+            btn.classList.add('correct');
+            feedbackElement.innerText = '答對了！ Yummy! 😋';
+            feedbackElement.style.color = 'var(--success-color)';
+        } else {
+            btn.classList.add('wrong');
+            feedbackElement.innerText = '哎呀，再試一次！ Oh no! 😅';
+            feedbackElement.style.color = 'var(--error-color)';
+        }
+
+        updateScore();
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < fruits.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }, 1500);
+    }
+
+    function updateScore() {
+        scoreElement.innerText = score;
+        document.getElementById('total-q').innerText = fruits.length;
+    }
+
+    function showResult() {
+        gameScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        document.getElementById('final-score-text').innerText = `你的得分是： ${score} / ${fruits.length}`;
+    }
+</script>
+
+</body>
+</html>
