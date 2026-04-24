@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 小朋友學習樂園</title>
+    <style>
+        :root {
+            --font-family: 'Comic Sans MS', 'Microsoft JhengHei', 'PingFang TC', cursive, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #fce4ec 0%, #e0f7fa 50%, #fff3e0 100%);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #home {
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            border: 8px solid #ffeb3b;
+        }
+        h1 {
+            color: #ff5722;
+            font-size: 2.4rem;
+            margin: 10px 0 5px;
+            text-shadow: 2px 2px #fff;
+        }
+        .subtitle {
+            color: #777;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .game-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: linear-gradient(145deg, #fff9c4, #fff59d);
+            border: 5px solid #ffd54f;
+            border-radius: 30px;
+            padding: 25px 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 0 #f9a825;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 11px 0 #f9a825;
+        }
+        .game-card:active {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0 #f9a825;
+        }
+        .game-card.zhuyin {
+            background: linear-gradient(145deg, #ffccbc, #ffab91);
+            border-color: #ff8a65;
+            box-shadow: 0 6px 0 #e64a19;
+        }
+        .game-card.zhuyin:hover { box-shadow: 0 11px 0 #e64a19; }
+        .game-card.zhuyin:active { box-shadow: 0 4px 0 #e64a19; }
+        .game-emoji {
+            font-size: 4.5rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .game-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 5px;
+        }
+        .game-desc {
+            font-size: 0.95rem;
+            color: #6d4c41;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .bouncing { animation: bounce 1.5s infinite; display: inline-block; }
+        footer {
+            margin-top: 25px;
+            font-size: 0.85rem;
+            color: #999;
+        }
+        @media (max-width: 480px) {
+            #home { padding: 30px 20px; }
+            h1 { font-size: 1.8rem; }
+            .game-grid { grid-template-columns: 1fr; }
+            .game-emoji { font-size: 3.5rem; }
+            .game-title { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="home">
+        <h1><span class="bouncing">🎮</span> 小朋友學習樂園</h1>
+        <p class="subtitle">選一個遊戲開始學習吧！</p>
+        <div class="game-grid">
+            <a href="./注音練習/" class="game-card zhuyin">
+                <span class="game-emoji">🎵</span>
+                <div class="game-title">注音小學堂</div>
+                <div class="game-desc">ㄅㄆㄇㄈ 單音 &amp; 拼音練習</div>
+            </a>
+            <a href="./英文測驗/" class="game-card">
+                <span class="game-emoji">🍎</span>
+                <div class="game-title">水果大冒險</div>
+                <div class="game-desc">Fruit Adventure!</div>
+            </a>
+        </div>
+        <footer>Made with ❤️ for kids</footer>
+    </div>
+</body>
+</html>
