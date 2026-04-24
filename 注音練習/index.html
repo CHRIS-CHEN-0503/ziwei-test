@@ -89,6 +89,65 @@
         }
         .mode-btn.mode-2:active { box-shadow: 0 3px 0 #6a1b9a; }
 
+        .mode-btn.mode-3 {
+            background: linear-gradient(145deg, #66bb6a, #43a047);
+            box-shadow: 0 6px 0 #2e7d32, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .mode-btn.mode-3:active { box-shadow: 0 3px 0 #2e7d32; }
+
+        /* 注音字卡 */
+        .flashcard {
+            background: radial-gradient(circle, #fff9c4 40%, transparent 70%);
+            border-radius: 30px;
+            padding: 30px 15px;
+            margin-bottom: 20px;
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .fc-zhuyin {
+            font-size: 10rem;
+            font-weight: bold;
+            color: #e65100;
+            line-height: 1;
+            text-shadow: 4px 4px 0 #fff, 6px 6px 12px rgba(0,0,0,0.15);
+        }
+        .fc-hint {
+            margin-top: 20px;
+            animation: fadeIn 0.4s;
+        }
+        .fc-hint .picture-emoji { font-size: 4rem; }
+        .fc-hint .word-display { font-size: 1.4rem; margin-top: 5px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fc-counter {
+            display: inline-block;
+            background: #fffde7;
+            color: #5d4037;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .fc-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .fc-buttons .big-btn {
+            margin: 0;
+            font-size: 1.1rem;
+            padding: 14px 10px;
+        }
+        .fc-buttons .fc-next {
+            grid-column: 1 / -1;
+        }
+
         .back-btn {
             position: absolute;
             top: 15px;
@@ -321,6 +380,10 @@
             📚 拼音練習<br>
             <small style="font-size:0.8rem">學會拼讀字詞</small>
         </button>
+        <button class="big-btn mode-btn mode-3" onclick="startFlashcard()">
+            🎴 注音字卡<br>
+            <small style="font-size:0.8rem">隨機認識 ㄅㄆㄇㄈ</small>
+        </button>
     </div>
 
     <!-- 選擇題數畫面 -->
@@ -353,6 +416,26 @@
 
         <div class="options-container" id="options"></div>
         <p id="feedback"></p>
+    </div>
+
+    <!-- 注音字卡 -->
+    <div id="flashcard-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('start-screen')">←</button>
+        <h1>🎴 注音字卡</h1>
+        <p class="subtitle">看看注音符號，按 🔊 聽發音</p>
+        <div class="fc-counter">已看過：<span id="fc-seen">0</span> / <span id="fc-total">37</span></div>
+        <div class="flashcard">
+            <div class="fc-zhuyin" id="fc-zhuyin">ㄅ</div>
+            <div class="fc-hint" id="fc-hint" style="display:none">
+                <div class="picture-emoji" id="fc-emoji">👨</div>
+                <div class="word-display" id="fc-word">爸爸</div>
+            </div>
+        </div>
+        <div class="fc-buttons">
+            <button class="big-btn" onclick="speakFlashcard()">🔊 聽發音</button>
+            <button class="big-btn mode-btn mode-2" onclick="toggleFlashcardHint()" id="fc-hint-btn">💡 看提示</button>
+            <button class="big-btn mode-btn mode-3 fc-next" onclick="nextFlashcard()">👉 下一個</button>
+        </div>
     </div>
 
     <!-- 結束畫面 -->
@@ -442,8 +525,53 @@
         { word: '兔子', zhuyin: 'ㄊㄨˋ ㄗ˙', emoji: '🐰' },
         { word: '猴子', zhuyin: 'ㄏㄡˊ ㄗ˙', emoji: '🐵' },
         { word: '冰淇淋', zhuyin: 'ㄅㄧㄥ ㄑㄧˊ ㄌㄧㄣˊ', emoji: '🍦' },
-        { word: '牛奶', zhuyin: 'ㄋㄧㄡˊ ㄋㄞˇ', emoji: '🥛' }
+        { word: '牛奶', zhuyin: 'ㄋㄧㄡˊ ㄋㄞˇ', emoji: '🥛' },
+        // 新增 30 題
+        { word: '梨子', zhuyin: 'ㄌㄧˊ ㄗ˙', emoji: '🍐' },
+        { word: '橘子', zhuyin: 'ㄐㄩˊ ㄗ˙', emoji: '🍊' },
+        { word: '芒果', zhuyin: 'ㄇㄤˊ ㄍㄨㄛˇ', emoji: '🥭' },
+        { word: '藍莓', zhuyin: 'ㄌㄢˊ ㄇㄟˊ', emoji: '🫐' },
+        { word: '櫻桃', zhuyin: 'ㄧㄥ ㄊㄠˊ', emoji: '🍒' },
+        { word: '椰子', zhuyin: 'ㄧㄝˊ ㄗ˙', emoji: '🥥' },
+        { word: '蜜蜂', zhuyin: 'ㄇㄧˋ ㄈㄥ', emoji: '🐝' },
+        { word: '螞蟻', zhuyin: 'ㄇㄚˇ ㄧˇ', emoji: '🐜' },
+        { word: '鸚鵡', zhuyin: 'ㄧㄥ ㄨˇ', emoji: '🦜' },
+        { word: '鯨魚', zhuyin: 'ㄐㄧㄥ ㄩˊ', emoji: '🐳' },
+        { word: '海豚', zhuyin: 'ㄏㄞˇ ㄊㄨㄣˊ', emoji: '🐬' },
+        { word: '鯊魚', zhuyin: 'ㄕㄚ ㄩˊ', emoji: '🦈' },
+        { word: '斑馬', zhuyin: 'ㄅㄢ ㄇㄚˇ', emoji: '🦓' },
+        { word: '企鵝', zhuyin: 'ㄑㄧˋ ㄜˊ', emoji: '🐧' },
+        { word: '蝸牛', zhuyin: 'ㄨㄛ ㄋㄧㄡˊ', emoji: '🐌' },
+        { word: '餅乾', zhuyin: 'ㄅㄧㄥˇ ㄍㄢ', emoji: '🍪' },
+        { word: '巧克力', zhuyin: 'ㄑㄧㄠˇ ㄎㄜˋ ㄌㄧˋ', emoji: '🍫' },
+        { word: '棒棒糖', zhuyin: 'ㄅㄤˋ ㄅㄤˋ ㄊㄤˊ', emoji: '🍭' },
+        { word: '甜甜圈', zhuyin: 'ㄊㄧㄢˊ ㄊㄧㄢˊ ㄑㄩㄢ', emoji: '🍩' },
+        { word: '披薩', zhuyin: 'ㄆㄧ ㄙㄚˋ', emoji: '🍕' },
+        { word: '漢堡', zhuyin: 'ㄏㄢˋ ㄅㄠˇ', emoji: '🍔' },
+        { word: '薯條', zhuyin: 'ㄕㄨˇ ㄊㄧㄠˊ', emoji: '🍟' },
+        { word: '咖啡', zhuyin: 'ㄎㄚ ㄈㄟ', emoji: '☕' },
+        { word: '果汁', zhuyin: 'ㄍㄨㄛˇ ㄓ', emoji: '🧃' },
+        { word: '腳踏車', zhuyin: 'ㄐㄧㄠˇ ㄊㄚˋ ㄔㄜ', emoji: '🚲' },
+        { word: '火箭', zhuyin: 'ㄏㄨㄛˇ ㄐㄧㄢˋ', emoji: '🚀' },
+        { word: '彩虹', zhuyin: 'ㄘㄞˇ ㄏㄨㄥˊ', emoji: '🌈' },
+        { word: '閃電', zhuyin: 'ㄕㄢˇ ㄉㄧㄢˋ', emoji: '⚡' },
+        { word: '玉米', zhuyin: 'ㄩˋ ㄇㄧˇ', emoji: '🌽' },
+        { word: '蘑菇', zhuyin: 'ㄇㄛˊ ㄍㄨ', emoji: '🍄' }
     ];
+
+    // 注音符號 → 用來朗讀的漢字（教學標準音）
+    const phoneticMap = {
+        'ㄅ': '玻', 'ㄆ': '坡', 'ㄇ': '摸', 'ㄈ': '佛',
+        'ㄉ': '得', 'ㄊ': '特', 'ㄋ': '呢', 'ㄌ': '勒',
+        'ㄍ': '哥', 'ㄎ': '科', 'ㄏ': '喝',
+        'ㄐ': '基', 'ㄑ': '欺', 'ㄒ': '西',
+        'ㄓ': '知', 'ㄔ': '吃', 'ㄕ': '詩', 'ㄖ': '日',
+        'ㄗ': '資', 'ㄘ': '此', 'ㄙ': '思',
+        'ㄧ': '衣', 'ㄨ': '烏', 'ㄩ': '魚',
+        'ㄚ': '啊', 'ㄛ': '喔', 'ㄜ': '鵝', 'ㄝ': '耶',
+        'ㄞ': '哀', 'ㄟ': '欸', 'ㄠ': '熬', 'ㄡ': '歐',
+        'ㄢ': '安', 'ㄣ': '恩', 'ㄤ': '昂', 'ㄥ': '鞥', 'ㄦ': '兒'
+    };
 
     // ====== 狀態 ======
     let mode = 'single';           // 'single' or 'pinyin'
@@ -453,6 +581,12 @@
     let questions = [];
     let currentQuestion = null;
     let isAnswering = false;
+
+    // 字卡狀態
+    let flashcardDeck = [];
+    let flashcardIndex = 0;
+    let flashcardSeen = 0;
+    let currentFlashcard = null;
 
     // ====== 畫面控制 ======
     function showScreen(id) {
@@ -666,6 +800,56 @@
         document.getElementById('result-comment').innerText = comment;
 
         speak(title);
+    }
+
+    // ====== 注音字卡 ======
+    function startFlashcard() {
+        flashcardDeck = shuffle(singleSounds);
+        flashcardIndex = 0;
+        flashcardSeen = 0;
+        document.getElementById('fc-total').innerText = flashcardDeck.length;
+        showScreen('flashcard-screen');
+        showFlashcard();
+    }
+
+    function showFlashcard() {
+        currentFlashcard = flashcardDeck[flashcardIndex];
+        document.getElementById('fc-zhuyin').innerText = currentFlashcard.zhuyin;
+        document.getElementById('fc-emoji').innerText = currentFlashcard.emoji;
+        document.getElementById('fc-word').innerText = currentFlashcard.word;
+        document.getElementById('fc-hint').style.display = 'none';
+        document.getElementById('fc-hint-btn').innerText = '💡 看提示';
+        flashcardSeen++;
+        document.getElementById('fc-seen').innerText = flashcardSeen;
+    }
+
+    function nextFlashcard() {
+        flashcardIndex++;
+        if (flashcardIndex >= flashcardDeck.length) {
+            // 全部看過一輪後重新洗牌
+            flashcardDeck = shuffle(singleSounds);
+            flashcardIndex = 0;
+        }
+        showFlashcard();
+    }
+
+    function speakFlashcard() {
+        if (!currentFlashcard) return;
+        const zy = currentFlashcard.zhuyin;
+        const text = phoneticMap[zy] || currentFlashcard.word;
+        speak(text);
+    }
+
+    function toggleFlashcardHint() {
+        const hint = document.getElementById('fc-hint');
+        const btn = document.getElementById('fc-hint-btn');
+        if (hint.style.display === 'none') {
+            hint.style.display = 'block';
+            btn.innerText = '🙈 隱藏提示';
+        } else {
+            hint.style.display = 'none';
+            btn.innerText = '💡 看提示';
+        }
     }
 </script>
 
