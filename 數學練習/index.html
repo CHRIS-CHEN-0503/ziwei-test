@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔢 數學小學堂 - 加減法大冒險</title>
+    <style>
+        :root {
+            --primary-bg: #e1f5fe;
+            --card-bg: #ffffff;
+            --accent: #29b6f6;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --text-color: #333;
+            --font-family: 'Comic Sans MS', 'Microsoft JhengHei', 'PingFang TC', cursive, sans-serif;
+        }
+        * { box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 50%, #c8e6c9 100%);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #app {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 580px;
+            width: 100%;
+            border: 8px solid #4fc3f7;
+            position: relative;
+        }
+
+        h1 {
+            color: #0277bd;
+            font-size: 2.2rem;
+            margin: 10px 0 15px;
+            text-shadow: 2px 2px #fff;
+        }
+
+        .subtitle { color: #666; font-size: 1rem; margin-bottom: 20px; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* 主按鈕 */
+        .big-btn {
+            background: linear-gradient(145deg, #29b6f6, #0288d1);
+            color: white;
+            padding: 18px 30px;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #01579b, 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.15s;
+            font-weight: bold;
+            font-family: inherit;
+            margin: 8px;
+        }
+        .big-btn:hover { transform: translateY(-2px); }
+        .big-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #01579b; }
+
+        .mode-btn {
+            display: block;
+            width: 100%;
+            margin: 12px auto;
+            background: linear-gradient(145deg, #66bb6a, #43a047);
+            box-shadow: 0 6px 0 #2e7d32, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .mode-btn:active { box-shadow: 0 3px 0 #2e7d32; }
+
+        .mode-btn.mode-2 {
+            background: linear-gradient(145deg, #ef5350, #e53935);
+            box-shadow: 0 6px 0 #b71c1c, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .mode-btn.mode-2:active { box-shadow: 0 3px 0 #b71c1c; }
+
+        .mode-btn.mode-3 {
+            background: linear-gradient(145deg, #ab47bc, #8e24aa);
+            box-shadow: 0 6px 0 #6a1b9a, 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .mode-btn.mode-3:active { box-shadow: 0 3px 0 #6a1b9a; }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #fff;
+            border: 3px solid #4fc3f7;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: #e1f5fe; }
+
+        /* 計分 / 進度 */
+        .score-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e8f5e9;
+            border-radius: 30px;
+            padding: 10px 20px;
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            color: #1b5e20;
+            font-weight: bold;
+        }
+        .score-box .star { color: #ffc107; font-size: 1.3rem; }
+
+        .progress-bar {
+            background: #c8e6c9;
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #66bb6a, #2e7d32);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 10px;
+        }
+
+        /* 題目區 */
+        .question-display {
+            min-height: 200px;
+            padding: 25px 15px;
+            background: radial-gradient(circle, #fff9c4 40%, transparent 70%);
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .math-equation {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #0277bd;
+            margin: 10px 0;
+            letter-spacing: 8px;
+        }
+
+        .visual-emojis {
+            font-size: 2.5rem;
+            line-height: 1.4;
+            margin: 12px 0;
+            letter-spacing: 2px;
+        }
+
+        .speak-btn {
+            background: #fff;
+            border: 3px solid #29b6f6;
+            color: #0277bd;
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        .speak-btn:hover { background: #e1f5fe; }
+
+        /* 選項 */
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .option-btn {
+            background-color: #f5f5f5;
+            border: 4px solid #ddd;
+            border-radius: 20px;
+            padding: 22px 10px;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            color: var(--text-color);
+            font-family: inherit;
+            min-height: 80px;
+        }
+        .option-btn:hover {
+            transform: scale(1.03);
+            background-color: #fff;
+            border-color: #29b6f6;
+        }
+        .option-btn.correct {
+            background-color: var(--success-color);
+            color: white;
+            border-color: #2e7d32;
+            animation: pop 0.4s;
+        }
+        .option-btn.wrong {
+            background-color: var(--error-color);
+            color: white;
+            border-color: #c62828;
+            animation: shake 0.4s;
+        }
+        .option-btn:disabled { cursor: not-allowed; }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-bounce { animation: bounce 1.2s infinite; display: inline-block; }
+
+        #feedback {
+            margin-top: 18px;
+            font-weight: bold;
+            min-height: 1.8em;
+            font-size: 1.3rem;
+        }
+
+        /* 結果 */
+        .result-stars { font-size: 3rem; margin: 15px 0; }
+        .result-emoji { font-size: 5rem; margin: 15px 0; }
+        .final-score {
+            font-size: 1.8rem;
+            color: #0277bd;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        /* 設定畫面 */
+        .selector-label {
+            font-size: 1.1rem;
+            color: #555;
+            margin: 15px 0 8px;
+            font-weight: bold;
+        }
+        .selector-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .pick-btn {
+            background: #fff;
+            border: 3px solid #4fc3f7;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            color: #0277bd;
+        }
+        .pick-btn.active {
+            background: #4fc3f7;
+            color: white;
+        }
+
+        /* 台幣樣式 */
+        .money-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+        .money-label {
+            font-size: 1rem;
+            color: #555;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        .coin {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.25), inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+            font-family: inherit;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+            border: 2px solid rgba(0,0,0,0.1);
+            flex-direction: column;
+            line-height: 1;
+        }
+        .coin .num { font-size: 1.05rem; }
+        .coin .unit { font-size: 0.55rem; margin-top: 1px; }
+        .coin-1 {
+            width: 36px; height: 36px;
+            background: radial-gradient(circle at 30% 30%, #d4a574, #a0703f);
+            color: #fff;
+        }
+        .coin-5 {
+            width: 42px; height: 42px;
+            background: radial-gradient(circle at 30% 30%, #e0e0e0, #9e9e9e);
+            color: #424242;
+        }
+        .coin-10 {
+            width: 46px; height: 46px;
+            background: radial-gradient(circle at 30% 30%, #d6d6d6, #888);
+            color: #212121;
+        }
+        .coin-50 {
+            width: 50px; height: 50px;
+            background: radial-gradient(circle at 30% 30%, #ffe082, #c8a000);
+            color: #4e342e;
+        }
+        .bill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 50px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+            position: relative;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 6px);
+            border: 2px solid rgba(255,255,255,0.4);
+            flex-direction: column;
+            line-height: 1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        }
+        .bill .num { font-size: 1.4rem; }
+        .bill .unit { font-size: 0.7rem; }
+        .bill-100 { background-color: #c62828; }
+        .bill-500 { background-color: #6d4c41; }
+        .bill-1000 { background-color: #00838f; }
+
+        @media (max-width: 480px) {
+            #app { padding: 20px 15px; border-radius: 30px; }
+            h1 { font-size: 1.7rem; }
+            .math-equation { font-size: 2.2rem; letter-spacing: 4px; }
+            .visual-emojis { font-size: 1.8rem; }
+            .question-text { font-size: 1.05rem; }
+            .option-btn { font-size: 1.5rem; padding: 16px 8px; }
+            .big-btn { font-size: 1.2rem; padding: 14px 22px; }
+            .bill { width: 75px; height: 42px; }
+            .bill .num { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- 開始畫面 -->
+    <div id="start-screen" class="screen active">
+        <h1 class="animate-bounce">🔢 ➕ ➖</h1>
+        <h1>數學小學堂</h1>
+        <p class="subtitle">小朋友，一起來算數學吧！</p>
+        <button class="big-btn mode-btn" onclick="selectMode('add')">
+            ➕ 加法練習<br>
+            <small style="font-size:0.8rem">學會加在一起</small>
+        </button>
+        <button class="big-btn mode-btn mode-2" onclick="selectMode('sub')">
+            ➖ 減法練習<br>
+            <small style="font-size:0.8rem">學會拿走多少</small>
+        </button>
+        <button class="big-btn mode-btn mode-3" onclick="selectMode('story')">
+            🛍️ 情境題<br>
+            <small style="font-size:0.8rem">買東西 &amp; 找錢</small>
+        </button>
+    </div>
+
+    <!-- 設定畫面 -->
+    <div id="setup-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('start-screen')">←</button>
+        <h1 id="setup-title">選擇難度</h1>
+        <div id="diff-section">
+            <div class="selector-label">數字範圍</div>
+            <div class="selector-row" id="diff-row">
+                <button class="pick-btn active" data-diff="5" onclick="setDiff(5, this)">簡單 1-5</button>
+                <button class="pick-btn" data-diff="10" onclick="setDiff(10, this)">中等 1-10</button>
+                <button class="pick-btn" data-diff="20" onclick="setDiff(20, this)">挑戰 1-20</button>
+            </div>
+        </div>
+        <div class="selector-label">題數</div>
+        <div class="selector-row">
+            <button class="pick-btn active" data-len="5" onclick="setLength(5, this)">5 題</button>
+            <button class="pick-btn" data-len="10" onclick="setLength(10, this)">10 題</button>
+            <button class="pick-btn" data-len="15" onclick="setLength(15, this)">15 題</button>
+        </div>
+        <button class="big-btn" style="margin-top:20px" onclick="startGame()">開始 GO! 🚀</button>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="game-screen" class="screen">
+        <button class="back-btn" onclick="confirmQuit()">←</button>
+        <div class="score-box">
+            <span>第 <span id="current-q">1</span> / <span id="total-q">5</span> 題</span>
+            <span><span class="star">⭐</span> <span id="score">0</span></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+        <div class="question-display">
+            <div id="question-content"></div>
+            <button class="speak-btn" id="speak-btn" onclick="speakQuestion()">🔊 聽題目</button>
+        </div>
+
+        <div class="options-container" id="options"></div>
+        <p id="feedback"></p>
+    </div>
+
+    <!-- 結束畫面 -->
+    <div id="result-screen" class="screen">
+        <div class="result-emoji" id="result-emoji">🎉</div>
+        <h1 id="result-title">太棒了！</h1>
+        <div class="result-stars" id="result-stars">⭐⭐⭐</div>
+        <p class="final-score" id="final-score-text"></p>
+        <p id="result-comment" class="subtitle"></p>
+        <button class="big-btn" onclick="startGame()">再玩一次 🔁</button>
+        <button class="big-btn mode-btn" style="margin-top:10px" onclick="showScreen('start-screen')">回主選單 🏠</button>
+    </div>
+</div>
+
+<script>
+    // ====== 狀態 ======
+    let mode = 'add';            // add / sub / story
+    let difficulty = 5;
+    let totalQuestions = 5;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let questions = [];
+    let currentQ = null;
+    let isAnswering = false;
+
+    // ====== 工具 ======
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-TW';
+        u.rate = 0.85;
+        u.pitch = 1.1;
+        window.speechSynthesis.speak(u);
+    }
+
+    // ====== 畫面 ======
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function selectMode(m) {
+        mode = m;
+        const titles = { add: '➕ 加法練習', sub: '➖ 減法練習', story: '🛍️ 情境題' };
+        document.getElementById('setup-title').innerText = titles[m];
+        // 情境題不選難度
+        document.getElementById('diff-section').style.display = (m === 'story') ? 'none' : 'block';
+        showScreen('setup-screen');
+    }
+
+    function setDiff(n, btn) {
+        difficulty = n;
+        document.querySelectorAll('#diff-row .pick-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function setLength(n, btn) {
+        totalQuestions = n;
+        const row = btn.parentElement;
+        row.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function confirmQuit() {
+        if (confirm('確定要回主選單嗎？目前進度會遺失喔～')) showScreen('start-screen');
+    }
+
+    // ====== 題目產生 ======
+    function genAdd() {
+        const a = randInt(1, difficulty);
+        const b = randInt(1, difficulty - a < 1 ? 1 : difficulty);
+        // 限制總和不超過 difficulty * 1.5 太大
+        const aFinal = a;
+        const bFinal = Math.min(b, difficulty);
+        const sum = aFinal + bFinal;
+        return {
+            type: 'add',
+            a: aFinal, b: bFinal,
+            answer: sum,
+            speakText: `${aFinal} 加 ${bFinal} 等於多少？`,
+            render: () => `
+                <div class="math-equation">${aFinal} + ${bFinal} = ?</div>
+                <div class="visual-emojis">${'🍎'.repeat(aFinal)} ➕ ${'🍎'.repeat(bFinal)}</div>
+            `
+        };
+    }
+
+    function genSub() {
+        const a = randInt(2, difficulty);
+        const b = randInt(1, a);
+        return {
+            type: 'sub',
+            a, b,
+            answer: a - b,
+            speakText: `${a} 減 ${b} 等於多少？`,
+            render: () => `
+                <div class="math-equation">${a} − ${b} = ?</div>
+                <div class="visual-emojis">${'🍪'.repeat(a)}<br>拿走 ${b} 個 ❌</div>
+            `
+        };
+    }
+
+    // ====== 情境題模板 ======
+    const ITEMS = [
+        { name: '蘋果', emoji: '🍎', unit: '顆' },
+        { name: '香蕉', emoji: '🍌', unit: '根' },
+        { name: '草莓', emoji: '🍓', unit: '顆' },
+        { name: '糖果', emoji: '🍬', unit: '顆' },
+        { name: '餅乾', emoji: '🍪', unit: '塊' },
+        { name: '橘子', emoji: '🍊', unit: '顆' }
+    ];
+    const TOYS = [
+        { name: '小汽車', emoji: '🚗', unit: '台' },
+        { name: '貼紙', emoji: '🌟', unit: '張' },
+        { name: '皮球', emoji: '⚽', unit: '顆' }
+    ];
+    const KIDS = ['小明', '小華', '小美', '小強', '妹妹', '弟弟', '哥哥'];
+
+    function moneyHTML(amount) {
+        // 把金額拆成 100/50/10/5/1
+        const denoms = [
+            { v: 100, cls: 'bill bill-100' },
+            { v: 50, cls: 'coin coin-50' },
+            { v: 10, cls: 'coin coin-10' },
+            { v: 5, cls: 'coin coin-5' },
+            { v: 1, cls: 'coin coin-1' }
+        ];
+        let html = '';
+        let left = amount;
+        for (const d of denoms) {
+            while (left >= d.v) {
+                html += `<span class="${d.cls}"><span class="num">${d.v}</span><span class="unit">元</span></span>`;
+                left -= d.v;
+            }
+        }
+        return html || '<span style="color:#888">0 元</span>';
+    }
+
+    function genStory() {
+        const templates = [
+            // 1. 買水果加法
+            () => {
+                const item = pick(ITEMS);
+                const kid = pick(KIDS);
+                const a = randInt(2, 6);
+                const b = randInt(2, 6);
+                const text = `${kid}買了 ${a} ${item.unit}${item.name}，媽媽又給他 ${b} ${item.unit}，他總共有幾${item.unit}${item.name}？`;
+                return {
+                    answer: a + b,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="visual-emojis">${item.emoji.repeat(a)} ➕ ${item.emoji.repeat(b)}</div>
+                    `,
+                    unit: item.unit
+                };
+            },
+            // 2. 吃食物減法
+            () => {
+                const item = pick(ITEMS);
+                const kid = pick(KIDS);
+                const a = randInt(5, 10);
+                const b = randInt(1, a - 1);
+                const text = `${kid}有 ${a} ${item.unit}${item.name}，吃掉了 ${b} ${item.unit}，還剩下幾${item.unit}？`;
+                return {
+                    answer: a - b,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="visual-emojis">${item.emoji.repeat(a)}<br>吃掉 ${b} ${item.unit} 😋</div>
+                    `,
+                    unit: item.unit
+                };
+            },
+            // 3. 兩個人合起來
+            () => {
+                const item = pick(TOYS);
+                const a = randInt(2, 7);
+                const b = randInt(2, 7);
+                const text = `哥哥有 ${a} ${item.unit}${item.name}，弟弟有 ${b} ${item.unit}${item.name}，兩個人合起來有幾${item.unit}？`;
+                return {
+                    answer: a + b,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="visual-emojis">哥哥 ${item.emoji.repeat(a)}<br>弟弟 ${item.emoji.repeat(b)}</div>
+                    `,
+                    unit: item.unit
+                };
+            },
+            // 4. 送朋友減法
+            () => {
+                const item = pick(TOYS);
+                const kid = pick(KIDS);
+                const a = randInt(5, 10);
+                const b = randInt(1, a - 1);
+                const text = `${kid}有 ${a} ${item.unit}${item.name}，送給好朋友 ${b} ${item.unit}，自己還剩幾${item.unit}？`;
+                return {
+                    answer: a - b,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="visual-emojis">${item.emoji.repeat(a)}<br>送出 ${b} ${item.unit} 🎁</div>
+                    `,
+                    unit: item.unit
+                };
+            },
+            // 5. 找錢題（10 元）
+            () => {
+                const item = pick(ITEMS);
+                const price = randInt(1, 9);
+                const paid = 10;
+                const change = paid - price;
+                const text = `小華用 ${paid} 元買了一${item.unit} ${item.name}，${item.name}是 ${price} 元，店員要找回多少元？`;
+                return {
+                    answer: change,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="money-row"><span class="money-label">付了：</span>${moneyHTML(paid)}</div>
+                        <div class="money-row"><span class="money-label">${item.emoji} 售價：</span>${moneyHTML(price)}</div>
+                        <div class="question-text" style="margin-top:8px">找回 ❓ 元</div>
+                    `,
+                    unit: '元'
+                };
+            },
+            // 6. 找錢題（50 元，價格 10 倍數）
+            () => {
+                const choices = [10, 20, 30, 40];
+                const price = pick(choices);
+                const paid = 50;
+                const change = paid - price;
+                const text = `媽媽帶小明去買玩具，玩具是 ${price} 元，媽媽用 ${paid} 元付錢，店員要找回多少元？`;
+                return {
+                    answer: change,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="money-row"><span class="money-label">付了：</span>${moneyHTML(paid)}</div>
+                        <div class="money-row"><span class="money-label">🎁 售價：</span>${moneyHTML(price)}</div>
+                        <div class="question-text" style="margin-top:8px">找回 ❓ 元</div>
+                    `,
+                    unit: '元'
+                };
+            },
+            // 7. 撲滿存錢
+            () => {
+                const a = randInt(5, 20);
+                const b = randInt(2, 10);
+                const text = `小強的撲滿原本有 ${a} 元，他又存了 ${b} 元進去，撲滿裡現在有多少元？`;
+                return {
+                    answer: a + b,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="money-row"><span class="money-label">原本：</span>${moneyHTML(a)}</div>
+                        <div class="money-row"><span class="money-label">+ 存入：</span>${moneyHTML(b)}</div>
+                        <div style="font-size:2.5rem;margin-top:5px">🐷</div>
+                    `,
+                    unit: '元'
+                };
+            },
+            // 8. 還差多少元
+            () => {
+                const price = randInt(10, 20);
+                const have = randInt(3, price - 2);
+                const text = `小寶想買一個 ${price} 元的小玩具，可是他只有 ${have} 元，還差多少元才能買？`;
+                return {
+                    answer: price - have,
+                    speakText: text,
+                    render: () => `
+                        <div class="question-text">${text}</div>
+                        <div class="money-row"><span class="money-label">玩具 🧸：</span>${moneyHTML(price)}</div>
+                        <div class="money-row"><span class="money-label">手上：</span>${moneyHTML(have)}</div>
+                    `,
+                    unit: '元'
+                };
+            }
+        ];
+        const tpl = pick(templates);
+        const data = tpl();
+        return Object.assign({ type: 'story' }, data);
+    }
+
+    // ====== 選項生成 ======
+    function genOptions(answer) {
+        const set = new Set([answer]);
+        let attempts = 0;
+        while (set.size < 4 && attempts < 50) {
+            const offset = randInt(-3, 3);
+            const v = answer + offset;
+            if (v >= 0 && v !== answer) set.add(v);
+            attempts++;
+        }
+        // 補位
+        let n = 1;
+        while (set.size < 4) {
+            if (!set.has(answer + n)) set.add(answer + n);
+            n++;
+        }
+        return shuffle([...set]);
+    }
+
+    // ====== 遊戲邏輯 ======
+    function startGame() {
+        score = 0;
+        currentQuestionIndex = 0;
+        questions = [];
+        for (let i = 0; i < totalQuestions; i++) {
+            if (mode === 'add') questions.push(genAdd());
+            else if (mode === 'sub') questions.push(genSub());
+            else questions.push(genStory());
+        }
+        showScreen('game-screen');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        isAnswering = false;
+        currentQ = questions[currentQuestionIndex];
+        document.getElementById('current-q').innerText = currentQuestionIndex + 1;
+        document.getElementById('total-q').innerText = questions.length;
+        document.getElementById('score').innerText = score;
+        document.getElementById('progress-fill').style.width =
+            (currentQuestionIndex / questions.length * 100) + '%';
+        document.getElementById('feedback').innerText = '';
+
+        document.getElementById('question-content').innerHTML = currentQ.render();
+
+        // 選項
+        const opts = genOptions(currentQ.answer);
+        const container = document.getElementById('options');
+        container.innerHTML = '';
+        const unit = currentQ.unit || '';
+        opts.forEach(v => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = v + (unit && mode === 'story' ? ' ' + unit : '');
+            btn.dataset.value = v;
+            btn.onclick = () => checkAnswer(v, btn);
+            container.appendChild(btn);
+        });
+
+        // 情境題自動朗讀；加減法不自動朗讀（按按鈕才唸）
+        if (mode === 'story') {
+            setTimeout(() => speak(currentQ.speakText), 250);
+        }
+    }
+
+    function speakQuestion() {
+        if (currentQ) speak(currentQ.speakText);
+    }
+
+    function checkAnswer(v, btn) {
+        if (isAnswering) return;
+        isAnswering = true;
+
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+        const feedback = document.getElementById('feedback');
+
+        if (v === currentQ.answer) {
+            score++;
+            btn.classList.add('correct');
+            const cheers = ['答對了！好棒 👍', '太厲害了！⭐', '正確！你真聰明 🌟', 'YA！答對啦 🎉'];
+            feedback.innerText = cheers[Math.floor(Math.random() * cheers.length)];
+            feedback.style.color = 'var(--success-color)';
+            speak('答對了');
+        } else {
+            btn.classList.add('wrong');
+            allBtns.forEach(b => {
+                if (parseInt(b.dataset.value) === currentQ.answer) b.classList.add('correct');
+            });
+            feedback.innerText = `再接再厲！正確答案是 ${currentQ.answer}`;
+            feedback.style.color = 'var(--error-color)';
+            speak(`正確答案是 ${currentQ.answer}`);
+        }
+
+        document.getElementById('score').innerText = score;
+        document.getElementById('progress-fill').style.width =
+            ((currentQuestionIndex + 1) / questions.length * 100) + '%';
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) showQuestion();
+            else showResult();
+        }, 1800);
+    }
+
+    function showResult() {
+        showScreen('result-screen');
+        const total = questions.length;
+        const ratio = score / total;
+        let stars, emoji, title, comment;
+        if (ratio === 1) { stars = '⭐⭐⭐⭐⭐'; emoji = '🏆'; title = '完美滿分！'; comment = '哇～你是數學小天才！全部答對了！'; }
+        else if (ratio >= 0.8) { stars = '⭐⭐⭐⭐'; emoji = '🎉'; title = '非常棒！'; comment = '你好厲害！再加把勁就完美了！'; }
+        else if (ratio >= 0.6) { stars = '⭐⭐⭐'; emoji = '😊'; title = '很不錯喔！'; comment = '繼續練習，會更棒的！'; }
+        else if (ratio >= 0.4) { stars = '⭐⭐'; emoji = '💪'; title = '加油！'; comment = '多練幾次就會越來越熟練喔！'; }
+        else { stars = '⭐'; emoji = '🌱'; title = '再試試看！'; comment = '慢慢來，每天進步一點點！'; }
+
+        document.getElementById('result-stars').innerText = stars;
+        document.getElementById('result-emoji').innerText = emoji;
+        document.getElementById('result-title').innerText = title;
+        document.getElementById('final-score-text').innerText = `得分：${score} / ${total}`;
+        document.getElementById('result-comment').innerText = comment;
+        speak(title);
+    }
+</script>
+
+</body>
+</html>
