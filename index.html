@@ -42,8 +42,11 @@
         }
         .game-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
+        }
+        @media (max-width: 600px) {
+            .game-grid { grid-template-columns: 1fr; }
         }
         .game-card {
             display: block;
@@ -71,6 +74,13 @@
         }
         .game-card.zhuyin:hover { box-shadow: 0 11px 0 #e64a19; }
         .game-card.zhuyin:active { box-shadow: 0 4px 0 #e64a19; }
+        .game-card.math {
+            background: linear-gradient(145deg, #b3e5fc, #81d4fa);
+            border-color: #29b6f6;
+            box-shadow: 0 6px 0 #0277bd;
+        }
+        .game-card.math:hover { box-shadow: 0 11px 0 #0277bd; }
+        .game-card.math:active { box-shadow: 0 4px 0 #0277bd; }
         .game-emoji {
             font-size: 4.5rem;
             display: block;
@@ -99,7 +109,6 @@
         @media (max-width: 480px) {
             #home { padding: 30px 20px; }
             h1 { font-size: 1.8rem; }
-            .game-grid { grid-template-columns: 1fr; }
             .game-emoji { font-size: 3.5rem; }
             .game-title { font-size: 1.3rem; }
         }
@@ -114,6 +123,11 @@
                 <span class="game-emoji">🎵</span>
                 <div class="game-title">注音小學堂</div>
                 <div class="game-desc">ㄅㄆㄇㄈ 單音 &amp; 拼音練習</div>
+            </a>
+            <a href="./數學練習/" class="game-card math">
+                <span class="game-emoji">🔢</span>
+                <div class="game-title">數學小學堂</div>
+                <div class="game-desc">加減法 &amp; 找錢練習</div>
             </a>
             <a href="./英文測驗/" class="game-card">
                 <span class="game-emoji">🍎</span>
