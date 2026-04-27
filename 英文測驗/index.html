@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍎 水果英文大冒險 - Fruit Adventure! 🍌</title>
+    <title>🌟 English Fun - Learn with Fun! 🎉</title>
     <style>
         :root {
             --primary-bg: #e0f7fa;
@@ -13,235 +13,785 @@
             --text-color: #333;
             --font-family: 'Comic Sans MS', 'PingFang TC', cursive, sans-serif;
         }
+        * { box-sizing: border-box; }
 
         body {
-            background-color: var(--primary-bg);
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2dfdb 50%, #c5e1a5 100%);
             font-family: var(--font-family);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            padding: 20px;
         }
 
-        #game-container {
+        #app {
             background-color: var(--card-bg);
             padding: 30px;
             border-radius: 40px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             text-align: center;
-            max-width: 500px;
-            width: 90%;
-            border: 8px solid #ffeb3b;
+            max-width: 580px;
+            width: 100%;
+            border: 8px solid #80deea;
+            position: relative;
         }
 
         h1 {
-            color: #ff5722;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+            color: #00838f;
+            font-size: 2.2rem;
+            margin: 10px 0 15px;
             text-shadow: 2px 2px #fff;
         }
 
+        .subtitle { color: #666; font-size: 1rem; margin-bottom: 20px; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .big-btn {
+            background: linear-gradient(145deg, #26c6da, #00acc1);
+            color: white;
+            padding: 18px 30px;
+            font-size: 1.4rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #00838f, 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.15s;
+            font-weight: bold;
+            font-family: inherit;
+            margin: 6px;
+        }
+        .big-btn:hover { transform: translateY(-2px); }
+        .big-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #00838f; }
+
+        /* 模式選單做成卡片網格 */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .mode-card {
+            background: linear-gradient(145deg, #fff9c4, #fff59d);
+            border: 4px solid #ffd54f;
+            border-radius: 25px;
+            padding: 18px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 5px 0 #f9a825;
+            font-family: inherit;
+            color: #5d4037;
+        }
+        .mode-card:hover { transform: translateY(-2px); }
+        .mode-card:active { transform: translateY(3px); box-shadow: 0 2px 0 #f9a825; }
+        .mode-card .m-emoji { font-size: 2.4rem; display: block; margin-bottom: 4px; }
+        .mode-card .m-title { font-size: 1.1rem; font-weight: bold; }
+        .mode-card .m-desc { font-size: 0.8rem; color: #6d4c41; margin-top: 2px; }
+
+        .mode-card.c1 { background: linear-gradient(145deg, #ffccbc, #ffab91); border-color: #ff8a65; box-shadow: 0 5px 0 #d84315; }
+        .mode-card.c2 { background: linear-gradient(145deg, #c8e6c9, #a5d6a7); border-color: #66bb6a; box-shadow: 0 5px 0 #2e7d32; }
+        .mode-card.c3 { background: linear-gradient(145deg, #b3e5fc, #81d4fa); border-color: #29b6f6; box-shadow: 0 5px 0 #0277bd; }
+        .mode-card.c4 { background: linear-gradient(145deg, #f8bbd0, #f48fb1); border-color: #ec407a; box-shadow: 0 5px 0 #ad1457; }
+        .mode-card.c5 { background: linear-gradient(145deg, #e1bee7, #ce93d8); border-color: #ab47bc; box-shadow: 0 5px 0 #6a1b9a; }
+        .mode-card.c6 { background: linear-gradient(145deg, #fff9c4, #fff176); border-color: #ffca28; box-shadow: 0 5px 0 #f57f17; }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #fff;
+            border: 3px solid #80deea;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: #e0f7fa; }
+
         .score-box {
-            font-size: 1.2rem;
-            color: #555;
+            display: flex;
+            justify-content: space-between;
+            background: #e0f7fa;
+            border-radius: 30px;
+            padding: 10px 20px;
             margin-bottom: 15px;
+            font-size: 1.05rem;
+            color: #006064;
+            font-weight: bold;
+        }
+        .score-box .star { color: #ffc107; font-size: 1.3rem; }
+
+        .progress-bar {
+            background: #b2ebf2;
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #4dd0e1, #00838f);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
         }
 
-        .fruit-display {
-            height: 180px;
+        .question-display {
+            min-height: 200px;
+            padding: 25px 15px;
+            background: radial-gradient(circle, #fffde7 40%, transparent 70%);
+            border-radius: 30px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            margin-bottom: 30px;
-            background: radial-gradient(circle, #fff 40%, transparent 70%);
-            border-radius: 50%;
+            margin-bottom: 18px;
         }
 
-        /* 水果 CSS 圖案 */
-        .fruit-icon { font-size: 100px; }
+        .prompt-text {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .big-letter {
+            font-size: 7rem;
+            font-weight: bold;
+            color: #00838f;
+            line-height: 1;
+            text-shadow: 4px 4px 0 #fff, 6px 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .big-emoji {
+            font-size: 5rem;
+            line-height: 1;
+        }
+
+        .big-word {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00695c;
+            margin-top: 8px;
+        }
+
+        .big-listen {
+            font-size: 5rem;
+            line-height: 1;
+        }
+
+        .color-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            margin: 10px auto;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3), inset 0 -8px 15px rgba(0,0,0,0.2), inset 0 8px 15px rgba(255,255,255,0.4);
+            border: 4px solid rgba(255,255,255,0.6);
+        }
+
+        .speak-btn {
+            background: #fff;
+            border: 3px solid #26c6da;
+            color: #00838f;
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        .speak-btn:hover { background: #e0f7fa; }
 
         .options-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 12px;
         }
-
         .option-btn {
-            background-color: #f0f0f0;
+            background-color: #f5f5f5;
             border: 4px solid #ddd;
             border-radius: 20px;
-            padding: 15px;
+            padding: 20px 10px;
             font-size: 1.5rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             font-weight: bold;
             color: var(--text-color);
+            font-family: inherit;
+            min-height: 75px;
         }
-
         .option-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
             background-color: #fff;
-            border-color: #2196f3;
+            border-color: #26c6da;
         }
-
         .option-btn.correct {
             background-color: var(--success-color);
             color: white;
             border-color: #2e7d32;
+            animation: pop 0.4s;
         }
-
         .option-btn.wrong {
             background-color: var(--error-color);
             color: white;
             border-color: #c62828;
+            animation: shake 0.4s;
+        }
+        .option-btn:disabled { cursor: not-allowed; }
+        .option-btn .opt-emoji { font-size: 2.2rem; display: block; line-height: 1; margin-bottom: 4px; }
+        .option-btn .opt-text { font-size: 1.2rem; }
+
+        @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .animate-bounce { animation: bounce 1.2s infinite; display: inline-block; }
+
+        #feedback {
+            margin-top: 18px;
+            font-weight: bold;
+            min-height: 1.8em;
+            font-size: 1.3rem;
         }
 
-        #start-screen, #result-screen {
-            display: none;
-        }
+        .result-stars { font-size: 3rem; margin: 15px 0; }
+        .result-emoji { font-size: 5rem; margin: 15px 0; }
+        .final-score { font-size: 1.8rem; color: #00838f; margin: 15px 0; font-weight: bold; }
 
-        #game-screen {
-            display: block;
-        }
-
-        .big-btn {
-            background-color: #ff5722;
-            color: white;
-            padding: 20px 40px;
-            font-size: 2rem;
-            border: none;
-            border-radius: 50px;
+        .selector-label { font-size: 1rem; color: #555; margin: 12px 0 8px; font-weight: bold; }
+        .selector-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+        .pick-btn {
+            background: #fff;
+            border: 3px solid #80deea;
+            border-radius: 20px;
+            padding: 10px 18px;
+            font-size: 1rem;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255,87,34,0.4);
-            transition: transform 0.2s;
+            font-family: inherit;
+            font-weight: bold;
+            color: #00838f;
         }
+        .pick-btn.active { background: #26c6da; color: white; }
 
-        .big-btn:hover { transform: scale(1.1); }
-
-        /* 動畫 */
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+        @media (max-width: 480px) {
+            #app { padding: 22px 15px; border-radius: 30px; }
+            h1 { font-size: 1.7rem; }
+            .big-letter { font-size: 5rem; }
+            .big-emoji { font-size: 4rem; }
+            .big-word { font-size: 1.6rem; }
+            .option-btn { font-size: 1.2rem; padding: 14px 8px; }
+            .option-btn .opt-text { font-size: 1rem; }
+            .big-btn { font-size: 1.2rem; padding: 14px 22px; }
         }
-        .animate-bounce { animation: bounce 1s infinite; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <!-- 開始畫面 -->
-    <div id="start-screen" style="display: block;">
-        <h1 class="animate-bounce">🍎🍌🍐</h1>
-        <h1>水果大冒險</h1>
-        <p>Fruit Adventure!</p>
-        <button class="big-btn" onclick="startGame()">開始遊戲 GO!</button>
+<div id="app">
+    <!-- 主畫面 -->
+    <div id="start-screen" class="screen active">
+        <h1 class="animate-bounce">🌟 ABC 🎉</h1>
+        <h1>English Fun</h1>
+        <p class="subtitle">Hi friend! Pick a game to start learning!</p>
+        <div class="mode-grid">
+            <button class="mode-card c1" onclick="selectMode('fruits')">
+                <span class="m-emoji">🍎</span>
+                <div class="m-title">Fruits</div>
+                <div class="m-desc">Match the fruit</div>
+            </button>
+            <button class="mode-card c2" onclick="selectMode('letters')">
+                <span class="m-emoji">🔤</span>
+                <div class="m-title">ABC Match</div>
+                <div class="m-desc">Big &amp; small letters</div>
+            </button>
+            <button class="mode-card c3" onclick="selectMode('phonics')">
+                <span class="m-emoji">🔊</span>
+                <div class="m-title">First Sound</div>
+                <div class="m-desc">What letter starts it?</div>
+            </button>
+            <button class="mode-card c4" onclick="selectMode('sight')">
+                <span class="m-emoji">👁️</span>
+                <div class="m-title">Sight Words</div>
+                <div class="m-desc">Listen &amp; pick</div>
+            </button>
+            <button class="mode-card c5" onclick="selectMode('opposites')">
+                <span class="m-emoji">↔️</span>
+                <div class="m-title">Opposites</div>
+                <div class="m-desc">Find the opposite</div>
+            </button>
+            <button class="mode-card c6" onclick="selectMode('colornum')">
+                <span class="m-emoji">🌈</span>
+                <div class="m-title">Colors &amp; Numbers</div>
+                <div class="m-desc">Read &amp; count</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- 設定畫面 -->
+    <div id="setup-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('start-screen')">←</button>
+        <h1 id="setup-title">Get Ready!</h1>
+        <p class="subtitle" id="setup-subtitle">How many questions?</p>
+        <div class="selector-row">
+            <button class="pick-btn active" onclick="setLength(5, this)">5 questions</button>
+            <button class="pick-btn" onclick="setLength(10, this)">10 questions</button>
+            <button class="pick-btn" onclick="setLength(15, this)">15 questions</button>
+        </div>
+        <button class="big-btn" style="margin-top:20px" onclick="startGame()">Let's Go! 🚀</button>
     </div>
 
     <!-- 遊戲畫面 -->
-    <div id="game-screen" style="display: none;">
-        <div class="score-box">分數: <span id="score">0</span> / <span id="total-q">5</span></div>
-        <div class="fruit-display" id="fruit-target">
-            <!-- 水果圖案由 JS 注入 -->
-            <span class="fruit-icon">🍎</span>
+    <div id="game-screen" class="screen">
+        <button class="back-btn" onclick="confirmQuit()">←</button>
+        <div class="score-box">
+            <span>Q <span id="current-q">1</span> / <span id="total-q">5</span></span>
+            <span><span class="star">⭐</span> <span id="score">0</span></span>
         </div>
-        <div class="options-container" id="options">
-            <!-- 選項按鈕由 JS 注入 -->
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+        <div class="question-display">
+            <div id="question-content"></div>
+            <button class="speak-btn" id="speak-btn" onclick="speakQuestion()">🔊 Listen</button>
         </div>
-        <p id="feedback" style="margin-top: 20px; font-weight: bold; min-height: 1.5em;"></p>
+
+        <div class="options-container" id="options"></div>
+        <p id="feedback"></p>
     </div>
 
-    <!-- 結束畫面 -->
-    <div id="result-screen" style="display: none;">
-        <h1>太棒了！ 🎉</h1>
-        <p id="final-score-text" style="font-size: 1.5rem;"></p>
-        <button class="big-btn" onclick="startGame()">再玩一次</button>
+    <!-- 結果畫面 -->
+    <div id="result-screen" class="screen">
+        <div class="result-emoji" id="result-emoji">🎉</div>
+        <h1 id="result-title">Great Job!</h1>
+        <div class="result-stars" id="result-stars">⭐⭐⭐</div>
+        <p class="final-score" id="final-score-text"></p>
+        <p id="result-comment" class="subtitle"></p>
+        <button class="big-btn" onclick="startGame()">Play Again 🔁</button>
+        <button class="big-btn" style="background:linear-gradient(145deg,#ff7043,#ff5722);box-shadow:0 6px 0 #d84315,0 8px 15px rgba(0,0,0,0.2);margin-top:10px" onclick="showScreen('start-screen')">Home 🏠</button>
     </div>
 </div>
 
 <script>
-    const fruits = [
-        { name: 'Apple', emoji: '🍎', options: ['Apple', 'Banana', 'Orange', 'Grape'] },
-        { name: 'Banana', emoji: '🍌', options: ['Grape', 'Banana', 'Watermelon', 'Apple'] },
-        { name: 'Orange', emoji: '🍊', options: ['Apple', 'Pear', 'Orange', 'Lemon'] },
-        { name: 'Grape', emoji: '🍇', options: ['Cherry', 'Peach', 'Grape', 'Banana'] },
-        { name: 'Watermelon', emoji: '🍉', options: ['Watermelon', 'Apple', 'Orange', 'Kiwi'] }
+    // ====== 資料 ======
+    const FRUITS = [
+        { word: 'Apple', emoji: '🍎' },
+        { word: 'Banana', emoji: '🍌' },
+        { word: 'Orange', emoji: '🍊' },
+        { word: 'Grape', emoji: '🍇' },
+        { word: 'Watermelon', emoji: '🍉' },
+        { word: 'Strawberry', emoji: '🍓' },
+        { word: 'Pear', emoji: '🍐' },
+        { word: 'Peach', emoji: '🍑' },
+        { word: 'Lemon', emoji: '🍋' },
+        { word: 'Cherry', emoji: '🍒' },
+        { word: 'Pineapple', emoji: '🍍' },
+        { word: 'Kiwi', emoji: '🥝' }
     ];
 
+    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+    // 字首音練習：每個字母配一張圖
+    const PHONICS = [
+        { letter: 'A', word: 'Apple', emoji: '🍎' },
+        { letter: 'B', word: 'Bear', emoji: '🐻' },
+        { letter: 'C', word: 'Cat', emoji: '🐱' },
+        { letter: 'D', word: 'Dog', emoji: '🐶' },
+        { letter: 'E', word: 'Elephant', emoji: '🐘' },
+        { letter: 'F', word: 'Fish', emoji: '🐟' },
+        { letter: 'G', word: 'Giraffe', emoji: '🦒' },
+        { letter: 'H', word: 'Hat', emoji: '🎩' },
+        { letter: 'I', word: 'Ice cream', emoji: '🍦' },
+        { letter: 'J', word: 'Juice', emoji: '🧃' },
+        { letter: 'K', word: 'Kite', emoji: '🪁' },
+        { letter: 'L', word: 'Lion', emoji: '🦁' },
+        { letter: 'M', word: 'Monkey', emoji: '🐵' },
+        { letter: 'N', word: 'Nest', emoji: '🪺' },
+        { letter: 'O', word: 'Owl', emoji: '🦉' },
+        { letter: 'P', word: 'Pig', emoji: '🐷' },
+        { letter: 'Q', word: 'Queen', emoji: '👑' },
+        { letter: 'R', word: 'Rabbit', emoji: '🐰' },
+        { letter: 'S', word: 'Sun', emoji: '☀️' },
+        { letter: 'T', word: 'Tiger', emoji: '🐯' },
+        { letter: 'U', word: 'Umbrella', emoji: '☂️' },
+        { letter: 'V', word: 'Violin', emoji: '🎻' },
+        { letter: 'W', word: 'Watermelon', emoji: '🍉' },
+        { letter: 'X', word: 'X-ray', emoji: '🩻' },
+        { letter: 'Y', word: 'Yo-yo', emoji: '🪀' },
+        { letter: 'Z', word: 'Zebra', emoji: '🦓' }
+    ];
+
+    // Dolch 幼兒園常用字（聽音選字）
+    const SIGHT_WORDS = [
+        'a', 'and', 'away', 'big', 'blue', 'can', 'come', 'down',
+        'find', 'for', 'funny', 'go', 'help', 'here', 'I', 'in',
+        'is', 'it', 'jump', 'little', 'look', 'make', 'me', 'my',
+        'not', 'one', 'play', 'red', 'run', 'said', 'see', 'the',
+        'three', 'to', 'two', 'up', 'we', 'where', 'yellow', 'you'
+    ];
+
+    // 反義詞配對
+    const OPPOSITES = [
+        { a: 'big', aE: '🐘', b: 'small', bE: '🐭' },
+        { a: 'hot', aE: '🔥', b: 'cold', bE: '❄️' },
+        { a: 'up', aE: '⬆️', b: 'down', bE: '⬇️' },
+        { a: 'day', aE: '☀️', b: 'night', bE: '🌙' },
+        { a: 'happy', aE: '😊', b: 'sad', bE: '😢' },
+        { a: 'fast', aE: '🐇', b: 'slow', bE: '🐢' },
+        { a: 'wet', aE: '💧', b: 'dry', bE: '🏜️' },
+        { a: 'open', aE: '📂', b: 'closed', bE: '📁' },
+        { a: 'tall', aE: '🦒', b: 'short', bE: '🐢' },
+        { a: 'old', aE: '👴', b: 'young', bE: '👶' },
+        { a: 'clean', aE: '✨', b: 'dirty', bE: '🐷' },
+        { a: 'full', aE: '🥛', b: 'empty', bE: '🥃' },
+        { a: 'light', aE: '🪶', b: 'heavy', bE: '🪨' },
+        { a: 'in', aE: '📥', b: 'out', bE: '📤' },
+        { a: 'on', aE: '💡', b: 'off', bE: '⚫' }
+    ];
+
+    const COLORS = [
+        { word: 'Red', color: '#e53935' },
+        { word: 'Blue', color: '#1e88e5' },
+        { word: 'Yellow', color: '#fdd835' },
+        { word: 'Green', color: '#43a047' },
+        { word: 'Orange', color: '#fb8c00' },
+        { word: 'Purple', color: '#8e24aa' },
+        { word: 'Pink', color: '#ec407a' },
+        { word: 'Black', color: '#212121' },
+        { word: 'White', color: '#fafafa' },
+        { word: 'Brown', color: '#6d4c41' }
+    ];
+
+    const NUMBER_WORDS = [
+        { n: 1, word: 'One' }, { n: 2, word: 'Two' }, { n: 3, word: 'Three' },
+        { n: 4, word: 'Four' }, { n: 5, word: 'Five' }, { n: 6, word: 'Six' },
+        { n: 7, word: 'Seven' }, { n: 8, word: 'Eight' }, { n: 9, word: 'Nine' },
+        { n: 10, word: 'Ten' }
+    ];
+
+    const COUNT_EMOJIS = ['🐝', '🍓', '⭐', '🌸', '🐠', '🎈', '🦋', '🐞'];
+
+    // ====== 狀態 ======
+    let mode = 'fruits';
+    let totalQuestions = 5;
     let currentQuestionIndex = 0;
     let score = 0;
+    let questions = [];
+    let currentQ = null;
+    let isAnswering = false;
 
-    const startScreen = document.getElementById('start-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const fruitTarget = document.getElementById('fruit-target');
-    const optionsContainer = document.getElementById('options');
-    const scoreElement = document.getElementById('score');
-    const feedbackElement = document.getElementById('feedback');
+    // ====== 工具 ======
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    function shuffle(a) {
+        const r = a.slice();
+        for (let i = r.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [r[i], r[j]] = [r[j], r[i]];
+        }
+        return r;
+    }
+    function pickN(arr, n, exclude) {
+        const pool = exclude ? arr.filter(x => x !== exclude) : arr.slice();
+        return shuffle(pool).slice(0, n);
+    }
+    function pickNBy(arr, n, key, excludeVal) {
+        const pool = arr.filter(x => x[key] !== excludeVal);
+        return shuffle(pool).slice(0, n);
+    }
 
+    function speak(text, opts = {}) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        u.rate = opts.rate || 0.85;
+        u.pitch = opts.pitch || 1.1;
+        // 偏好兒童/女聲 en-US
+        const voices = window.speechSynthesis.getVoices();
+        const enVoice = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en'));
+        if (enVoice) u.voice = enVoice;
+        window.speechSynthesis.speak(u);
+    }
+    // 預先載入 voice 清單（某些瀏覽器需要）
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    // ====== 畫面 ======
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    const MODE_TITLES = {
+        fruits: '🍎 Fruits',
+        letters: '🔤 ABC Match',
+        phonics: '🔊 First Sound',
+        sight: '👁️ Sight Words',
+        opposites: '↔️ Opposites',
+        colornum: '🌈 Colors & Numbers'
+    };
+
+    function selectMode(m) {
+        mode = m;
+        document.getElementById('setup-title').innerText = MODE_TITLES[m] || 'Get Ready!';
+        showScreen('setup-screen');
+    }
+
+    function setLength(n, btn) {
+        totalQuestions = n;
+        btn.parentElement.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function confirmQuit() {
+        if (confirm('Go back to home? Your progress will be lost.')) showScreen('start-screen');
+    }
+
+    // ====== 題目產生器 ======
+    // 每個 question 物件含: render(), prompt, speakText, options (label/value/emoji), answer
+    function genFruits() {
+        const f = pick(FRUITS);
+        const distract = pickNBy(FRUITS, 3, 'word', f.word).map(x => x.word);
+        const opts = shuffle([f.word, ...distract]);
+        return {
+            speakText: f.word,
+            autoSpeak: true,
+            render: () => `
+                <p class="prompt-text">What is this fruit?</p>
+                <div class="big-emoji animate-bounce">${f.emoji}</div>
+            `,
+            options: opts.map(w => ({ label: w, value: w })),
+            answer: f.word
+        };
+    }
+
+    function genLetters() {
+        const letter = pick(ALPHABET);
+        const isUpper = Math.random() < 0.5;
+        const target = isUpper ? letter : letter.toLowerCase();
+        const correct = isUpper ? letter.toLowerCase() : letter;
+        const distractLetters = pickN(ALPHABET, 3, letter);
+        const opts = shuffle([
+            correct,
+            ...distractLetters.map(L => isUpper ? L.toLowerCase() : L)
+        ]);
+        return {
+            speakText: letter,
+            autoSpeak: false,
+            render: () => `
+                <p class="prompt-text">${isUpper ? 'Find the small letter:' : 'Find the BIG letter:'}</p>
+                <div class="big-letter">${target}</div>
+            `,
+            options: opts.map(o => ({ label: o, value: o })),
+            answer: correct
+        };
+    }
+
+    function genPhonics() {
+        const item = pick(PHONICS);
+        const distract = pickNBy(PHONICS, 3, 'letter', item.letter).map(x => x.letter);
+        const opts = shuffle([item.letter, ...distract]);
+        return {
+            speakText: item.word,
+            autoSpeak: true,
+            render: () => `
+                <p class="prompt-text">What letter does this start with?</p>
+                <div class="big-emoji animate-bounce">${item.emoji}</div>
+                <div class="big-word">${item.word}</div>
+            `,
+            options: opts.map(L => ({ label: L, value: L })),
+            answer: item.letter
+        };
+    }
+
+    function genSight() {
+        const word = pick(SIGHT_WORDS);
+        const distract = pickN(SIGHT_WORDS, 3, word);
+        const opts = shuffle([word, ...distract]);
+        return {
+            speakText: word,
+            autoSpeak: true,
+            render: () => `
+                <p class="prompt-text">Click the word you hear:</p>
+                <div class="big-listen">👂</div>
+                <div style="font-size:0.95rem;color:#777;margin-top:6px">(Press 🔊 Listen to hear again)</div>
+            `,
+            options: opts.map(w => ({ label: w, value: w })),
+            answer: word
+        };
+    }
+
+    function genOpposites() {
+        const pair = pick(OPPOSITES);
+        // 隨機從 a 或 b 出題
+        const fromA = Math.random() < 0.5;
+        const target = fromA ? pair.a : pair.b;
+        const targetEmoji = fromA ? pair.aE : pair.bE;
+        const correct = fromA ? pair.b : pair.a;
+        // 干擾選項：從其他 pair 的詞
+        const distractPool = OPPOSITES.filter(p => p !== pair).flatMap(p => [p.a, p.b]);
+        const distract = pickN(distractPool, 3);
+        const opts = shuffle([correct, ...distract]);
+        return {
+            speakText: `What is the opposite of ${target}?`,
+            autoSpeak: true,
+            render: () => `
+                <p class="prompt-text">Find the opposite:</p>
+                <div class="big-emoji animate-bounce">${targetEmoji}</div>
+                <div class="big-word">${target}</div>
+            `,
+            options: opts.map(w => ({ label: w, value: w })),
+            answer: correct
+        };
+    }
+
+    function genColors() {
+        const c = pick(COLORS);
+        const distract = pickNBy(COLORS, 3, 'word', c.word).map(x => x.word);
+        const opts = shuffle([c.word, ...distract]);
+        return {
+            speakText: c.word,
+            autoSpeak: true,
+            render: () => `
+                <p class="prompt-text">What color is this?</p>
+                <div class="color-circle" style="background:${c.color}"></div>
+            `,
+            options: opts.map(w => ({ label: w, value: w })),
+            answer: c.word
+        };
+    }
+
+    function genCounting() {
+        const n = randInt(1, 10);
+        const e = pick(COUNT_EMOJIS);
+        const correctWord = NUMBER_WORDS[n - 1].word;
+        const distract = pickNBy(NUMBER_WORDS, 3, 'word', correctWord).map(x => x.word);
+        const opts = shuffle([correctWord, ...distract]);
+        return {
+            speakText: `How many? ${correctWord}.`,
+            autoSpeak: true,
+            render: () => `
+                <p class="prompt-text">Count and pick the right word!</p>
+                <div style="font-size:2.2rem;line-height:1.4;letter-spacing:2px;max-width:380px">${e.repeat(n)}</div>
+            `,
+            options: opts.map(w => ({ label: w, value: w })),
+            answer: correctWord
+        };
+    }
+
+    function genColorNum() {
+        // 隨機混合：顏色 vs 數數
+        return Math.random() < 0.5 ? genColors() : genCounting();
+    }
+
+    const GENERATORS = {
+        fruits: genFruits,
+        letters: genLetters,
+        phonics: genPhonics,
+        sight: genSight,
+        opposites: genOpposites,
+        colornum: genColorNum
+    };
+
+    // ====== 遊戲流程 ======
     function startGame() {
         score = 0;
         currentQuestionIndex = 0;
-        startScreen.style.display = 'none';
-        resultScreen.style.display = 'none';
-        gameScreen.style.display = 'block';
-        updateScore();
+        questions = [];
+        const gen = GENERATORS[mode];
+        for (let i = 0; i < totalQuestions; i++) questions.push(gen());
+        showScreen('game-screen');
         showQuestion();
     }
 
     function showQuestion() {
-        const question = fruits[currentQuestionIndex];
-        fruitTarget.innerHTML = `<span class="fruit-icon animate-bounce">${question.emoji}</span>`;
-        optionsContainer.innerHTML = '';
-        feedbackElement.innerText = '';
-        
-        question.options.forEach(opt => {
+        isAnswering = false;
+        currentQ = questions[currentQuestionIndex];
+        document.getElementById('current-q').innerText = currentQuestionIndex + 1;
+        document.getElementById('total-q').innerText = questions.length;
+        document.getElementById('score').innerText = score;
+        document.getElementById('progress-fill').style.width =
+            (currentQuestionIndex / questions.length * 100) + '%';
+        document.getElementById('feedback').innerText = '';
+
+        document.getElementById('question-content').innerHTML = currentQ.render();
+
+        const container = document.getElementById('options');
+        container.innerHTML = '';
+        currentQ.options.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
-            btn.innerText = opt;
-            btn.onclick = () => checkAnswer(opt, btn);
-            optionsContainer.appendChild(btn);
+            btn.dataset.value = opt.value;
+            btn.innerHTML = opt.emoji
+                ? `<span class="opt-emoji">${opt.emoji}</span><span class="opt-text">${opt.label}</span>`
+                : `<span class="opt-text">${opt.label}</span>`;
+            btn.onclick = () => checkAnswer(opt.value, btn);
+            container.appendChild(btn);
         });
+
+        if (currentQ.autoSpeak) setTimeout(() => speak(currentQ.speakText), 250);
     }
 
-    function checkAnswer(selected, btn) {
-        const correct = fruits[currentQuestionIndex].name;
-        const allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(b => b.style.pointerEvents = 'none');
+    function speakQuestion() {
+        if (currentQ) speak(currentQ.speakText);
+    }
 
-        if (selected === correct) {
+    function checkAnswer(value, btn) {
+        if (isAnswering) return;
+        isAnswering = true;
+
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+        const feedback = document.getElementById('feedback');
+
+        if (value === currentQ.answer) {
             score++;
             btn.classList.add('correct');
-            feedbackElement.innerText = '答對了！ Yummy! 😋';
-            feedbackElement.style.color = 'var(--success-color)';
+            const cheers = ['Great job! 👍', 'Awesome! ⭐', "You're amazing! 🌟", 'Yes! 🎉', 'Super! 🚀'];
+            feedback.innerText = cheers[Math.floor(Math.random() * cheers.length)];
+            feedback.style.color = 'var(--success-color)';
+            speak('Yes!');
         } else {
             btn.classList.add('wrong');
-            feedbackElement.innerText = '哎呀，再試一次！ Oh no! 😅';
-            feedbackElement.style.color = 'var(--error-color)';
+            allBtns.forEach(b => {
+                if (b.dataset.value === String(currentQ.answer)) b.classList.add('correct');
+            });
+            feedback.innerText = `Try again! The answer is "${currentQ.answer}"`;
+            feedback.style.color = 'var(--error-color)';
+            speak(`The answer is ${currentQ.answer}`);
         }
 
-        updateScore();
+        document.getElementById('score').innerText = score;
+        document.getElementById('progress-fill').style.width =
+            ((currentQuestionIndex + 1) / questions.length * 100) + '%';
 
         setTimeout(() => {
             currentQuestionIndex++;
-            if (currentQuestionIndex < fruits.length) {
-                showQuestion();
-            } else {
-                showResult();
-            }
-        }, 1500);
-    }
-
-    function updateScore() {
-        scoreElement.innerText = score;
-        document.getElementById('total-q').innerText = fruits.length;
+            if (currentQuestionIndex < questions.length) showQuestion();
+            else showResult();
+        }, 1800);
     }
 
     function showResult() {
-        gameScreen.style.display = 'none';
-        resultScreen.style.display = 'block';
-        document.getElementById('final-score-text').innerText = `你的得分是： ${score} / ${fruits.length}`;
+        showScreen('result-screen');
+        const total = questions.length;
+        const ratio = score / total;
+        let stars, emoji, title, comment;
+        if (ratio === 1) { stars = '⭐⭐⭐⭐⭐'; emoji = '🏆'; title = 'Perfect Score!'; comment = 'Wow! You got them all right!'; }
+        else if (ratio >= 0.8) { stars = '⭐⭐⭐⭐'; emoji = '🎉'; title = 'Excellent!'; comment = "You're doing great! Almost perfect!"; }
+        else if (ratio >= 0.6) { stars = '⭐⭐⭐'; emoji = '😊'; title = 'Good Work!'; comment = 'Keep practicing! You can do it!'; }
+        else if (ratio >= 0.4) { stars = '⭐⭐'; emoji = '💪'; title = 'Keep Going!'; comment = 'Try again — you’ll get better!'; }
+        else { stars = '⭐'; emoji = '🌱'; title = 'Try Again!'; comment = 'Practice makes perfect!'; }
+
+        document.getElementById('result-stars').innerText = stars;
+        document.getElementById('result-emoji').innerText = emoji;
+        document.getElementById('result-title').innerText = title;
+        document.getElementById('final-score-text').innerText = `Score: ${score} / ${total}`;
+        document.getElementById('result-comment').innerText = comment;
+        speak(title);
     }
 </script>
 
