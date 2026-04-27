@@ -506,7 +506,7 @@
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'en-US';
-        u.rate = opts.rate || 0.85;
+        u.rate = opts.rate || 0.57;
         u.pitch = opts.pitch || 1.1;
         // 偏好兒童/女聲 en-US
         const voices = window.speechSynthesis.getVoices();
