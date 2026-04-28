@@ -42,7 +42,7 @@
         }
         .game-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
         @media (max-width: 600px) {
@@ -81,6 +81,13 @@
         }
         .game-card.math:hover { box-shadow: 0 11px 0 #0277bd; }
         .game-card.math:active { box-shadow: 0 4px 0 #0277bd; }
+        .game-card.yumi {
+            background: linear-gradient(145deg, #f8bbd0, #f48fb1);
+            border-color: #ec407a;
+            box-shadow: 0 6px 0 #ad1457;
+        }
+        .game-card.yumi:hover { box-shadow: 0 11px 0 #ad1457; }
+        .game-card.yumi:active { box-shadow: 0 4px 0 #ad1457; }
         .game-emoji {
             font-size: 4.5rem;
             display: block;
@@ -133,6 +140,11 @@
                 <span class="game-emoji">🌟</span>
                 <div class="game-title">English Fun</div>
                 <div class="game-desc">ABC、字音、Sight Words 等</div>
+            </a>
+            <a href="./YUMI英文練習/" class="game-card yumi">
+                <span class="game-emoji">🌸</span>
+                <div class="game-title">YUMI 英文闖關</div>
+                <div class="game-desc">補習班課本內容複習</div>
             </a>
         </div>
         <footer>Made with ❤️ for kids</footer>
