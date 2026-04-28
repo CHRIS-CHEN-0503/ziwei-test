@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 YUMI 英文闖關</title>
+    <style>
+        :root {
+            --primary: #ab47bc;
+            --primary-dark: #6a1b9a;
+            --accent: #ec407a;
+            --accent-dark: #ad1457;
+            --success: #4caf50;
+            --error: #f44336;
+            --font-family: 'Comic Sans MS', 'PingFang TC', 'Microsoft JhengHei', cursive, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #f3e5f5 0%, #fce4ec 50%, #fff3e0 100%);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        #app {
+            background: #fff;
+            padding: 28px 22px;
+            border-radius: 36px;
+            box-shadow: 0 15px 40px rgba(106,27,154,0.18);
+            width: 100%;
+            max-width: 620px;
+            border: 8px solid #ce93d8;
+            position: relative;
+        }
+        h1 {
+            color: var(--primary-dark);
+            font-size: 2rem;
+            text-align: center;
+            margin: 6px 0 4px;
+            text-shadow: 2px 2px #fff;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 18px;
+            font-size: 1rem;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .back-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: #fff;
+            border: 3px solid #ce93d8;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--primary-dark);
+        }
+        .back-btn:hover { background: #f3e5f5; }
+
+        /* 課程列表卡片 */
+        .lesson-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: linear-gradient(145deg, #f8bbd0, #f48fb1);
+            border: 5px solid var(--accent);
+            border-radius: 28px;
+            padding: 18px 18px 16px;
+            margin: 14px 0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--accent-dark);
+            transition: transform 0.15s, box-shadow 0.15s;
+            text-align: left;
+            width: 100%;
+            font-family: inherit;
+        }
+        .lesson-card:hover { transform: translateY(-3px); box-shadow: 0 9px 0 var(--accent-dark); }
+        .lesson-card:active { transform: translateY(2px); box-shadow: 0 4px 0 var(--accent-dark); }
+        .lesson-card.purple {
+            background: linear-gradient(145deg, #e1bee7, #ce93d8);
+            border-color: var(--primary);
+            box-shadow: 0 6px 0 var(--primary-dark);
+        }
+        .lesson-card.purple:hover { box-shadow: 0 9px 0 var(--primary-dark); }
+        .lesson-card.purple:active { box-shadow: 0 4px 0 var(--primary-dark); }
+        .lesson-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+        .lesson-emoji { font-size: 2.6rem; line-height: 1; }
+        .lesson-title { font-size: 1.25rem; font-weight: bold; color: #4a148c; }
+        .lesson-sub { font-size: 0.95rem; color: #6a1b9a; margin-bottom: 6px; }
+        .lesson-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: #4a148c;
+            background: rgba(255,255,255,0.55);
+            padding: 4px 10px;
+            border-radius: 14px;
+            margin-top: 6px;
+        }
+        .lesson-progress { font-weight: bold; }
+
+        /* 關卡列表 */
+        .stage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+        @media (max-width: 480px) {
+            .stage-grid { grid-template-columns: 1fr; }
+        }
+        .stage-card {
+            background: linear-gradient(145deg, #fff9c4, #fff59d);
+            border: 4px solid #ffd54f;
+            border-radius: 22px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            font-family: inherit;
+            color: #5d4037;
+            box-shadow: 0 5px 0 #f9a825;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .stage-card:hover { transform: translateY(-2px); }
+        .stage-card:active { transform: translateY(2px); box-shadow: 0 3px 0 #f9a825; }
+        .stage-card.cleared {
+            background: linear-gradient(145deg, #c8e6c9, #a5d6a7);
+            border-color: #66bb6a;
+            box-shadow: 0 5px 0 #2e7d32;
+        }
+        .stage-card.locked {
+            background: #eceff1;
+            border-color: #b0bec5;
+            box-shadow: 0 5px 0 #78909c;
+            color: #90a4ae;
+            cursor: not-allowed;
+        }
+        .stage-emoji { font-size: 2.4rem; display: block; margin-bottom: 4px; }
+        .stage-title { font-size: 1.05rem; font-weight: bold; }
+        .stage-desc { font-size: 0.78rem; margin-top: 3px; opacity: 0.85; }
+        .stage-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ffeb3b;
+            border: 3px solid #fbc02d;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #e65100;
+        }
+        .stage-card.locked .stage-badge {
+            background: #cfd8dc;
+            border-color: #90a4ae;
+            color: #607d8b;
+        }
+        .stage-card.cleared .stage-badge {
+            background: #ffeb3b;
+            border-color: #f9a825;
+        }
+
+        /* 闖關進度 */
+        .score-box {
+            display: flex;
+            justify-content: space-between;
+            background: #f3e5f5;
+            border-radius: 26px;
+            padding: 10px 18px;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+        .score-box .star { color: #ffc107; font-size: 1.2rem; }
+        .progress-bar {
+            background: #e1bee7;
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #ba68c8, #6a1b9a);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .question-display {
+            min-height: 180px;
+            padding: 22px 14px;
+            background: radial-gradient(circle, #fff8e1 40%, transparent 70%);
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .prompt-text { font-size: 1rem; color: #555; margin-bottom: 6px; }
+        .big-emoji { font-size: 5.5rem; line-height: 1; }
+        .big-word { font-size: 2rem; font-weight: bold; color: var(--primary-dark); margin-top: 6px; }
+        .sentence-text { font-size: 1.4rem; color: #4a148c; font-weight: bold; margin: 8px 0; }
+        .heart-icon { font-size: 3rem; }
+        .speak-btn {
+            background: #fff;
+            border: 3px solid var(--primary);
+            color: var(--primary-dark);
+            border-radius: 26px;
+            padding: 7px 16px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-top: 8px;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        .speak-btn:hover { background: #f3e5f5; }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .option-btn {
+            background: #f5f5f5;
+            border: 4px solid #ddd;
+            border-radius: 18px;
+            padding: 16px 8px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            color: #333;
+            font-family: inherit;
+            min-height: 70px;
+        }
+        .option-btn:hover {
+            transform: scale(1.03);
+            background: #fff;
+            border-color: var(--primary);
+        }
+        .option-btn.correct {
+            background: var(--success);
+            color: #fff;
+            border-color: #2e7d32;
+            animation: pop 0.4s;
+        }
+        .option-btn.wrong {
+            background: var(--error);
+            color: #fff;
+            border-color: #c62828;
+            animation: shake 0.4s;
+        }
+        .option-btn:disabled { cursor: not-allowed; }
+        .option-btn .opt-emoji { font-size: 2.2rem; display: block; line-height: 1; margin-bottom: 4px; }
+        .option-btn .opt-text { font-size: 1.1rem; }
+
+        @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .animate-bounce { animation: bounce 1.4s infinite; display: inline-block; }
+
+        #feedback {
+            margin-top: 14px;
+            font-weight: bold;
+            min-height: 1.6em;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .big-btn {
+            background: linear-gradient(145deg, #ba68c8, #8e24aa);
+            color: #fff;
+            padding: 16px 26px;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark), 0 8px 14px rgba(0,0,0,0.18);
+            transition: all 0.15s;
+            font-weight: bold;
+            font-family: inherit;
+            margin: 6px 4px;
+        }
+        .big-btn:hover { transform: translateY(-2px); }
+        .big-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--primary-dark); }
+        .big-btn.pink {
+            background: linear-gradient(145deg, #f48fb1, #ec407a);
+            box-shadow: 0 6px 0 var(--accent-dark), 0 8px 14px rgba(0,0,0,0.18);
+        }
+        .big-btn.pink:active { box-shadow: 0 3px 0 var(--accent-dark); }
+        .big-btn.gray {
+            background: linear-gradient(145deg, #b0bec5, #78909c);
+            box-shadow: 0 6px 0 #455a64, 0 8px 14px rgba(0,0,0,0.18);
+        }
+
+        .result-emoji { font-size: 5rem; margin: 12px 0; text-align: center; }
+        .result-stars { font-size: 2.6rem; margin: 10px 0; text-align: center; }
+        .final-score { font-size: 1.6rem; color: var(--primary-dark); margin: 12px 0; font-weight: bold; text-align: center; }
+
+        .vocab-strip {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0 4px;
+        }
+        .vocab-pill {
+            background: #fff;
+            border: 3px solid #ce93d8;
+            border-radius: 18px;
+            padding: 6px 12px;
+            font-size: 0.95rem;
+            color: var(--primary-dark);
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .footer-info {
+            text-align: center;
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 480px) {
+            #app { padding: 22px 14px; border-radius: 28px; }
+            h1 { font-size: 1.6rem; }
+            .big-emoji { font-size: 4.2rem; }
+            .big-word { font-size: 1.6rem; }
+            .sentence-text { font-size: 1.15rem; }
+            .option-btn { font-size: 1.1rem; padding: 12px 6px; }
+            .option-btn .opt-text { font-size: 0.95rem; }
+            .big-btn { font-size: 1.1rem; padding: 13px 20px; }
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- 主畫面：課程主題列表 -->
+    <div id="lessons-screen" class="screen active">
+        <h1><span class="animate-bounce">🌸</span> YUMI 英文闖關</h1>
+        <p class="subtitle">每次補習班上完課，就來這裡破關複習～</p>
+        <div id="lessons-list"></div>
+        <p class="footer-info">每完成一個關卡，下一關就會解鎖喔！</p>
+    </div>
+
+    <!-- 關卡選擇 -->
+    <div id="stages-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('lessons-screen')">←</button>
+        <h1 id="stages-title">Unit ?</h1>
+        <p class="subtitle" id="stages-subtitle"></p>
+        <div class="vocab-strip" id="vocab-strip"></div>
+        <div class="stage-grid" id="stages-grid"></div>
+        <p class="footer-info" id="stages-date"></p>
+    </div>
+
+    <!-- 闖關畫面 -->
+    <div id="game-screen" class="screen">
+        <button class="back-btn" onclick="confirmQuit()">←</button>
+        <h1 id="game-title" style="font-size:1.4rem;margin-top:8px"></h1>
+        <div class="score-box">
+            <span>第 <span id="current-q">1</span> / <span id="total-q">5</span> 題</span>
+            <span><span class="star">⭐</span> <span id="score">0</span></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="question-display">
+            <div id="question-content"></div>
+            <button class="speak-btn" id="speak-btn" onclick="speakQuestion()">🔊 Listen</button>
+        </div>
+        <div class="options-container" id="options"></div>
+        <p id="feedback"></p>
+    </div>
+
+    <!-- 結果畫面 -->
+    <div id="result-screen" class="screen">
+        <div class="result-emoji" id="result-emoji">🎉</div>
+        <h1 id="result-title">過關！</h1>
+        <div class="result-stars" id="result-stars">⭐⭐⭐</div>
+        <p class="final-score" id="final-score-text"></p>
+        <p id="result-comment" class="subtitle" style="text-align:center"></p>
+        <div style="text-align:center">
+            <button class="big-btn" id="next-stage-btn" onclick="goNextStage()">下一關 ➡️</button>
+            <button class="big-btn pink" onclick="startGame()">再玩一次 🔁</button>
+            <button class="big-btn gray" onclick="backToStages()">回到關卡 🏠</button>
+        </div>
+    </div>
+</div>
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
