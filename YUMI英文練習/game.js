@@ -145,11 +145,15 @@ function startGame() {
 
 function buildQuestions(stage, vocab) {
     const builders = {
-        pic2word:  buildPic2Word,
-        word2pic:  buildWord2Pic,
-        listen:    buildListen,
-        like:      buildLike,
-        wantsome:  buildWantSome
+        pic2word:      buildPic2Word,
+        word2pic:      buildWord2Pic,
+        listen:        buildListen,
+        like:          buildLike,
+        wantsome:      buildWantSome,
+        speak:         buildSpeak,
+        spell:         buildSpell,
+        speakLike:     buildSpeakLike,
+        speakWantSome: buildSpeakWantSome
     };
     const fn = builders[stage.type];
     const all = [];
@@ -261,6 +265,82 @@ function buildWantSome(target, vocab) {
     };
 }
 
+// 開口說：看圖說單字
+function buildSpeak(target) {
+    return {
+        kind: 'speak',
+        prompt: '看圖片，按🎤後大聲說出英文！',
+        emoji: target.emoji,
+        targetPhrase: target.word,
+        accept: [target.word.toLowerCase()],
+        speakText: target.word
+    };
+}
+
+// 開口說：說 I like / I don't like
+function buildSpeakLike(target) {
+    const positive = Math.random() < 0.5;
+    const heart = positive ? '❤️' : '✗';
+    const phrase = positive ? `I like ${target.word}.` : `I don't like ${target.word}.`;
+    // 接受的口說（去掉標點、I 寬鬆）
+    const accept = positive
+        ? [`i like ${target.word}`.toLowerCase()]
+        : [
+            `i don't like ${target.word}`.toLowerCase(),
+            `i dont like ${target.word}`.toLowerCase(),
+            `i do not like ${target.word}`.toLowerCase()
+          ];
+    return {
+        kind: 'speak',
+        prompt: positive ? '看到 ❤️ 大聲說：' : '看到 ✗ 大聲說：',
+        emoji: target.emoji,
+        heart: heart,
+        targetPhrase: phrase,
+        accept: accept,
+        speakText: phrase
+    };
+}
+
+// 開口說：對 Do you want some 回答
+function buildSpeakWantSome(target) {
+    const wantIt = Math.random() < 0.5;
+    const phrase = wantIt ? 'Yes, please.' : 'No, thank you.';
+    const accept = wantIt
+        ? ['yes please', 'yes']
+        : ['no thank you', 'no thanks', 'no'];
+    return {
+        kind: 'speak',
+        prompt: `Do you want some ${target.word}?`,
+        emoji: target.emoji,
+        heart: wantIt ? '😋' : '🙅',
+        promptSpeak: `Do you want some ${target.word}?`,
+        targetPhrase: phrase,
+        accept: accept,
+        speakText: phrase,
+        autoSpeakPrompt: true
+    };
+}
+
+// 拼字：把字母順序排對
+function buildSpell(target) {
+    const letters = target.word.split('');
+    // 字母池：所有字母 + 額外 1~2 個誘餌字母（在較長單字才加）
+    let tiles = letters.slice();
+    if (letters.length <= 4) {
+        const extras = ['a','e','o','t','s'].filter(c => !letters.includes(c));
+        if (extras.length) tiles.push(extras[Math.floor(Math.random() * extras.length)]);
+    }
+    tiles = shuffle(tiles);
+    return {
+        kind: 'spell',
+        prompt: '把這個單字拼出來！',
+        emoji: target.emoji,
+        word: target.word,
+        tiles: tiles,
+        speakText: target.word
+    };
+}
+
 // ====== 渲染題目 ======
 function renderQuestion() {
     const q = questions[currentIdx];
@@ -268,21 +348,33 @@ function renderQuestion() {
     document.getElementById('progress-fill').style.width =
         `${(currentIdx / questions.length) * 100}%`;
     document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').style.color = '';
     const qContent = document.getElementById('question-content');
-    qContent.innerHTML = `<div class="prompt-text">${q.prompt}</div>${q.display}`;
-
     const optsBox = document.getElementById('options');
+    const speakBtn = document.getElementById('speak-btn');
     optsBox.innerHTML = '';
+
+    // 派發到對應 renderer
+    if (q.kind === 'speak') {
+        renderSpeak(q, qContent, optsBox, speakBtn);
+    } else if (q.kind === 'spell') {
+        renderSpell(q, qContent, optsBox, speakBtn);
+    } else {
+        renderOptions(q, qContent, optsBox, speakBtn);
+    }
+}
+
+function renderOptions(q, qContent, optsBox, speakBtn) {
+    speakBtn.style.display = '';
+    qContent.innerHTML = `<div class="prompt-text">${q.prompt}</div>${q.display}`;
+    optsBox.style.display = 'grid';
     optsBox.style.gridTemplateColumns = q.options.length === 2 ? '1fr 1fr' : '1fr 1fr';
     q.options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        if (q.layout === 'emoji') {
-            btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span><span class="opt-text">${opt.text}</span>`;
-        } else if (q.layout === 'sentence-emoji') {
+        if (q.layout === 'emoji' || q.layout === 'sentence-emoji') {
             btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span><span class="opt-text">${opt.text}</span>`;
         } else if (q.layout === 'sentence') {
-            btn.style.fontSize = '1rem';
             btn.innerHTML = `<span class="opt-text" style="font-size:1rem">${opt.text}</span>`;
         } else {
             btn.innerHTML = `<span class="opt-text">${opt.text}</span>`;
@@ -290,8 +382,254 @@ function renderQuestion() {
         btn.onclick = () => answer(btn, opt);
         optsBox.appendChild(btn);
     });
-
     if (q.autoSpeak) setTimeout(speakQuestion, 350);
+}
+
+// ====== 開口說渲染 ======
+function renderSpeak(q, qContent, optsBox, speakBtn) {
+    speakBtn.style.display = 'none';
+    optsBox.style.display = 'none';
+    const heart = q.heart ? `<div class="heart-icon">${q.heart}</div>` : '';
+    qContent.innerHTML = `
+        <div class="prompt-text">${q.prompt}</div>
+        <div class="big-emoji">${q.emoji}</div>
+        ${heart}
+        <div class="target-phrase" id="target-phrase">${q.targetPhrase}</div>
+        <div class="speak-area">
+            <button class="mic-btn" id="mic-btn" onclick="onMicTap()">🎤</button>
+            <div class="speak-hint" id="speak-hint">點麥克風開始說</div>
+            <div class="transcript-box" id="transcript-box">　</div>
+            <div class="speak-actions">
+                <button class="small-btn" onclick="speakTarget()">🔊 聽範例</button>
+                <button class="small-btn warn" onclick="markSelfSaid()">我說過了 ✓</button>
+                <button class="small-btn warn" onclick="skipSpeak()">跳過</button>
+            </div>
+        </div>
+    `;
+    if (q.autoSpeakPrompt && q.promptSpeak) setTimeout(() => speak(q.promptSpeak), 300);
+}
+
+function speakTarget() {
+    const q = questions[currentIdx];
+    if (q && q.speakText) speak(q.speakText);
+}
+
+let recognizer = null;
+function onMicTap() {
+    const q = questions[currentIdx];
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('mic-btn');
+    const hint = document.getElementById('speak-hint');
+    const tBox = document.getElementById('transcript-box');
+    if (!SR) {
+        hint.textContent = '這個瀏覽器不支援語音辨識，按「我說過了 ✓」自己確認唸完囉～';
+        tBox.textContent = '（建議使用 Chrome / Safari）';
+        return;
+    }
+    if (recognizer) {
+        try { recognizer.abort(); } catch (e) {}
+        recognizer = null;
+    }
+    try {
+        recognizer = new SR();
+        recognizer.lang = 'en-US';
+        recognizer.interimResults = false;
+        recognizer.maxAlternatives = 5;
+        micBtn.classList.add('listening');
+        micBtn.disabled = true;
+        hint.textContent = '聽我說…大聲一點唷！🎙️';
+        tBox.className = 'transcript-box';
+        tBox.textContent = '　';
+        recognizer.onresult = (ev) => {
+            const alts = [];
+            for (let i = 0; i < ev.results[0].length; i++) {
+                alts.push(ev.results[0][i].transcript);
+            }
+            const heard = alts[0] || '';
+            tBox.textContent = '👂 我聽到：' + heard;
+            const ok = alts.some(a => matchPhrase(a, q.accept));
+            handleSpeakResult(ok, heard);
+        };
+        recognizer.onerror = (ev) => {
+            micBtn.classList.remove('listening');
+            micBtn.disabled = false;
+            if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+                hint.textContent = '需要允許麥克風權限才能聽喔！';
+            } else if (ev.error === 'no-speech') {
+                hint.textContent = '沒聽到聲音，再試一次！';
+            } else {
+                hint.textContent = '出錯了：' + ev.error + '，再按麥克風試試';
+            }
+        };
+        recognizer.onend = () => {
+            micBtn.classList.remove('listening');
+            micBtn.disabled = false;
+        };
+        recognizer.start();
+    } catch (e) {
+        micBtn.classList.remove('listening');
+        micBtn.disabled = false;
+        hint.textContent = '無法啟動麥克風，按「我說過了 ✓」自己確認囉';
+    }
+}
+
+function normalizePhrase(s) {
+    return (s || '')
+        .toLowerCase()
+        .replace(/[.,!?'"’]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+function matchPhrase(transcript, accepts) {
+    const t = normalizePhrase(transcript);
+    return accepts.some(a => {
+        const target = normalizePhrase(a);
+        if (t === target) return true;
+        if (t.includes(target)) return true;
+        // 對單字題：transcript 含關鍵字即可
+        const tw = t.split(' ');
+        const aw = target.split(' ');
+        if (aw.length === 1) return tw.includes(aw[0]);
+        return aw.every(w => tw.includes(w));
+    });
+}
+
+function handleSpeakResult(ok, heard) {
+    const tBox = document.getElementById('transcript-box');
+    const hint = document.getElementById('speak-hint');
+    if (ok) {
+        tBox.classList.add('match');
+        hint.textContent = '✅ 唸得很棒！';
+        score++;
+        document.getElementById('score').textContent = score;
+        document.getElementById('feedback').textContent = '✅ Great speaking!';
+        document.getElementById('feedback').style.color = '#2e7d32';
+        setTimeout(advance, 1100);
+    } else {
+        tBox.classList.add('miss');
+        hint.textContent = '差一點！按範例聽一下，再試一次～';
+        document.getElementById('feedback').textContent = '再聽一次「' + (questions[currentIdx].targetPhrase) + '」試試';
+        document.getElementById('feedback').style.color = '#c62828';
+    }
+}
+
+function markSelfSaid() {
+    // 信任小朋友/家長，記為答對
+    score++;
+    document.getElementById('score').textContent = score;
+    document.getElementById('feedback').textContent = '👍 好棒！';
+    document.getElementById('feedback').style.color = '#2e7d32';
+    setTimeout(advance, 700);
+}
+function skipSpeak() {
+    document.getElementById('feedback').textContent = '已跳過這題';
+    document.getElementById('feedback').style.color = '#888';
+    setTimeout(advance, 500);
+}
+
+// ====== 拼字渲染 ======
+let spellCurrent = '';
+function renderSpell(q, qContent, optsBox, speakBtn) {
+    speakBtn.style.display = '';
+    optsBox.style.display = 'none';
+    spellCurrent = '';
+    const slots = q.word.split('').map((_, i) => `<div class="spell-slot" data-i="${i}"></div>`).join('');
+    const tiles = q.tiles.map((c, i) =>
+        `<button class="spell-tile" data-i="${i}" onclick="onSpellTile(${i})">${c}</button>`
+    ).join('');
+    qContent.innerHTML = `
+        <div class="prompt-text">${q.prompt}</div>
+        <div class="spell-target">${q.emoji}</div>
+        <div class="big-word" style="font-size:1.4rem">${q.word.length} letters</div>
+        <div class="spell-slots" id="spell-slots">${slots}</div>
+        <div class="spell-tiles" id="spell-tiles">${tiles}</div>
+        <div class="spell-actions">
+            <button class="small-btn" onclick="undoSpell()">⌫ 退一格</button>
+            <button class="small-btn" onclick="clearSpell()">清空</button>
+        </div>
+    `;
+}
+
+function onSpellTile(i) {
+    const q = questions[currentIdx];
+    if (spellCurrent.length >= q.word.length) return;
+    const tileBtn = document.querySelector(`#spell-tiles .spell-tile[data-i="${i}"]`);
+    if (!tileBtn || tileBtn.classList.contains('used')) return;
+    const letter = q.tiles[i];
+    spellCurrent += letter;
+    tileBtn.classList.add('used');
+    tileBtn.disabled = true;
+    tileBtn.dataset.placedAt = spellCurrent.length - 1;
+    const slot = document.querySelector(`#spell-slots .spell-slot[data-i="${spellCurrent.length - 1}"]`);
+    if (slot) {
+        slot.textContent = letter;
+        slot.classList.add('filled');
+    }
+    if (spellCurrent.length === q.word.length) checkSpell();
+}
+
+function undoSpell() {
+    const q = questions[currentIdx];
+    if (!spellCurrent.length) return;
+    const idx = spellCurrent.length - 1;
+    spellCurrent = spellCurrent.slice(0, -1);
+    const slot = document.querySelector(`#spell-slots .spell-slot[data-i="${idx}"]`);
+    if (slot) {
+        slot.textContent = '';
+        slot.classList.remove('filled', 'correct', 'wrong');
+    }
+    const tileBtn = document.querySelector(`#spell-tiles .spell-tile.used[data-placed-at="${idx}"]`);
+    if (tileBtn) {
+        tileBtn.classList.remove('used');
+        tileBtn.disabled = false;
+        delete tileBtn.dataset.placedAt;
+    }
+}
+function clearSpell() {
+    const q = questions[currentIdx];
+    spellCurrent = '';
+    document.querySelectorAll('#spell-slots .spell-slot').forEach(s => {
+        s.textContent = '';
+        s.classList.remove('filled', 'correct', 'wrong');
+    });
+    document.querySelectorAll('#spell-tiles .spell-tile').forEach(t => {
+        t.classList.remove('used');
+        t.disabled = false;
+        delete t.dataset.placedAt;
+    });
+}
+
+function checkSpell() {
+    const q = questions[currentIdx];
+    const slots = document.querySelectorAll('#spell-slots .spell-slot');
+    const ok = spellCurrent.toLowerCase() === q.word.toLowerCase();
+    if (ok) {
+        slots.forEach(s => s.classList.add('correct'));
+        score++;
+        document.getElementById('score').textContent = score;
+        document.getElementById('feedback').textContent = '✅ 拼對了！' + q.word;
+        document.getElementById('feedback').style.color = '#2e7d32';
+        speak(q.word);
+        setTimeout(advance, 1300);
+    } else {
+        slots.forEach(s => s.classList.add('wrong'));
+        document.getElementById('feedback').textContent = '差一點～再試一次';
+        document.getElementById('feedback').style.color = '#c62828';
+        // 讓孩子自己重來：清空後重排
+        setTimeout(() => {
+            clearSpell();
+            document.getElementById('feedback').textContent = '';
+        }, 1100);
+    }
+}
+
+function advance() {
+    currentIdx++;
+    if (currentIdx >= questions.length) {
+        finishStage();
+    } else {
+        renderQuestion();
+    }
 }
 
 function answer(btn, opt) {
@@ -314,14 +652,7 @@ function answer(btn, opt) {
         document.getElementById('feedback').textContent = '❌ 答案是：' + (q.options.find(o => o.isCorrect).text);
         document.getElementById('feedback').style.color = '#c62828';
     }
-    setTimeout(() => {
-        currentIdx++;
-        if (currentIdx >= questions.length) {
-            finishStage();
-        } else {
-            renderQuestion();
-        }
-    }, opt.isCorrect ? 1100 : 1700);
+    setTimeout(advance, opt.isCorrect ? 1100 : 1700);
 }
 
 function speakQuestion() {
