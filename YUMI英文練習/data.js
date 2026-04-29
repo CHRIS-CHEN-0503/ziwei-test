@@ -43,12 +43,36 @@ const LESSONS = [
                 type: 'listen'
             },
             {
+                id: 'speak',
+                title: '看圖說單字',
+                emoji: '🎤',
+                desc: '看圖片大聲說英文',
+                instruction: '按🎤後大聲說出單字！',
+                type: 'speak'
+            },
+            {
+                id: 'spell',
+                title: '排字母',
+                emoji: '🧩',
+                desc: '依序點字母拼出單字',
+                instruction: '依序點字母拼出英文單字',
+                type: 'spell'
+            },
+            {
                 id: 'like',
                 title: 'I like / I don\'t like',
                 emoji: '❤️',
-                desc: '看❤️或✗說出喜不喜歡',
+                desc: '看❤️或✗選句子',
                 instruction: '看到 ❤️ 就用 I like ~，看到 ✗ 就用 I don\'t like ~',
                 type: 'like'
+            },
+            {
+                id: 'speakLike',
+                title: '說 I like',
+                emoji: '💖',
+                desc: '說出整句喜不喜歡',
+                instruction: '看到 ❤️ 大聲說 I like ~，看到 ✗ 說 I don\'t like ~',
+                type: 'speakLike'
             },
             {
                 id: 'wantsome',
@@ -57,6 +81,14 @@ const LESSONS = [
                 desc: '禮貌回答 Yes / No',
                 instruction: 'Do you want some ~? 想要選 Yes, please. 不要選 No, thank you.',
                 type: 'wantsome'
+            },
+            {
+                id: 'speakWantSome',
+                title: '開口回答',
+                emoji: '💬',
+                desc: '用嘴巴回答想不想要',
+                instruction: '聽到問題後說 Yes, please. 或 No, thank you.',
+                type: 'speakWantSome'
             }
         ]
     }
