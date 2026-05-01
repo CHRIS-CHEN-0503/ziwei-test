@@ -1,5 +1,7 @@
 // ====== 狀態 ======
-let currentLesson = null;
+let currentSuperUnit = null;
+let currentUnit = null;
+let currentSection = null;   // 過去叫 currentLesson；現在是「節」
 let currentStage = null;
 let questions = [];
 let currentIdx = 0;
@@ -8,7 +10,8 @@ const QUESTIONS_PER_STAGE = 5;
 const PASS_THRESHOLD = 4; // 5 題答對 4 題以上算過關
 
 // ====== 進度（localStorage） ======
-const PROGRESS_KEY = 'yumi_english_progress_v1';
+// 結構：progress[superUnitId][unitId][sectionId][stageId] = { stars, at }
+const PROGRESS_KEY = 'yumi_english_progress_v2';
 function loadProgress() {
     try {
         return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {};
@@ -17,21 +20,42 @@ function loadProgress() {
 function saveProgress(p) {
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
 }
-function isStageCleared(lessonId, stageId) {
+function isStageCleared(suId, uId, secId, stId) {
     const p = loadProgress();
-    return !!(p[lessonId] && p[lessonId][stageId]);
+    return !!(p[suId] && p[suId][uId] && p[suId][uId][secId] && p[suId][uId][secId][stId]);
 }
-function markStageCleared(lessonId, stageId, stars) {
+function markStageCleared(suId, uId, secId, stId, stars) {
     const p = loadProgress();
-    if (!p[lessonId]) p[lessonId] = {};
-    const prev = p[lessonId][stageId] || { stars: 0 };
-    p[lessonId][stageId] = { stars: Math.max(prev.stars || 0, stars), at: new Date().toISOString() };
+    if (!p[suId]) p[suId] = {};
+    if (!p[suId][uId]) p[suId][uId] = {};
+    if (!p[suId][uId][secId]) p[suId][uId][secId] = {};
+    const prev = p[suId][uId][secId][stId] || { stars: 0 };
+    p[suId][uId][secId][stId] = {
+        stars: Math.max(prev.stars || 0, stars),
+        at: new Date().toISOString()
+    };
     saveProgress(p);
 }
-function lessonClearedCount(lesson) {
-    const p = loadProgress();
-    if (!p[lesson.id]) return 0;
-    return lesson.stages.filter(s => p[lesson.id][s.id]).length;
+function sectionStats(section, suId, uId) {
+    const total = section.stages.length;
+    const cleared = section.stages.filter(s => isStageCleared(suId, uId, section.id, s.id)).length;
+    return { total, cleared, done: total > 0 && cleared === total };
+}
+function unitStats(unit, suId) {
+    let total = 0, cleared = 0;
+    unit.sections.forEach(sec => {
+        const s = sectionStats(sec, suId, unit.id);
+        total += s.total; cleared += s.cleared;
+    });
+    return { total, cleared, done: total > 0 && cleared === total };
+}
+function superUnitStats(su) {
+    let total = 0, cleared = 0;
+    su.units.forEach(u => {
+        const s = unitStats(u, su.id);
+        total += s.total; cleared += s.cleared;
+    });
+    return { total, cleared, done: total > 0 && cleared === total };
 }
 
 // ====== 工具 ======
@@ -51,48 +75,135 @@ function showScreen(id) {
     document.getElementById(id).classList.add('active');
 }
 
-// ====== 主畫面：列出課程 ======
-function renderLessons() {
-    const list = document.getElementById('lessons-list');
+// ====== 首頁：大單元列表 ======
+function renderSuperUnits() {
+    const list = document.getElementById('superunits-list');
     list.innerHTML = '';
-    if (!LESSONS.length) {
-        list.innerHTML = '<p class="subtitle">還沒有課程，上完課再來吧！</p>';
+    if (!SUPER_UNITS.length) {
+        list.innerHTML = '<p class="subtitle">還沒有大單元，上完課再來吧！</p>';
         return;
     }
-    LESSONS.forEach(lesson => {
-        const cleared = lessonClearedCount(lesson);
-        const total = lesson.stages.length;
-        const done = cleared === total;
+    SUPER_UNITS.forEach(su => {
+        const stats = superUnitStats(su);
         const card = document.createElement('button');
-        card.className = 'lesson-card ' + (lesson.color || '');
-        card.onclick = () => openLesson(lesson.id);
+        card.className = 'lesson-card ' + (su.color || '');
+        card.onclick = () => openSuperUnit(su.id);
         card.innerHTML = `
             <div class="lesson-head">
-                <span class="lesson-emoji">${lesson.emoji || '📘'}</span>
+                <span class="lesson-emoji">${su.emoji || '📚'}</span>
                 <div>
-                    <div class="lesson-title">${lesson.title}</div>
+                    <div class="lesson-title">${su.title}</div>
                 </div>
             </div>
-            <div class="lesson-sub">${lesson.subtitle || ''}</div>
+            <div class="lesson-sub">${su.subtitle || ''}</div>
             <div class="lesson-meta">
-                <span>📅 更新：${lesson.date}</span>
-                <span class="lesson-progress">${done ? '✨ 全破關' : `闖關 ${cleared}/${total}`}</span>
+                <span>📁 ${su.units.length} 個單元</span>
+                <span class="lesson-progress">${stats.done ? '✨ 全破關' : `關卡 ${stats.cleared}/${stats.total}`}</span>
             </div>
         `;
         list.appendChild(card);
     });
 }
 
-function openLesson(lessonId) {
-    currentLesson = LESSONS.find(l => l.id === lessonId);
-    if (!currentLesson) return;
-    document.getElementById('stages-title').textContent = currentLesson.title;
-    document.getElementById('stages-subtitle').textContent = currentLesson.subtitle || '';
-    document.getElementById('stages-date').textContent = '📅 更新日期：' + currentLesson.date;
+function openSuperUnit(suId) {
+    currentSuperUnit = SUPER_UNITS.find(s => s.id === suId);
+    if (!currentSuperUnit) return;
+    document.getElementById('units-title').textContent = currentSuperUnit.title;
+    document.getElementById('units-subtitle').textContent = currentSuperUnit.subtitle || '';
+    renderUnits();
+    showScreen('units-screen');
+}
+
+// ====== 單元列表 ======
+function renderUnits() {
+    const list = document.getElementById('units-list');
+    list.innerHTML = '';
+    // 依日期排序（新的在上面）
+    const units = currentSuperUnit.units.slice().sort((a, b) =>
+        (b.date || '').localeCompare(a.date || ''));
+    units.forEach(u => {
+        const stats = unitStats(u, currentSuperUnit.id);
+        const card = document.createElement('button');
+        card.className = 'lesson-card ' + (u.color || '');
+        card.onclick = () => openUnit(u.id);
+        const sectionsLabel = u.sections.length > 1 ? `🗂️ ${u.sections.length} 節` : '';
+        card.innerHTML = `
+            <div class="lesson-head">
+                <span class="lesson-emoji">${u.emoji || '📘'}</span>
+                <div>
+                    <div class="lesson-title">${u.title}</div>
+                </div>
+            </div>
+            <div class="lesson-sub">${u.subtitle || ''}</div>
+            <div class="lesson-meta">
+                <span>📅 ${u.date}${sectionsLabel ? ' · ' + sectionsLabel : ''}</span>
+                <span class="lesson-progress">${stats.done ? '✨ 全破關' : `關卡 ${stats.cleared}/${stats.total}`}</span>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function openUnit(uId) {
+    currentUnit = currentSuperUnit.units.find(u => u.id === uId);
+    if (!currentUnit) return;
+    // 只有一節 → 直接進關卡列表，不顯示節選單
+    if (currentUnit.sections.length === 1) {
+        openSection(currentUnit.sections[0].id, /* fromUnit */ true);
+        return;
+    }
+    document.getElementById('sections-breadcrumb').textContent =
+        `${currentSuperUnit.title} › ${currentUnit.title}`;
+    document.getElementById('sections-title').textContent = currentUnit.title;
+    document.getElementById('sections-subtitle').textContent = currentUnit.subtitle || '';
+    document.getElementById('sections-date').textContent = '📅 更新日期：' + currentUnit.date;
+    renderSections();
+    showScreen('sections-screen');
+}
+
+// ====== 節列表 ======
+function renderSections() {
+    const list = document.getElementById('sections-list');
+    list.innerHTML = '';
+    currentUnit.sections.forEach(sec => {
+        const stats = sectionStats(sec, currentSuperUnit.id, currentUnit.id);
+        const card = document.createElement('button');
+        card.className = 'lesson-card';
+        card.onclick = () => openSection(sec.id);
+        card.innerHTML = `
+            <div class="lesson-head">
+                <span class="lesson-emoji">${sec.emoji || '📖'}</span>
+                <div>
+                    <div class="lesson-title">${sec.title}</div>
+                </div>
+            </div>
+            <div class="lesson-sub">${sec.subtitle || ''}</div>
+            <div class="lesson-meta">
+                <span>📚 ${stats.total} 關</span>
+                <span class="lesson-progress">${stats.done ? '✨ 全破關' : `關卡 ${stats.cleared}/${stats.total}`}</span>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function openSection(secId, fromUnit) {
+    currentSection = currentUnit.sections.find(s => s.id === secId);
+    if (!currentSection) return;
+    // 麵包屑
+    const breadcrumb = currentUnit.sections.length > 1
+        ? `${currentSuperUnit.title} › ${currentUnit.title} › ${currentSection.title}`
+        : `${currentSuperUnit.title} › ${currentUnit.title}`;
+    document.getElementById('stages-breadcrumb').textContent = breadcrumb;
+    document.getElementById('stages-title').textContent = currentSection.title;
+    document.getElementById('stages-subtitle').textContent = currentSection.subtitle || '';
+    document.getElementById('stages-date').textContent = '📅 更新日期：' + currentUnit.date;
     const strip = document.getElementById('vocab-strip');
-    strip.innerHTML = currentLesson.vocab.map(v =>
+    strip.innerHTML = currentSection.vocab.map(v =>
         `<span class="vocab-pill">${v.emoji} ${v.word}</span>`
     ).join('');
+    // 紀錄是不是直接從 unit-screen 跳過來的（單一節時）
+    currentSection._fromUnit = !!fromUnit;
     renderStages();
     showScreen('stages-screen');
 }
@@ -100,9 +211,11 @@ function openLesson(lessonId) {
 function renderStages() {
     const grid = document.getElementById('stages-grid');
     grid.innerHTML = '';
-    currentLesson.stages.forEach((stage, idx) => {
-        const cleared = isStageCleared(currentLesson.id, stage.id);
-        const prevCleared = idx === 0 || isStageCleared(currentLesson.id, currentLesson.stages[idx - 1].id);
+    const stages = currentSection.stages;
+    stages.forEach((stage, idx) => {
+        const cleared = isStageCleared(currentSuperUnit.id, currentUnit.id, currentSection.id, stage.id);
+        const prevCleared = idx === 0 ||
+            isStageCleared(currentSuperUnit.id, currentUnit.id, currentSection.id, stages[idx - 1].id);
         const locked = !cleared && !prevCleared;
         const card = document.createElement('button');
         card.className = 'stage-card' + (cleared ? ' cleared' : '') + (locked ? ' locked' : '');
@@ -119,6 +232,15 @@ function renderStages() {
     });
 }
 
+function backFromStages() {
+    // 多節 → 回節選單；單節 → 回單元列表
+    if (currentSection && !currentSection._fromUnit) {
+        showScreen('sections-screen');
+    } else {
+        showScreen('units-screen');
+    }
+}
+
 function backToStages() {
     renderStages();
     showScreen('stages-screen');
@@ -126,7 +248,7 @@ function backToStages() {
 
 // ====== 出題 ======
 function startStage(stageId) {
-    currentStage = currentLesson.stages.find(s => s.id === stageId);
+    currentStage = currentSection.stages.find(s => s.id === stageId);
     startGame();
 }
 
@@ -136,7 +258,7 @@ function startGame() {
     document.getElementById('feedback').textContent = '';
     document.getElementById('game-title').textContent =
         `${currentStage.emoji} ${currentStage.title}`;
-    questions = buildQuestions(currentStage, currentLesson.vocab);
+    questions = buildQuestions(currentStage, currentSection.vocab);
     document.getElementById('total-q').textContent = questions.length;
     document.getElementById('score').textContent = '0';
     showScreen('game-screen');
@@ -732,24 +854,24 @@ function finishStage() {
     document.getElementById('result-comment').textContent = comment;
 
     if (passed) {
-        markStageCleared(currentLesson.id, currentStage.id, stars);
+        markStageCleared(currentSuperUnit.id, currentUnit.id, currentSection.id, currentStage.id, stars);
     }
 
     // 下一關按鈕：只有過關 + 還有下一關才顯示
     const nextBtn = document.getElementById('next-stage-btn');
-    const idx = currentLesson.stages.findIndex(s => s.id === currentStage.id);
-    const hasNext = passed && idx < currentLesson.stages.length - 1;
+    const idx = currentSection.stages.findIndex(s => s.id === currentStage.id);
+    const hasNext = passed && idx < currentSection.stages.length - 1;
     nextBtn.style.display = hasNext ? '' : 'none';
 
     showScreen('result-screen');
 }
 
 function goNextStage() {
-    const idx = currentLesson.stages.findIndex(s => s.id === currentStage.id);
-    const next = currentLesson.stages[idx + 1];
+    const idx = currentSection.stages.findIndex(s => s.id === currentStage.id);
+    const next = currentSection.stages[idx + 1];
     if (next) startStage(next.id);
     else backToStages();
 }
 
 // ====== 啟動 ======
-document.addEventListener('DOMContentLoaded', renderLessons);
+document.addEventListener('DOMContentLoaded', renderSuperUnits);
