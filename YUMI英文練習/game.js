@@ -153,7 +153,9 @@ function buildQuestions(stage, vocab) {
         speak:         buildSpeak,
         spell:         buildSpell,
         speakLike:     buildSpeakLike,
-        speakWantSome: buildSpeakWantSome
+        speakWantSome: buildSpeakWantSome,
+        iwant:         buildIWant,
+        speakIWant:    buildSpeakIWant
     };
     const fn = builders[stage.type];
     const all = [];
@@ -318,6 +320,34 @@ function buildSpeakWantSome(target) {
         accept: accept,
         speakText: phrase,
         autoSpeakPrompt: true
+    };
+}
+
+// I want some ___：看圖選出對的食物填空
+function buildIWant(target, vocab) {
+    const others = pickOthers(vocab, target, 1);
+    const opts = shuffle([target, ...others]).map(v => ({
+        text: v.word, emoji: v.emoji, isCorrect: v.word === target.word
+    }));
+    return {
+        prompt: 'I want some ___ .',
+        display: `<div class="big-emoji">${target.emoji}</div>
+                  <div class="sentence-text">I want some ___ .</div>`,
+        speakText: `I want some ${target.word}.`,
+        options: opts,
+        layout: 'emoji'
+    };
+}
+
+// 開口說：I want some [食物]
+function buildSpeakIWant(target) {
+    return {
+        kind: 'speak',
+        prompt: '看圖大聲說：',
+        emoji: target.emoji,
+        targetPhrase: `I want some ${target.word}.`,
+        accept: [`i want some ${target.word}`.toLowerCase()],
+        speakText: `I want some ${target.word}.`
     };
 }
 

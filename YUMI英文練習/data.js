@@ -91,6 +91,60 @@ const LESSONS = [
                 type: 'speakWantSome'
             }
         ]
+    },
+    {
+        id: 'unit2-iwant',
+        title: 'Unit 2 L3-L4 - I want some...',
+        subtitle: '想吃想喝什麼？學會用 I want some ~',
+        emoji: '🍰',
+        date: '2026-04-30',
+        color: 'pink',
+        vocab: [
+            { word: 'cake',       emoji: '🍰', zh: '蛋糕' },
+            { word: 'honey',      emoji: '🍯', zh: '蜂蜜' },
+            { word: 'juice',      emoji: '🧃', zh: '果汁' },
+            { word: 'pasta',      emoji: '🍝', zh: '義大利麵' },
+            { word: 'fruit',      emoji: '🍎', zh: '水果' },
+            { word: 'milk',       emoji: '🥛', zh: '牛奶' },
+            { word: 'peas',       emoji: '🟢', zh: '豌豆' },
+            { word: 'meat',       emoji: '🍗', zh: '肉' },
+            { word: 'beans',      emoji: '🫘', zh: '豆子' },
+            { word: 'vegetables', emoji: '🥦', zh: '蔬菜' }
+        ],
+        stages: [
+            { id: 'pic2word',   title: '看圖選字',   emoji: '🖼️', desc: '看圖選英文',           type: 'pic2word' },
+            { id: 'word2pic',   title: '看字選圖',   emoji: '🔤', desc: '看英文選圖',           type: 'word2pic' },
+            { id: 'listen',     title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖',           type: 'listen' },
+            { id: 'speak',      title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說',           type: 'speak' },
+            { id: 'spell',      title: '排字母',     emoji: '🧩', desc: '依序排字母',           type: 'spell' },
+            { id: 'iwant',      title: '我想要…',    emoji: '🍽️', desc: 'I want some ___',     type: 'iwant' },
+            { id: 'speakIWant', title: '開口說 I want', emoji: '💬', desc: '說 I want some ~',  type: 'speakIWant' }
+        ]
+    },
+    {
+        id: 'phonics-ea',
+        title: 'Easy EA Words 字音練習',
+        subtitle: 'ea 字母組合的長音 /iː/',
+        emoji: '🌈',
+        date: '2026-04-30',
+        color: 'purple',
+        vocab: [
+            { word: 'leaf',  emoji: '🍃', zh: '葉子' },
+            { word: 'seal',  emoji: '🦭', zh: '海豹' },
+            { word: 'beach', emoji: '🏖️', zh: '海灘' },
+            { word: 'meat',  emoji: '🍗', zh: '肉' },
+            { word: 'peach', emoji: '🍑', zh: '桃子' },
+            { word: 'read',  emoji: '📖', zh: '讀' },
+            { word: 'leap',  emoji: '🤸', zh: '跳' },
+            { word: 'meal',  emoji: '🍱', zh: '一餐' }
+        ],
+        stages: [
+            { id: 'pic2word', title: '看圖選字',   emoji: '🖼️', desc: '看圖選英文',  type: 'pic2word' },
+            { id: 'word2pic', title: '看字選圖',   emoji: '🔤', desc: '看英文選圖',  type: 'word2pic' },
+            { id: 'listen',   title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖',  type: 'listen' },
+            { id: 'speak',    title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說',  type: 'speak' },
+            { id: 'spell',    title: '排字母',     emoji: '🧩', desc: '依序排字母',  type: 'spell' }
+        ]
     }
     // 之後上完課再 push 新的 lesson 物件到這個陣列
 ];
