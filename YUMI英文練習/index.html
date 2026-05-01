@@ -513,17 +513,37 @@
 </head>
 <body>
 <div id="app">
-    <!-- 主畫面：課程主題列表 -->
-    <div id="lessons-screen" class="screen active">
+    <!-- 首頁：大單元列表 -->
+    <div id="home-screen" class="screen active">
         <h1><span class="animate-bounce">🌸</span> YUMI 英文闖關</h1>
-        <p class="subtitle">每次補習班上完課，就來這裡破關複習～</p>
-        <div id="lessons-list"></div>
-        <p class="footer-info">每完成一個關卡，下一關就會解鎖喔！</p>
+        <p class="subtitle">每次上完課就來這裡破關複習～</p>
+        <div id="superunits-list"></div>
+        <p class="footer-info">選一個大單元開始吧！</p>
+    </div>
+
+    <!-- 單元列表（一個大單元下，每次上課一個單元） -->
+    <div id="units-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('home-screen')">←</button>
+        <h1 id="units-title">ST3</h1>
+        <p class="subtitle" id="units-subtitle"></p>
+        <div id="units-list"></div>
+        <p class="footer-info">每次上課新增一個單元，按日期排序</p>
+    </div>
+
+    <!-- 節列表（單元裡的不同主題；只有一節時自動跳過此畫面） -->
+    <div id="sections-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('units-screen')">←</button>
+        <p class="subtitle" id="sections-breadcrumb"></p>
+        <h1 id="sections-title">單元</h1>
+        <p class="subtitle" id="sections-subtitle"></p>
+        <div id="sections-list"></div>
+        <p class="footer-info" id="sections-date"></p>
     </div>
 
     <!-- 關卡選擇 -->
     <div id="stages-screen" class="screen">
-        <button class="back-btn" onclick="showScreen('lessons-screen')">←</button>
+        <button class="back-btn" onclick="backFromStages()">←</button>
+        <p class="subtitle" id="stages-breadcrumb"></p>
         <h1 id="stages-title">Unit ?</h1>
         <p class="subtitle" id="stages-subtitle"></p>
         <div class="vocab-strip" id="vocab-strip"></div>
