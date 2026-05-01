@@ -445,19 +445,19 @@ function buildSpeakWantSome(target) {
     };
 }
 
-// I want some ___：看圖選出對的食物填空
+// I want some ___：看圖選出對的食物填空（題目給圖，選項只顯示英文，練習填空）
 function buildIWant(target, vocab) {
     const others = pickOthers(vocab, target, 1);
     const opts = shuffle([target, ...others]).map(v => ({
-        text: v.word, emoji: v.emoji, isCorrect: v.word === target.word
+        text: v.word, isCorrect: v.word === target.word
     }));
     return {
         prompt: 'I want some ___ .',
         display: `<div class="big-emoji">${target.emoji}</div>
                   <div class="sentence-text">I want some ___ .</div>`,
         speakText: `I want some ${target.word}.`,
-        options: opts,
-        layout: 'emoji'
+        options: opts
+        // 不指定 layout → 落入預設純文字選項
     };
 }
 
@@ -524,7 +524,10 @@ function renderOptions(q, qContent, optsBox, speakBtn) {
     q.options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        if (q.layout === 'emoji' || q.layout === 'sentence-emoji') {
+        if (q.layout === 'emoji') {
+            // 純圖：避免題目已經給字、選項又標字導致變成單純對字
+            btn.innerHTML = `<span class="opt-emoji" style="font-size:3.4rem;display:block;margin:0">${opt.emoji}</span>`;
+        } else if (q.layout === 'sentence-emoji') {
             btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span><span class="opt-text">${opt.text}</span>`;
         } else if (q.layout === 'sentence') {
             btn.innerHTML = `<span class="opt-text" style="font-size:1rem">${opt.text}</span>`;
