@@ -430,8 +430,8 @@ function buildSpeakWantSome(target) {
     const wantIt = Math.random() < 0.5;
     const phrase = wantIt ? 'Yes, please.' : 'No, thank you.';
     const accept = wantIt
-        ? ['yes please', 'yes']
-        : ['no thank you', 'no thanks', 'no'];
+        ? ['yes please']
+        : ['no thank you', 'no thanks'];
     return {
         kind: 'speak',
         prompt: `Do you want some ${target.word}?`,
@@ -637,15 +637,27 @@ function normalizePhrase(s) {
 }
 function matchPhrase(transcript, accepts) {
     const t = normalizePhrase(transcript);
+    if (!t) return false;
+    const tw = t.split(' ');
     return accepts.some(a => {
         const target = normalizePhrase(a);
-        if (t === target) return true;
-        if (t.includes(target)) return true;
-        // 對單字題：transcript 含關鍵字即可
-        const tw = t.split(' ');
+        if (!target) return false;
         const aw = target.split(' ');
-        if (aw.length === 1) return tw.includes(aw[0]);
-        return aw.every(w => tw.includes(w));
+        if (aw.length === 1) {
+            // 單字題：要求 transcript 中包含該字（完整 token，避免 'an' 配到 'banana'）
+            return tw.includes(aw[0]);
+        }
+        // 多字題：要求 target 的每個字必須照順序「連續」出現在 transcript 中
+        // 例如目標 "i want some cake"，"i want some cake please" 過，
+        // 但 "cake i want some" 或 "i want cake some" 都不過
+        for (let i = 0; i + aw.length <= tw.length; i++) {
+            let allMatch = true;
+            for (let j = 0; j < aw.length; j++) {
+                if (tw[i + j] !== aw[j]) { allMatch = false; break; }
+            }
+            if (allMatch) return true;
+        }
+        return false;
     });
 }
 
