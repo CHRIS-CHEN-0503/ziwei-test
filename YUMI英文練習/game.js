@@ -814,12 +814,57 @@ function speakQuestion() {
     const q = questions[currentIdx];
     if (q && q.speakText) speak(q.speakText);
 }
+// 語音挑選：每個平台預設聲音差很多（Windows 預設 David 很沙啞），
+// 這裡依優先序挑一個比較自然 / 適合幼童的英文聲音
+let preferredVoice = null;
+function pickPreferredVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
+    if (!voices.length) return;
+    const tests = [
+        // 預先指定（localStorage 可由家長設定）
+        v => v.name === localStorage.getItem('yumi_voice'),
+        // Apple：Samantha / Ava / Allison / Karen 都很自然
+        v => /^(Samantha|Ava|Allison|Karen)$/i.test(v.name),
+        v => /^(Samantha|Ava|Allison|Karen)\b/i.test(v.name),
+        // Google（Chrome / Android）
+        v => /^Google US English$/.test(v.name),
+        v => /^Google UK English Female$/.test(v.name),
+        v => /^Google /.test(v.name) && v.lang.startsWith('en-US'),
+        // Microsoft 新款神經語音（Edge / Win11）
+        v => /(Aria|Jenny|Michelle|Sonia|Libby)/i.test(v.name),
+        // Microsoft Zira（Win10 內建女聲，比 David 自然得多）
+        v => /Zira/i.test(v.name),
+        // 任何英文女聲，避開 David / Mark / Daniel 這幾個機器感重的
+        v => v.lang.toLowerCase().startsWith('en') && !/david|mark|daniel|fred|albert/i.test(v.name),
+        // 最後 fallback
+        v => v.lang.toLowerCase().startsWith('en-us'),
+        v => v.lang.toLowerCase().startsWith('en')
+    ];
+    for (const t of tests) {
+        const v = voices.find(t);
+        if (v) { preferredVoice = v; return; }
+    }
+    preferredVoice = voices[0];
+}
+if ('speechSynthesis' in window) {
+    pickPreferredVoice();
+    // voices 在某些瀏覽器是非同步載入的
+    window.speechSynthesis.onvoiceschanged = pickPreferredVoice;
+}
+
 function speak(text) {
     if (!('speechSynthesis' in window)) return;
     try {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'en-US';
+        if (!preferredVoice) pickPreferredVoice();
+        if (preferredVoice) {
+            u.voice = preferredVoice;
+            u.lang = preferredVoice.lang;
+        } else {
+            u.lang = 'en-US';
+        }
         u.rate = 0.9;
         u.pitch = 1.05;
         window.speechSynthesis.speak(u);
