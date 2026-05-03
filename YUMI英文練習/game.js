@@ -877,8 +877,10 @@ function speak(text) {
         } else {
             u.lang = 'en-US';
         }
-        u.rate = 0.9;
-        u.pitch = 1.05;
+        // 單字唸更慢，幫助孩子聽清楚 ea / ee / ai 等母音
+        const isSingleWord = !/\s/.test(text.trim());
+        u.rate = isSingleWord ? 0.78 : 0.9;
+        u.pitch = 1.0; // 保持自然，不拉高（拉高會讓母音偏尖）
         window.speechSynthesis.speak(u);
     } catch (e) {}
 }
