@@ -267,17 +267,22 @@ function startGame() {
 
 function buildQuestions(stage, vocab) {
     const builders = {
-        pic2word:      buildPic2Word,
-        word2pic:      buildWord2Pic,
-        listen:        buildListen,
-        like:          buildLike,
-        wantsome:      buildWantSome,
-        speak:         buildSpeak,
-        spell:         buildSpell,
-        speakLike:     buildSpeakLike,
-        speakWantSome: buildSpeakWantSome,
-        iwant:         buildIWant,
-        speakIWant:    buildSpeakIWant
+        pic2word:        buildPic2Word,
+        word2pic:        buildWord2Pic,
+        listen:          buildListen,
+        like:            buildLike,
+        wantsome:        buildWantSome,
+        speak:           buildSpeak,
+        spell:           buildSpell,
+        speakLike:       buildSpeakLike,
+        speakWantSome:   buildSpeakWantSome,
+        iwant:           buildIWant,
+        speakIWant:      buildSpeakIWant,
+        countpic:        buildCountPic,
+        iwantToEat:      buildIWantToEat,
+        speakIWantToEat: buildSpeakIWantToEat,
+        wouldyou:        buildWouldYou,
+        speakWouldYou:   buildSpeakWouldYou
     };
     const fn = builders[stage.type];
     const all = [];
@@ -470,6 +475,88 @@ function buildSpeakIWant(target) {
         targetPhrase: `I want some ${target.word}.`,
         accept: [`i want some ${target.word}`.toLowerCase()],
         speakText: `I want some ${target.word}.`
+    };
+}
+
+// 數一數：顯示 N 個水果 emoji，選對應的英文數字
+function buildCountPic(target, vocab) {
+    const others = pickOthers(vocab, target, 3);
+    const opts = shuffle([target, ...others]).map(v => ({
+        text: v.word, isCorrect: v.word === target.word
+    }));
+    const fruits = ['🍎', '🍌', '🍇', '🍊', '🍓', '🥕', '🍐'];
+    const fruit = fruits[Math.floor(Math.random() * fruits.length)];
+    const cells = fruit.repeat(target.count);
+    return {
+        prompt: '數一數，總共幾個？',
+        display: `<div class="count-display">${cells}</div>`,
+        speakText: target.word,
+        options: opts
+    };
+}
+
+// I want ___ to eat（Lesson 5 句型）
+function buildIWantToEat(target, vocab) {
+    const others = pickOthers(vocab, target, 1);
+    const opts = shuffle([target, ...others]).map(v => ({
+        text: v.word, isCorrect: v.word === target.word
+    }));
+    return {
+        prompt: 'I want ___ to eat.',
+        display: `<div class="big-emoji">${target.emoji}</div>
+                  <div class="sentence-text">I want ___ to eat.</div>`,
+        speakText: `I want ${target.word} to eat.`,
+        options: opts
+    };
+}
+
+function buildSpeakIWantToEat(target) {
+    return {
+        kind: 'speak',
+        prompt: '看圖大聲說：',
+        emoji: target.emoji,
+        targetPhrase: `I want ${target.word} to eat.`,
+        accept: [`i want ${target.word} to eat`.toLowerCase()],
+        speakText: `I want ${target.word} to eat.`
+    };
+}
+
+// Would you like some ~?（Lesson 6 句型）
+function buildWouldYou(target, vocab) {
+    const wantIt = Math.random() < 0.5;
+    const correct = wantIt ? 'Yes, please.' : 'No, thank you.';
+    const wrong   = wantIt ? 'No, thank you.' : 'Yes, please.';
+    const opts = shuffle([
+        { text: correct, emoji: wantIt ? '😋' : '🙅', isCorrect: true },
+        { text: wrong,   emoji: wantIt ? '🙅' : '😋', isCorrect: false }
+    ]);
+    return {
+        prompt: `Would you like some ${target.word}?`,
+        display: `<div class="big-emoji">${target.emoji}</div>
+                  <div class="sentence-text">Would you like some ${target.word}?</div>
+                  <div class="heart-icon">${wantIt ? '😋' : '🙅'}</div>`,
+        speakText: `Would you like some ${target.word}?`,
+        options: opts,
+        layout: 'sentence-emoji'
+    };
+}
+
+function buildSpeakWouldYou(target) {
+    const wantIt = Math.random() < 0.5;
+    const phrase = wantIt ? 'Yes, please.' : 'No, thank you.';
+    const accept = wantIt
+        ? ['yes please']
+        : ['no thank you', 'no thanks'];
+    return {
+        kind: 'speak',
+        prompt: `Would you like some ${target.word}?`,
+        emoji: target.emoji,
+        heart: wantIt ? '😋' : '🙅',
+        promptSpeak: `Would you like some ${target.word}?`,
+        targetPhrase: phrase,
+        accept: accept,
+        speakText: phrase,
+        autoSpeakPrompt: true
     };
 }
 
