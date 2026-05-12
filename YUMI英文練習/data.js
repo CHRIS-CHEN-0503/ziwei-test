@@ -107,6 +107,100 @@ const SUPER_UNITS = [
                         ]
                     }
                 ]
+            },
+            {
+                id: 'u-260511',
+                date: '2026-05-11',
+                title: '260511 課堂',
+                subtitle: '數字 11-15、I want to eat、水果、Would you like some',
+                emoji: '🔢',
+                color: 'pink',
+                sections: [
+                    {
+                        id: 'numbers-11-15',
+                        title: '數字 11-15',
+                        subtitle: 'eleven, twelve, thirteen, fourteen, fifteen',
+                        emoji: '🔢',
+                        vocab: [
+                            { word: 'eleven',   emoji: '1️⃣1️⃣', zh: '11', count: 11 },
+                            { word: 'twelve',   emoji: '1️⃣2️⃣', zh: '12', count: 12 },
+                            { word: 'thirteen', emoji: '1️⃣3️⃣', zh: '13', count: 13 },
+                            { word: 'fourteen', emoji: '1️⃣4️⃣', zh: '14', count: 14 },
+                            { word: 'fifteen',  emoji: '1️⃣5️⃣', zh: '15', count: 15 }
+                        ],
+                        stages: [
+                            { id: 'countpic', title: '數一數',       emoji: '🧮', desc: '數一數選英文', type: 'countpic' },
+                            { id: 'pic2word', title: '看數字選英文', emoji: '🔢', desc: '看數字選英文', type: 'pic2word' },
+                            { id: 'word2pic', title: '看英文選數字', emoji: '🔤', desc: '看英文選數字', type: 'word2pic' },
+                            { id: 'listen',   title: '聽聽看',       emoji: '🔊', desc: '聽聲音選數字', type: 'listen' },
+                            { id: 'speak',    title: '看數字說英文', emoji: '🎤', desc: '按🎤大聲說',   type: 'speak' },
+                            { id: 'spell',    title: '排字母',       emoji: '🧩', desc: '依序排字母',   type: 'spell' }
+                        ]
+                    },
+                    {
+                        id: 'iwant-toeat',
+                        title: 'Lesson 5 - I want ~ to eat',
+                        subtitle: '想吃什麼？meat, peas, beans, peaches',
+                        emoji: '🍴',
+                        vocab: [
+                            { word: 'meat',    emoji: '🍗', zh: '肉' },
+                            { word: 'peas',    emoji: '🟢', zh: '豌豆' },
+                            { word: 'beans',   emoji: '🫘', zh: '豆子' },
+                            { word: 'peaches', emoji: '🍑', zh: '桃子' }
+                        ],
+                        stages: [
+                            { id: 'pic2word',        title: '看圖選字',         emoji: '🖼️', desc: '看圖選英文',          type: 'pic2word' },
+                            { id: 'word2pic',        title: '看字選圖',         emoji: '🔤', desc: '看英文選圖',          type: 'word2pic' },
+                            { id: 'listen',          title: '聽聽看',           emoji: '🔊', desc: '聽聲音選圖',          type: 'listen' },
+                            { id: 'speak',           title: '看圖說單字',       emoji: '🎤', desc: '按🎤大聲說',          type: 'speak' },
+                            { id: 'spell',           title: '排字母',           emoji: '🧩', desc: '依序排字母',          type: 'spell' },
+                            { id: 'iwantToEat',      title: '我想吃…',          emoji: '🍴', desc: 'I want ___ to eat',  type: 'iwantToEat' },
+                            { id: 'speakIWantToEat', title: '開口說 I want to eat', emoji: '💬', desc: '說整句 I want ~ to eat', type: 'speakIWantToEat' }
+                        ]
+                    },
+                    {
+                        id: 'fruits-where',
+                        title: '水果單字 Where are all the ~?',
+                        subtitle: '蘋果、香蕉、橘子、葡萄、梨子、草莓',
+                        emoji: '🍇',
+                        vocab: [
+                            { word: 'pears',        emoji: '🍐', zh: '梨子' },
+                            { word: 'apples',       emoji: '🍎', zh: '蘋果' },
+                            { word: 'bananas',      emoji: '🍌', zh: '香蕉' },
+                            { word: 'oranges',      emoji: '🍊', zh: '橘子' },
+                            { word: 'grapes',       emoji: '🍇', zh: '葡萄' },
+                            { word: 'strawberries', emoji: '🍓', zh: '草莓' }
+                        ],
+                        stages: [
+                            { id: 'pic2word', title: '看圖選字',   emoji: '🖼️', desc: '看圖選英文', type: 'pic2word' },
+                            { id: 'word2pic', title: '看字選圖',   emoji: '🔤', desc: '看英文選圖', type: 'word2pic' },
+                            { id: 'listen',   title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
+                            { id: 'speak',    title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
+                            { id: 'spell',    title: '排字母',     emoji: '🧩', desc: '依序排字母', type: 'spell' }
+                        ]
+                    },
+                    {
+                        id: 'wouldyou',
+                        title: 'Lesson 6 - Would you like some?',
+                        subtitle: '禮貌問與答：Yes, please. / No, thank you.',
+                        emoji: '🤔',
+                        vocab: [
+                            { word: 'strawberries', emoji: '🍓', zh: '草莓' },
+                            { word: 'oranges',      emoji: '🍊', zh: '橘子' },
+                            { word: 'grapes',       emoji: '🍇', zh: '葡萄' },
+                            { word: 'peas',         emoji: '🟢', zh: '豌豆' }
+                        ],
+                        stages: [
+                            { id: 'pic2word',      title: '看圖選字',           emoji: '🖼️', desc: '看圖選英文',           type: 'pic2word' },
+                            { id: 'word2pic',      title: '看字選圖',           emoji: '🔤', desc: '看英文選圖',           type: 'word2pic' },
+                            { id: 'listen',        title: '聽聽看',             emoji: '🔊', desc: '聽聲音選圖',           type: 'listen' },
+                            { id: 'speak',         title: '看圖說單字',         emoji: '🎤', desc: '按🎤大聲說',           type: 'speak' },
+                            { id: 'spell',         title: '排字母',             emoji: '🧩', desc: '依序排字母',           type: 'spell' },
+                            { id: 'wouldyou',      title: 'Would you like?',    emoji: '🤔', desc: '回答 Yes / No',        type: 'wouldyou' },
+                            { id: 'speakWouldYou', title: '開口回答 Would you', emoji: '💬', desc: '說 Yes/No, thank you', type: 'speakWouldYou' }
+                        ]
+                    }
+                ]
             }
         ]
     }
