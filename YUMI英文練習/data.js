@@ -218,6 +218,7 @@ const STORIES = [
         subtitle: 'Oxford Read and Imagine（捉迷藏故事）',
         emoji: '👀',
         author: 'Paul Shipton',
+        videoUrl: 'https://www.youtube.com/watch?v=uD9TXg1WtqM',
         pages: [
             {
                 id: 'p1',
