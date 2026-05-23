@@ -472,6 +472,148 @@
             .spell-target { font-size: 4rem; }
         }
 
+        /* 劇情練習 */
+        .lesson-card.drama {
+            background: linear-gradient(145deg, #ffe0b2, #ffcc80);
+            border-color: #ff9800;
+            box-shadow: 0 6px 0 #e65100;
+        }
+        .lesson-card.drama:hover { box-shadow: 0 9px 0 #e65100; }
+        .lesson-card.drama:active { box-shadow: 0 4px 0 #e65100; }
+
+        .speed-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 10px 0 16px;
+        }
+        .speed-btn {
+            background: #fff;
+            border: 3px solid #ce93d8;
+            border-radius: 22px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--primary-dark);
+            font-family: inherit;
+        }
+        .speed-btn:hover { background: #f3e5f5; }
+        .speed-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-dark);
+        }
+
+        .sentence-board {
+            background: #fffde7;
+            border: 3px dashed #ce93d8;
+            border-radius: 24px;
+            padding: 18px 12px;
+            margin: 14px 0;
+            text-align: center;
+        }
+        .chunks-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .chunk-chip {
+            background: #fff;
+            border: 3px solid #ce93d8;
+            border-radius: 16px;
+            padding: 6px 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-block;
+        }
+        .chunk-chip:hover { background: #f3e5f5; }
+        .chunk-chip.reading {
+            background: linear-gradient(145deg, #ffeb3b, #fbc02d);
+            color: #5d4037;
+            border-color: #f57f17;
+            transform: scale(1.06);
+            box-shadow: 0 0 0 4px rgba(251,192,45,0.25);
+        }
+        .chunk-chip.done { opacity: 0.55; }
+        .sentence-full {
+            font-size: 1.35rem;
+            color: var(--primary-dark);
+            font-weight: bold;
+            line-height: 1.45;
+            padding: 6px 4px;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+        .sentence-full.reading {
+            background: linear-gradient(145deg, #fff59d, #fff176);
+            color: #5d4037;
+        }
+
+        .drama-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 6px 0 12px;
+        }
+        .drama-btn {
+            background: linear-gradient(145deg, #ba68c8, #8e24aa);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 22px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 5px 0 var(--primary-dark);
+        }
+        .drama-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--primary-dark); }
+        .drama-btn.chunk {
+            background: linear-gradient(145deg, #ffb74d, #fb8c00);
+            box-shadow: 0 5px 0 #e65100;
+        }
+        .drama-btn.chunk:active { box-shadow: 0 2px 0 #e65100; }
+
+        .drama-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .nav-btn {
+            background: #fff;
+            border: 3px solid #ce93d8;
+            border-radius: 24px;
+            padding: 10px 18px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .nav-btn:hover { background: #f3e5f5; }
+        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        #sentence-counter {
+            font-size: 1rem;
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .chunk-chip { font-size: 1rem; padding: 5px 10px; }
+            .sentence-full { font-size: 1.15rem; }
+            .drama-btn { font-size: 1rem; padding: 10px 18px; }
+        }
+
         /* 數一數 */
         .count-display {
             display: flex;
@@ -584,6 +726,42 @@
         <p id="feedback"></p>
     </div>
 
+    <!-- 劇情練習：故事列表 -->
+    <div id="stories-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('home-screen')">←</button>
+        <h1>🎭 劇情練習</h1>
+        <p class="subtitle">讀繪本、分解念誦、整句念誦</p>
+        <div id="stories-list"></div>
+    </div>
+
+    <!-- 劇情練習：頁列表 -->
+    <div id="pages-screen" class="screen">
+        <button class="back-btn" onclick="showScreen('stories-screen')">←</button>
+        <h1 id="pages-title">故事</h1>
+        <p class="subtitle" id="pages-subtitle"></p>
+        <div id="pages-list"></div>
+    </div>
+
+    <!-- 劇情練習：念誦頁 -->
+    <div id="drama-screen" class="screen">
+        <button class="back-btn" onclick="stopDrama(); showScreen('pages-screen')">←</button>
+        <h1 id="drama-title" style="font-size:1.3rem">頁面</h1>
+        <div class="speed-row" id="speed-buttons"></div>
+        <div class="sentence-board">
+            <div class="chunks-row" id="sentence-chunks"></div>
+            <div class="sentence-full" id="sentence-full"></div>
+        </div>
+        <div class="drama-actions">
+            <button class="drama-btn" onclick="playFullSentence()">🔊 整句念誦</button>
+            <button class="drama-btn chunk" onclick="playChunkedSentence()">📦 分解念誦</button>
+        </div>
+        <div class="drama-nav">
+            <button class="nav-btn" id="prev-sentence" onclick="prevSentence()">⬅️ 上一句</button>
+            <span id="sentence-counter">1 / 1</span>
+            <button class="nav-btn" id="next-sentence" onclick="nextSentence()">下一句 ➡️</button>
+        </div>
+    </div>
+
     <!-- 結果畫面 -->
     <div id="result-screen" class="screen">
         <div class="result-emoji" id="result-emoji">🎉</div>
@@ -600,5 +778,6 @@
 </div>
 <script src="data.js"></script>
 <script src="game.js"></script>
+<script src="drama.js"></script>
 </body>
 </html>

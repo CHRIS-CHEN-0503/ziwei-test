@@ -205,3 +205,134 @@ const SUPER_UNITS = [
         ]
     }
 ];
+
+// =========================================================
+// 劇情練習：讀繪本，整句念誦 / 句子分解念誦 / 可調速度
+// 與 SUPER_UNITS 完全分開
+// 結構：故事 STORIES → 頁 pages → 句 sentences → 分解 chunks
+// =========================================================
+const STORIES = [
+    {
+        id: 'i-can-see-you',
+        title: 'I Can See You!',
+        subtitle: 'Oxford Read and Imagine（捉迷藏故事）',
+        emoji: '👀',
+        author: 'Paul Shipton',
+        pages: [
+            {
+                id: 'p1',
+                title: 'Page 2-3 - 自我介紹',
+                emoji: '👋',
+                sentences: [
+                    { text: 'Hello!',              chunks: ['Hello!'] },
+                    { text: 'My name is Rosie.',   chunks: ['My name', 'is Rosie.'] },
+                    { text: 'My name is Ben.',     chunks: ['My name', 'is Ben.'] },
+                    { text: 'This is Grandpa.',    chunks: ['This is', 'Grandpa.'] },
+                    { text: "Now let's read this story, I Can See You!",
+                      chunks: ['Now', "let's read", 'this story,', 'I Can See You!'] }
+                ]
+            },
+            {
+                id: 'p2',
+                title: 'Page 4-5 - 玩遊戲',
+                emoji: '🎮',
+                sentences: [
+                    { text: 'Rosie and Alice are best friends.',
+                      chunks: ['Rosie and Alice', 'are best friends.'] },
+                    { text: "Rosie says, Let's play!",
+                      chunks: ['Rosie says,', "Let's play!"] },
+                    { text: 'OK! say Alice and Ben.',
+                      chunks: ['OK!', 'say Alice', 'and Ben.'] },
+                    { text: 'Clunk the robot has a slice of pizza.',
+                      chunks: ['Clunk', 'the robot', 'has a slice', 'of pizza.'] },
+                    { text: 'Clunk asks, Can I play?',
+                      chunks: ['Clunk asks,', 'Can I play?'] },
+                    { text: 'Yes, says Ben.',
+                      chunks: ['Yes,', 'says Ben.'] }
+                ]
+            },
+            {
+                id: 'p3',
+                title: 'Page 6-7 - 捉迷藏開始',
+                emoji: '🙈',
+                sentences: [
+                    { text: 'Rosie closes her eyes.',
+                      chunks: ['Rosie closes', 'her eyes.'] },
+                    { text: 'She counts: One, two, three, four, five.',
+                      chunks: ['She counts:', 'One, two, three,', 'four, five.'] },
+                    { text: 'Alice, Ben, and Clunk run.',
+                      chunks: ['Alice, Ben,', 'and Clunk', 'run.'] },
+                    { text: 'Six, seven, eight, nine, ten.',
+                      chunks: ['Six, seven,', 'eight, nine, ten.'] },
+                    { text: "I'm coming! says Rosie.",
+                      chunks: ["I'm coming!", 'says Rosie.'] },
+                    { text: 'Where are you?',
+                      chunks: ['Where', 'are you?'] },
+                    { text: 'She runs to her bedroom and looks under the bed.',
+                      chunks: ['She runs', 'to her bedroom', 'and looks', 'under the bed.'] }
+                ]
+            },
+            {
+                id: 'p4',
+                title: 'Page 8-9 - 找到 Ben！',
+                emoji: '👕',
+                sentences: [
+                    { text: 'Then Rosie opens the wardrobe.',
+                      chunks: ['Then Rosie', 'opens', 'the wardrobe.'] },
+                    { text: 'I can see you, Ben! says Rosie.',
+                      chunks: ['I can see you,', 'Ben!', 'says Rosie.'] },
+                    { text: "You're in my wardrobe!",
+                      chunks: ["You're", 'in my wardrobe!'] },
+                    { text: 'Rosie and Ben go to the living room.',
+                      chunks: ['Rosie and Ben', 'go to', 'the living room.'] },
+                    { text: "Ben asks, Where's Alice?",
+                      chunks: ['Ben asks,', "Where's Alice?"] },
+                    { text: 'They look behind the couch.',
+                      chunks: ['They look', 'behind the couch.'] }
+                ]
+            },
+            {
+                id: 'p5',
+                title: 'Page 10-11 - Clunk 不見了',
+                emoji: '🔍',
+                sentences: [
+                    { text: 'Then they look behind the big, orange chair.',
+                      chunks: ['Then they look', 'behind', 'the big,', 'orange chair.'] },
+                    { text: 'Ben says, I can see you, Alice!',
+                      chunks: ['Ben says,', 'I can see you,', 'Alice!'] },
+                    { text: "Rosie says, You're behind the chair!",
+                      chunks: ['Rosie says,', "You're", 'behind the chair!'] },
+                    { text: "Alice asks, Where's Clunk?",
+                      chunks: ['Alice asks,', "Where's Clunk?"] },
+                    { text: 'The children look and look.',
+                      chunks: ['The children', 'look and look.'] },
+                    { text: "Rosie says, He isn't in the bathroom.",
+                      chunks: ['Rosie says,', "He isn't", 'in the bathroom.'] },
+                    { text: "Alice says, He isn't in the hall.",
+                      chunks: ['Alice says,', "He isn't", 'in the hall.'] },
+                    { text: "Ben says, He isn't here in the kitchen.",
+                      chunks: ['Ben says,', "He isn't here", 'in the kitchen.'] }
+                ]
+            },
+            {
+                id: 'p6',
+                title: 'Page 12-13 - 抓到 Clunk！',
+                emoji: '🤖',
+                sentences: [
+                    { text: 'Where IS he? asks Ben.',
+                      chunks: ['Where IS he?', 'asks Ben.'] },
+                    { text: "Rosie points and says, What's this on the floor?",
+                      chunks: ['Rosie points', 'and says,', "What's this", 'on the floor?'] },
+                    { text: "It's cheese! says Alice.",
+                      chunks: ["It's cheese!", 'says Alice.'] },
+                    { text: 'The children look up.',
+                      chunks: ['The children', 'look up.'] },
+                    { text: 'We can see you, Clunk! says Ben.',
+                      chunks: ['We can see you,', 'Clunk!', 'says Ben.'] },
+                    { text: "You're on the ceiling. And you're eating your pizza!",
+                      chunks: ["You're", 'on the ceiling.', "And you're eating", 'your pizza!'] }
+                ]
+            }
+        ]
+    }
+];
