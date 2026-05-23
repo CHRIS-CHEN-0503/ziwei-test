@@ -79,30 +79,49 @@ function showScreen(id) {
 function renderSuperUnits() {
     const list = document.getElementById('superunits-list');
     list.innerHTML = '';
-    if (!SUPER_UNITS.length) {
-        list.innerHTML = '<p class="subtitle">還沒有大單元，上完課再來吧！</p>';
-        return;
+    if (SUPER_UNITS.length) {
+        SUPER_UNITS.forEach(su => {
+            const stats = superUnitStats(su);
+            const card = document.createElement('button');
+            card.className = 'lesson-card ' + (su.color || '');
+            card.onclick = () => openSuperUnit(su.id);
+            card.innerHTML = `
+                <div class="lesson-head">
+                    <span class="lesson-emoji">${su.emoji || '📚'}</span>
+                    <div>
+                        <div class="lesson-title">${su.title}</div>
+                    </div>
+                </div>
+                <div class="lesson-sub">${su.subtitle || ''}</div>
+                <div class="lesson-meta">
+                    <span>📁 ${su.units.length} 個單元</span>
+                    <span class="lesson-progress">${stats.done ? '✨ 全破關' : `關卡 ${stats.cleared}/${stats.total}`}</span>
+                </div>
+            `;
+            list.appendChild(card);
+        });
     }
-    SUPER_UNITS.forEach(su => {
-        const stats = superUnitStats(su);
+    // 劇情練習入口（與補習班教材分開）
+    if (typeof STORIES !== 'undefined' && STORIES.length) {
         const card = document.createElement('button');
-        card.className = 'lesson-card ' + (su.color || '');
-        card.onclick = () => openSuperUnit(su.id);
+        card.className = 'lesson-card drama';
+        card.onclick = () => openDrama();
         card.innerHTML = `
             <div class="lesson-head">
-                <span class="lesson-emoji">${su.emoji || '📚'}</span>
-                <div>
-                    <div class="lesson-title">${su.title}</div>
-                </div>
+                <span class="lesson-emoji">🎭</span>
+                <div><div class="lesson-title">劇情練習</div></div>
             </div>
-            <div class="lesson-sub">${su.subtitle || ''}</div>
+            <div class="lesson-sub">讀繪本、句子分解、整句念誦（可調速度）</div>
             <div class="lesson-meta">
-                <span>📁 ${su.units.length} 個單元</span>
-                <span class="lesson-progress">${stats.done ? '✨ 全破關' : `關卡 ${stats.cleared}/${stats.total}`}</span>
+                <span>📖 ${STORIES.length} 個故事</span>
+                <span class="lesson-progress">念誦練習</span>
             </div>
         `;
         list.appendChild(card);
-    });
+    }
+    if (!list.children.length) {
+        list.innerHTML = '<p class="subtitle">還沒有大單元，上完課再來吧！</p>';
+    }
 }
 
 function openSuperUnit(suId) {
@@ -952,10 +971,11 @@ if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = pickPreferredVoice;
 }
 
-function speak(text) {
-    if (!('speechSynthesis' in window)) return;
+function speak(text, opts) {
+    if (!('speechSynthesis' in window)) return null;
+    opts = opts || {};
     try {
-        window.speechSynthesis.cancel();
+        if (!opts.queue) window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
         if (!preferredVoice) pickPreferredVoice();
         if (preferredVoice) {
@@ -964,12 +984,14 @@ function speak(text) {
         } else {
             u.lang = 'en-US';
         }
-        // 單字唸更慢，幫助孩子聽清楚 ea / ee / ai 等母音
         const isSingleWord = !/\s/.test(text.trim());
-        u.rate = isSingleWord ? 0.78 : 0.9;
-        u.pitch = 1.0; // 保持自然，不拉高（拉高會讓母音偏尖）
+        u.rate = (typeof opts.rate === 'number') ? opts.rate : (isSingleWord ? 0.78 : 0.9);
+        u.pitch = (typeof opts.pitch === 'number') ? opts.pitch : 1.0;
+        if (opts.onend) u.onend = opts.onend;
+        if (opts.onstart) u.onstart = opts.onstart;
         window.speechSynthesis.speak(u);
-    } catch (e) {}
+        return u;
+    } catch (e) { return null; }
 }
 
 function confirmQuit() {
