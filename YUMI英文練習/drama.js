@@ -54,6 +54,15 @@ function openStory(storyId) {
     document.getElementById('drama-title').textContent =
         `${currentStory.emoji || '📖'} ${currentStory.title}`;
     document.getElementById('drama-subtitle').textContent = currentStory.subtitle || '';
+    // 原始影片連結（如果有設定）
+    const linkBox = document.getElementById('drama-source-link');
+    if (currentStory.videoUrl) {
+        linkBox.innerHTML =
+            `<a href="${currentStory.videoUrl}" target="_blank" rel="noopener">📺 原始影片</a>`;
+        linkBox.style.display = '';
+    } else {
+        linkBox.style.display = 'none';
+    }
     renderSpeedButtons();
     renderDramaContent();
     showScreen('drama-screen');

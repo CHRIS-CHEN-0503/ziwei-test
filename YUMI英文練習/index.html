@@ -481,6 +481,25 @@
         .lesson-card.drama:hover { box-shadow: 0 9px 0 #e65100; }
         .lesson-card.drama:active { box-shadow: 0 4px 0 #e65100; }
 
+        .source-link {
+            text-align: center;
+            margin: 4px 0 6px;
+            font-size: 0.95rem;
+        }
+        .source-link a {
+            display: inline-block;
+            background: linear-gradient(145deg, #ffcc80, #ffb74d);
+            color: #5d4037;
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 2px solid #fb8c00;
+            font-weight: bold;
+            box-shadow: 0 3px 0 #e65100;
+        }
+        .source-link a:hover { transform: translateY(-1px); }
+        .source-link a:active { transform: translateY(2px); box-shadow: 0 1px 0 #e65100; }
+
         /* 頂部速度列（黏在念誦頁頂） */
         .speed-bar {
             position: sticky;
@@ -734,6 +753,7 @@
         <button class="back-btn" onclick="stopDrama(); showScreen('stories-screen')">←</button>
         <h1 id="drama-title" style="font-size:1.4rem">故事</h1>
         <p class="subtitle" id="drama-subtitle"></p>
+        <p class="source-link" id="drama-source-link"></p>
         <div class="speed-bar">
             <span class="speed-label">速度</span>
             <div class="speed-row" id="speed-buttons"></div>
