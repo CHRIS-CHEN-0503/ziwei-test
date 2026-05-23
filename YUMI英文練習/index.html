@@ -481,19 +481,30 @@
         .lesson-card.drama:hover { box-shadow: 0 9px 0 #e65100; }
         .lesson-card.drama:active { box-shadow: 0 4px 0 #e65100; }
 
-        .speed-row {
+        /* 頂部速度列（黏在念誦頁頂） */
+        .speed-bar {
+            position: sticky;
+            top: -8px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(6px);
+            z-index: 5;
+            padding: 8px 4px;
+            margin: 6px 0 4px;
+            border-radius: 16px;
             display: flex;
+            align-items: center;
             gap: 8px;
             justify-content: center;
             flex-wrap: wrap;
-            margin: 10px 0 16px;
         }
+        .speed-label { font-size: 0.95rem; color: var(--primary-dark); font-weight: bold; }
+        .speed-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .speed-btn {
             background: #fff;
             border: 3px solid #ce93d8;
             border-radius: 22px;
-            padding: 8px 18px;
-            font-size: 1rem;
+            padding: 6px 16px;
+            font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
             color: var(--primary-dark);
@@ -505,28 +516,57 @@
             color: #fff;
             border-color: var(--primary-dark);
         }
-
-        .sentence-board {
-            background: #fffde7;
-            border: 3px dashed #ce93d8;
-            border-radius: 24px;
-            padding: 18px 12px;
-            margin: 14px 0;
+        .drama-tip {
+            font-size: 0.85rem;
+            color: #888;
             text-align: center;
+            margin: 6px 0 14px;
         }
-        .chunks-row {
+
+        /* 故事內容區（一頁瀏覽所有句子） */
+        .page-section {
+            background: #fffde7;
+            border: 2px dashed #ce93d8;
+            border-radius: 22px;
+            padding: 14px 12px;
+            margin: 16px 0;
+        }
+        .page-header {
+            color: var(--primary-dark);
+            margin: 0 0 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            border-bottom: 2px dotted #ce93d8;
+            padding-bottom: 6px;
+        }
+        .page-sentences { display: flex; flex-direction: column; gap: 10px; }
+        .sentence-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 8px 10px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .sentence-row.active {
+            border-color: #fbc02d;
+            background: #fffbea;
+        }
+        .chunks-inline {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 14px;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
         }
         .chunk-chip {
             background: #fff;
-            border: 3px solid #ce93d8;
-            border-radius: 16px;
-            padding: 6px 12px;
-            font-size: 1.1rem;
+            border: 2.5px solid #ce93d8;
+            border-radius: 14px;
+            padding: 4px 10px;
+            font-size: 1rem;
             font-weight: bold;
             color: var(--primary-dark);
             cursor: pointer;
@@ -539,79 +579,34 @@
             color: #5d4037;
             border-color: #f57f17;
             transform: scale(1.06);
-            box-shadow: 0 0 0 4px rgba(251,192,45,0.25);
+            box-shadow: 0 0 0 3px rgba(251,192,45,0.3);
         }
-        .chunk-chip.done { opacity: 0.55; }
-        .sentence-full {
-            font-size: 1.35rem;
-            color: var(--primary-dark);
-            font-weight: bold;
-            line-height: 1.45;
-            padding: 6px 4px;
-            border-radius: 12px;
-            transition: background 0.2s;
-        }
-        .sentence-full.reading {
-            background: linear-gradient(145deg, #fff59d, #fff176);
-            color: #5d4037;
-        }
-
-        .drama-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 6px 0 12px;
-        }
-        .drama-btn {
+        .chunk-chip.done { opacity: 0.45; }
+        .row-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .icon-btn {
             background: linear-gradient(145deg, #ba68c8, #8e24aa);
             color: #fff;
             border: none;
-            border-radius: 30px;
-            padding: 12px 22px;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
             font-size: 1.1rem;
-            font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 3px 0 var(--primary-dark);
             font-family: inherit;
-            box-shadow: 0 5px 0 var(--primary-dark);
         }
-        .drama-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--primary-dark); }
-        .drama-btn.chunk {
+        .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--primary-dark); }
+        .icon-btn.chunk-btn {
             background: linear-gradient(145deg, #ffb74d, #fb8c00);
-            box-shadow: 0 5px 0 #e65100;
+            box-shadow: 0 3px 0 #e65100;
         }
-        .drama-btn.chunk:active { box-shadow: 0 2px 0 #e65100; }
-
-        .drama-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-top: 12px;
-        }
-        .nav-btn {
-            background: #fff;
-            border: 3px solid #ce93d8;
-            border-radius: 24px;
-            padding: 10px 18px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: var(--primary-dark);
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .nav-btn:hover { background: #f3e5f5; }
-        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        #sentence-counter {
-            font-size: 1rem;
-            color: var(--primary-dark);
-            font-weight: bold;
-        }
+        .icon-btn.chunk-btn:active { box-shadow: 0 1px 0 #e65100; }
 
         @media (max-width: 480px) {
-            .chunk-chip { font-size: 1rem; padding: 5px 10px; }
-            .sentence-full { font-size: 1.15rem; }
-            .drama-btn { font-size: 1rem; padding: 10px 18px; }
+            .chunk-chip { font-size: 0.95rem; padding: 4px 8px; }
+            .icon-btn { width: 34px; height: 34px; font-size: 1rem; }
+            .page-section { padding: 12px 8px; }
+            .sentence-row { padding: 6px 8px; }
         }
 
         /* 數一數 */
@@ -730,36 +725,21 @@
     <div id="stories-screen" class="screen">
         <button class="back-btn" onclick="showScreen('home-screen')">←</button>
         <h1>🎭 劇情練習</h1>
-        <p class="subtitle">讀繪本、分解念誦、整句念誦</p>
+        <p class="subtitle">點任一個故事，所有句子都在同一頁練習</p>
         <div id="stories-list"></div>
     </div>
 
-    <!-- 劇情練習：頁列表 -->
-    <div id="pages-screen" class="screen">
-        <button class="back-btn" onclick="showScreen('stories-screen')">←</button>
-        <h1 id="pages-title">故事</h1>
-        <p class="subtitle" id="pages-subtitle"></p>
-        <div id="pages-list"></div>
-    </div>
-
-    <!-- 劇情練習：念誦頁 -->
+    <!-- 劇情練習：故事念誦頁（所有句子在同一頁） -->
     <div id="drama-screen" class="screen">
-        <button class="back-btn" onclick="stopDrama(); showScreen('pages-screen')">←</button>
-        <h1 id="drama-title" style="font-size:1.3rem">頁面</h1>
-        <div class="speed-row" id="speed-buttons"></div>
-        <div class="sentence-board">
-            <div class="chunks-row" id="sentence-chunks"></div>
-            <div class="sentence-full" id="sentence-full"></div>
+        <button class="back-btn" onclick="stopDrama(); showScreen('stories-screen')">←</button>
+        <h1 id="drama-title" style="font-size:1.4rem">故事</h1>
+        <p class="subtitle" id="drama-subtitle"></p>
+        <div class="speed-bar">
+            <span class="speed-label">速度</span>
+            <div class="speed-row" id="speed-buttons"></div>
         </div>
-        <div class="drama-actions">
-            <button class="drama-btn" onclick="playFullSentence()">🔊 整句念誦</button>
-            <button class="drama-btn chunk" onclick="playChunkedSentence()">📦 分解念誦</button>
-        </div>
-        <div class="drama-nav">
-            <button class="nav-btn" id="prev-sentence" onclick="prevSentence()">⬅️ 上一句</button>
-            <span id="sentence-counter">1 / 1</span>
-            <button class="nav-btn" id="next-sentence" onclick="nextSentence()">下一句 ➡️</button>
-        </div>
+        <p class="drama-tip">🔊 整句念 ／ 📦 分解念 ／ 點任一個 chunk 可單獨重聽</p>
+        <div id="drama-content"></div>
     </div>
 
     <!-- 結果畫面 -->
