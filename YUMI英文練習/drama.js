@@ -5,9 +5,9 @@ let dramaPlaying = false;
 
 const DRAMA_SPEED_KEY = 'yumi_drama_speed';
 const SPEED_PRESETS = [
-    { id: 'slow', label: '🐢 慢', rate: 0.55, pause: 500 },
-    { id: 'mid',  label: '🚶 中', rate: 0.8,  pause: 350 },
-    { id: 'fast', label: '🐰 快', rate: 1.0,  pause: 250 }
+    { id: 'slow', label: '🐢 慢', rate: 0.28, pause: 700 },
+    { id: 'mid',  label: '🚶 中', rate: 0.4,  pause: 500 },
+    { id: 'fast', label: '🐰 快', rate: 0.5,  pause: 350 }
 ];
 function getDramaSpeed() {
     const id = localStorage.getItem(DRAMA_SPEED_KEY) || 'mid';
