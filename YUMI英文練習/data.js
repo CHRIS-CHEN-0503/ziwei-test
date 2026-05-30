@@ -5,6 +5,11 @@
 //   - 同一大單元下新增單元：到對應大單元的 units 陣列 push 一個物件
 //   - 新建大單元（例如升等到 ST4）：在 SUPER_UNITS 陣列 push 新物件
 //   - 一個單元只有一節時也用 sections 包起來，UI 會自動跳過節選單直接進關卡
+//
+// 【關卡設計準則】每節只挑 3 個最有學習效益的關卡，不超載小朋友。建議組合：
+//   有句型：listen（聽辨）→ speak（單字口說）→ speakXXX（整句口說）
+//   純單字：listen → speak → spell（拼字）
+//   數字：countpic（數一數）→ listen → speak
 const SUPER_UNITS = [
     {
         id: 'ST3',
@@ -35,15 +40,9 @@ const SUPER_UNITS = [
                             { word: 'vegetables', emoji: '🥦', zh: '蔬菜' }
                         ],
                         stages: [
-                            { id: 'pic2word',      title: '看圖選字',      emoji: '🖼️', desc: '看圖選英文',         type: 'pic2word' },
-                            { id: 'word2pic',      title: '看字選圖',      emoji: '🔤', desc: '看英文選圖',         type: 'word2pic' },
-                            { id: 'listen',        title: '聽聽看',        emoji: '🔊', desc: '聽聲音選圖',         type: 'listen' },
-                            { id: 'speak',         title: '看圖說單字',    emoji: '🎤', desc: '按🎤大聲說',         type: 'speak' },
-                            { id: 'spell',         title: '排字母',        emoji: '🧩', desc: '依序排字母',         type: 'spell' },
-                            { id: 'like',          title: 'I like / don\'t like', emoji: '❤️', desc: '看❤️或✗選句子', type: 'like' },
-                            { id: 'speakLike',     title: '說 I like',     emoji: '💖', desc: '說整句喜不喜歡',     type: 'speakLike' },
-                            { id: 'wantsome',      title: 'Do you want some?', emoji: '🍽️', desc: '禮貌回答 Yes / No', type: 'wantsome' },
-                            { id: 'speakWantSome', title: '開口回答',      emoji: '💬', desc: '說 Yes/No thank you', type: 'speakWantSome' }
+                            { id: 'listen',    title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖',         type: 'listen' },
+                            { id: 'speak',     title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說',         type: 'speak' },
+                            { id: 'speakLike', title: '說 I like',  emoji: '💖', desc: '說整句喜不喜歡',     type: 'speakLike' }
                         ]
                     }
                 ]
@@ -74,12 +73,8 @@ const SUPER_UNITS = [
                             { word: 'vegetables', emoji: '🥦', zh: '蔬菜' }
                         ],
                         stages: [
-                            { id: 'pic2word',   title: '看圖選字',      emoji: '🖼️', desc: '看圖選英文',       type: 'pic2word' },
-                            { id: 'word2pic',   title: '看字選圖',      emoji: '🔤', desc: '看英文選圖',       type: 'word2pic' },
                             { id: 'listen',     title: '聽聽看',        emoji: '🔊', desc: '聽聲音選圖',       type: 'listen' },
                             { id: 'speak',      title: '看圖說單字',    emoji: '🎤', desc: '按🎤大聲說',       type: 'speak' },
-                            { id: 'spell',      title: '排字母',        emoji: '🧩', desc: '依序排字母',       type: 'spell' },
-                            { id: 'iwant',      title: '我想要…',       emoji: '🍽️', desc: 'I want some ___', type: 'iwant' },
                             { id: 'speakIWant', title: '開口說 I want', emoji: '💬', desc: '說 I want some ~', type: 'speakIWant' }
                         ]
                     },
@@ -99,11 +94,9 @@ const SUPER_UNITS = [
                             { word: 'meal',  emoji: '🍱', zh: '一餐' }
                         ],
                         stages: [
-                            { id: 'pic2word', title: '看圖選字',   emoji: '🖼️', desc: '看圖選英文', type: 'pic2word' },
-                            { id: 'word2pic', title: '看字選圖',   emoji: '🔤', desc: '看英文選圖', type: 'word2pic' },
-                            { id: 'listen',   title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
-                            { id: 'speak',    title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
-                            { id: 'spell',    title: '排字母',     emoji: '🧩', desc: '依序排字母', type: 'spell' }
+                            { id: 'listen', title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
+                            { id: 'speak',  title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
+                            { id: 'spell',  title: '排字母',     emoji: '🧩', desc: '依序排字母', type: 'spell' }
                         ]
                     }
                 ]
@@ -130,11 +123,8 @@ const SUPER_UNITS = [
                         ],
                         stages: [
                             { id: 'countpic', title: '數一數',       emoji: '🧮', desc: '數一數選英文', type: 'countpic' },
-                            { id: 'pic2word', title: '看數字選英文', emoji: '🔢', desc: '看數字選英文', type: 'pic2word' },
-                            { id: 'word2pic', title: '看英文選數字', emoji: '🔤', desc: '看英文選數字', type: 'word2pic' },
                             { id: 'listen',   title: '聽聽看',       emoji: '🔊', desc: '聽聲音選數字', type: 'listen' },
-                            { id: 'speak',    title: '看數字說英文', emoji: '🎤', desc: '按🎤大聲說',   type: 'speak' },
-                            { id: 'spell',    title: '排字母',       emoji: '🧩', desc: '依序排字母',   type: 'spell' }
+                            { id: 'speak',    title: '看數字說英文', emoji: '🎤', desc: '按🎤大聲說',   type: 'speak' }
                         ]
                     },
                     {
@@ -149,13 +139,9 @@ const SUPER_UNITS = [
                             { word: 'peaches', emoji: '🍑', zh: '桃子' }
                         ],
                         stages: [
-                            { id: 'pic2word',        title: '看圖選字',         emoji: '🖼️', desc: '看圖選英文',          type: 'pic2word' },
-                            { id: 'word2pic',        title: '看字選圖',         emoji: '🔤', desc: '看英文選圖',          type: 'word2pic' },
-                            { id: 'listen',          title: '聽聽看',           emoji: '🔊', desc: '聽聲音選圖',          type: 'listen' },
-                            { id: 'speak',           title: '看圖說單字',       emoji: '🎤', desc: '按🎤大聲說',          type: 'speak' },
-                            { id: 'spell',           title: '排字母',           emoji: '🧩', desc: '依序排字母',          type: 'spell' },
-                            { id: 'iwantToEat',      title: '我想吃…',          emoji: '🍴', desc: 'I want ___ to eat',  type: 'iwantToEat' },
-                            { id: 'speakIWantToEat', title: '開口說 I want to eat', emoji: '💬', desc: '說整句 I want ~ to eat', type: 'speakIWantToEat' }
+                            { id: 'listen',          title: '聽聽看',               emoji: '🔊', desc: '聽聲音選圖',                type: 'listen' },
+                            { id: 'speak',           title: '看圖說單字',           emoji: '🎤', desc: '按🎤大聲說',                type: 'speak' },
+                            { id: 'speakIWantToEat', title: '開口說 I want to eat', emoji: '💬', desc: '說整句 I want ~ to eat',    type: 'speakIWantToEat' }
                         ]
                     },
                     {
@@ -172,11 +158,9 @@ const SUPER_UNITS = [
                             { word: 'strawberries', emoji: '🍓', zh: '草莓' }
                         ],
                         stages: [
-                            { id: 'pic2word', title: '看圖選字',   emoji: '🖼️', desc: '看圖選英文', type: 'pic2word' },
-                            { id: 'word2pic', title: '看字選圖',   emoji: '🔤', desc: '看英文選圖', type: 'word2pic' },
-                            { id: 'listen',   title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
-                            { id: 'speak',    title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
-                            { id: 'spell',    title: '排字母',     emoji: '🧩', desc: '依序排字母', type: 'spell' }
+                            { id: 'listen', title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
+                            { id: 'speak',  title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
+                            { id: 'spell',  title: '排字母',     emoji: '🧩', desc: '依序排字母', type: 'spell' }
                         ]
                     },
                     {
@@ -191,12 +175,8 @@ const SUPER_UNITS = [
                             { word: 'peas',         emoji: '🟢', zh: '豌豆' }
                         ],
                         stages: [
-                            { id: 'pic2word',      title: '看圖選字',           emoji: '🖼️', desc: '看圖選英文',           type: 'pic2word' },
-                            { id: 'word2pic',      title: '看字選圖',           emoji: '🔤', desc: '看英文選圖',           type: 'word2pic' },
                             { id: 'listen',        title: '聽聽看',             emoji: '🔊', desc: '聽聲音選圖',           type: 'listen' },
                             { id: 'speak',         title: '看圖說單字',         emoji: '🎤', desc: '按🎤大聲說',           type: 'speak' },
-                            { id: 'spell',         title: '排字母',             emoji: '🧩', desc: '依序排字母',           type: 'spell' },
-                            { id: 'wouldyou',      title: 'Would you like?',    emoji: '🤔', desc: '回答 Yes / No',        type: 'wouldyou' },
                             { id: 'speakWouldYou', title: '開口回答 Would you', emoji: '💬', desc: '說 Yes/No, thank you', type: 'speakWouldYou' }
                         ]
                     }
