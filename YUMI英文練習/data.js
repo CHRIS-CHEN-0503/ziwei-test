@@ -193,6 +193,37 @@ const SUPER_UNITS = [
 // =========================================================
 const STORIES = [
     {
+        id: 'i-am-an-elephant',
+        title: "I'm an Elephant",
+        subtitle: 'Unit 3（ay 字音）· 大象自我介紹歌謠',
+        emoji: '🐘',
+        author: 'Unit 3 Chant',
+        pages: [
+            {
+                id: 'p1',
+                title: 'Page 18 - 大象介紹自己',
+                emoji: '🐘',
+                sentences: [
+                    { text: "I'm an elephant.",        chunks: ["I'm an", "elephant."] },
+                    { text: "I'm big and gray.",       chunks: ["I'm big", "and gray."] },
+                    { text: "This is my trunk,",       chunks: ["This is", "my trunk,"] },
+                    { text: "And this is my mouse.",   chunks: ["And this is", "my mouse."] }
+                ]
+            },
+            {
+                id: 'p2',
+                title: 'Page 18 - 大象會做的事 (chant)',
+                emoji: '🎵',
+                sentences: [
+                    { text: "I can stomp, stomp, stomp.",   chunks: ["I can", "stomp,", "stomp,", "stomp."] },
+                    { text: "I can spray, spray, spray.",   chunks: ["I can", "spray,", "spray,", "spray."] },
+                    { text: "I can eat, eat, eat,",         chunks: ["I can", "eat,", "eat,", "eat,"] },
+                    { text: "Lots of hay, hay, hay.",       chunks: ["Lots of", "hay,", "hay,", "hay."] }
+                ]
+            }
+        ]
+    },
+    {
         id: 'i-can-see-you',
         title: 'I Can See You!',
         subtitle: 'Oxford Read and Imagine（捉迷藏故事）',
