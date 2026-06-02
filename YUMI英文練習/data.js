@@ -207,7 +207,7 @@ const STORIES = [
                     { text: "I'm an elephant.",        chunks: ["I'm an", "elephant."] },
                     { text: "I'm big and gray.",       chunks: ["I'm big", "and gray."] },
                     { text: "This is my trunk,",       chunks: ["This is", "my trunk,"] },
-                    { text: "And this is my mouse.",   chunks: ["And this is", "my mouse."] }
+                    { text: "And this is my tail.",   chunks: ["And this is", "my tail."] }
                 ]
             },
             {
