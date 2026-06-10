@@ -181,6 +181,72 @@ const SUPER_UNITS = [
                         ]
                     }
                 ]
+            },
+            {
+                id: 'u-260610',
+                date: '2026-06-10',
+                title: '260610 課堂',
+                subtitle: 'Review 1-3、家裡房間、交通工具',
+                emoji: '🏫',
+                color: 'pink',
+                sections: [
+                    {
+                        id: 'review-1-3',
+                        title: 'Review 1 - 第 1-3 單元複習',
+                        subtitle: 'meat / rice / party / presents / art room / computer room',
+                        emoji: '📝',
+                        vocab: [
+                            { word: 'meat',          emoji: '🍗', zh: '肉' },
+                            { word: 'rice',          emoji: '🍚', zh: '米飯' },
+                            { word: 'party',         emoji: '🎉', zh: '派對' },
+                            { word: 'presents',      emoji: '🎁', zh: '禮物' },
+                            { word: 'art room',      emoji: '🎨', zh: '美術教室' },
+                            { word: 'computer room', emoji: '💻', zh: '電腦教室' }
+                        ],
+                        stages: [
+                            { id: 'listen', title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
+                            { id: 'speak',  title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
+                            { id: 'spell',  title: '排字母',     emoji: '🧩', desc: '依序排字母（多字詞跳過）', type: 'spell' }
+                        ]
+                    },
+                    {
+                        id: 'home-rooms',
+                        title: '家裡的房間',
+                        subtitle: 'bedroom / kitchen / hall / couch / living room / bathroom',
+                        emoji: '🏠',
+                        vocab: [
+                            { word: 'bedroom',     emoji: '🛏️', zh: '臥室' },
+                            { word: 'kitchen',     emoji: '🍳', zh: '廚房' },
+                            { word: 'hall',        emoji: '🚪', zh: '門廳' },
+                            { word: 'couch',       emoji: '🛋️', zh: '沙發' },
+                            { word: 'living room', emoji: '📺', zh: '客廳' },
+                            { word: 'bathroom',    emoji: '🛁', zh: '浴室' }
+                        ],
+                        stages: [
+                            { id: 'listen', title: '聽聽看',     emoji: '🔊', desc: '聽聲音選圖', type: 'listen' },
+                            { id: 'speak',  title: '看圖說單字', emoji: '🎤', desc: '按🎤大聲說', type: 'speak' },
+                            { id: 'spell',  title: '排字母',     emoji: '🧩', desc: '依序排字母', type: 'spell' }
+                        ]
+                    },
+                    {
+                        id: 'transport-school',
+                        title: '交通工具 We went to school by ~',
+                        subtitle: 'van / bike / train / bus / car',
+                        emoji: '🚌',
+                        vocab: [
+                            { word: 'van',   emoji: '🚐', zh: '廂型車' },
+                            { word: 'bike',  emoji: '🚲', zh: '腳踏車' },
+                            { word: 'train', emoji: '🚆', zh: '火車' },
+                            { word: 'bus',   emoji: '🚌', zh: '公車' },
+                            { word: 'car',   emoji: '🚗', zh: '汽車' }
+                        ],
+                        stages: [
+                            { id: 'listen',      title: '聽聽看',        emoji: '🔊', desc: '聽聲音選圖',                  type: 'listen' },
+                            { id: 'speak',       title: '看圖說單字',    emoji: '🎤', desc: '按🎤大聲說',                  type: 'speak' },
+                            { id: 'speakWentBy', title: '開口說 We went', emoji: '💬', desc: '說 We went to school by ~', type: 'speakWentBy' }
+                        ]
+                    }
+                ]
             }
         ]
     }

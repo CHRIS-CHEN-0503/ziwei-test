@@ -301,16 +301,23 @@ function buildQuestions(stage, vocab) {
         iwantToEat:      buildIWantToEat,
         speakIWantToEat: buildSpeakIWantToEat,
         wouldyou:        buildWouldYou,
-        speakWouldYou:   buildSpeakWouldYou
+        speakWouldYou:   buildSpeakWouldYou,
+        speakWentBy:     buildSpeakWentBy
     };
     const fn = builders[stage.type];
+    // spell 不適合拼多字詞（含空格的如 "living room"），如果整批 vocab 都是多字詞才退回原 vocab
+    let pool = vocab;
+    if (stage.type === 'spell') {
+        const single = vocab.filter(v => !/\s/.test(v.word));
+        if (single.length) pool = single;
+    }
     const all = [];
     // 每個單字至少 1 題，再隨機補滿到 QUESTIONS_PER_STAGE
-    const base = shuffle(vocab);
-    base.forEach(v => all.push(fn(v, vocab)));
+    const base = shuffle(pool);
+    base.forEach(v => all.push(fn(v, pool)));
     while (all.length < QUESTIONS_PER_STAGE) {
-        const v = vocab[Math.floor(Math.random() * vocab.length)];
-        all.push(fn(v, vocab));
+        const v = pool[Math.floor(Math.random() * pool.length)];
+        all.push(fn(v, pool));
     }
     return shuffle(all).slice(0, QUESTIONS_PER_STAGE);
 }
@@ -557,6 +564,18 @@ function buildWouldYou(target, vocab) {
         speakText: `Would you like some ${target.word}?`,
         options: opts,
         layout: 'sentence-emoji'
+    };
+}
+
+// 開口說：We went to school by ~（交通工具句型）
+function buildSpeakWentBy(target) {
+    return {
+        kind: 'speak',
+        prompt: '看圖大聲說：',
+        emoji: target.emoji,
+        targetPhrase: `We went to school by ${target.word}.`,
+        accept: [`we went to school by ${target.word}`.toLowerCase()],
+        speakText: `We went to school by ${target.word}.`
     };
 }
 
