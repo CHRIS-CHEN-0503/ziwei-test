@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🚀 魔法太空快遞員</title>
+<style>
+  :root{
+    --font:'Comic Sans MS','Microsoft JhengHei','PingFang TC',cursive,sans-serif;
+    --blue:#4fc3f7; --red:#ff7a8a; --yellow:#ffd54f; --green:#81d88a;
+    --ink:#3a3a5a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:linear-gradient(160deg,#3b2e6e 0%,#5b4aa0 45%,#7e6fd1 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* twinkling stars background */
+  .stars{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+  .stars span{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.7;
+    animation:twinkle 3s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.25;}50%{opacity:.9;}}
+
+  .wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:16px;
+    min-height:100vh;display:flex;flex-direction:column;justify-content:center;}
+
+  .screen{display:none;}
+  .screen.active{display:block;animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .card{background:#fff;border-radius:32px;padding:28px 22px;
+    box-shadow:0 14px 36px rgba(0,0,0,.28);border:7px solid var(--yellow);text-align:center;}
+
+  h1{color:#ff7043;font-size:2rem;margin:6px 0;text-shadow:1px 1px #fff;}
+  h2{color:#5e35b1;font-size:1.5rem;margin:4px 0 14px;}
+  .sub{color:#8a85a8;margin:0 0 22px;font-size:1.05rem;}
+  .rocket{font-size:4.2rem;display:inline-block;animation:floaty 2.6s ease-in-out infinite;}
+  @keyframes floaty{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-12px) rotate(4deg);}}
+
+  .btn{display:block;width:100%;border:none;cursor:pointer;font-family:var(--font);
+    font-size:1.3rem;font-weight:bold;color:#fff;padding:16px;border-radius:22px;margin:12px 0;
+    background:linear-gradient(145deg,#7e6fd1,#5e35b1);box-shadow:0 6px 0 #4527a0;
+    transition:transform .12s, box-shadow .12s;}
+  .btn:active{transform:translateY(3px);box-shadow:0 3px 0 #4527a0;}
+  .btn.go{background:linear-gradient(145deg,#ffb74d,#ff9800);box-shadow:0 6px 0 #ef6c00;}
+  .btn.go:active{box-shadow:0 3px 0 #ef6c00;}
+  .btn.soft{background:linear-gradient(145deg,#90caf9,#64b5f6);box-shadow:0 6px 0 #1976d2;}
+  .btn.soft:active{box-shadow:0 3px 0 #1976d2;}
+  .btn.small{font-size:1.05rem;padding:12px;width:auto;display:inline-block;margin:6px;}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0;}
+  .opt{flex:1;min-width:90px;border:4px solid #d6cffb;border-radius:18px;padding:14px 8px;
+    cursor:pointer;background:#f6f4ff;font-size:1.1rem;font-weight:bold;color:#5e35b1;
+    transition:.15s;}
+  .opt.sel{border-color:#ff9800;background:#fff3e0;color:#ef6c00;transform:scale(1.04);}
+  .field{text-align:left;margin:16px 0 6px;font-weight:bold;color:#5e35b1;}
+  input[type=text]{width:100%;font-family:var(--font);font-size:1.2rem;padding:12px 14px;
+    border:4px solid #d6cffb;border-radius:18px;outline:none;color:var(--ink);}
+  input[type=text]:focus{border-color:#ff9800;}
+
+  .instr{text-align:left;font-size:1.05rem;line-height:1.7;color:#4a4a6a;}
+  .instr h3{color:#ff7043;margin:16px 0 4px;font-size:1.15rem;}
+  .instr .tag{display:inline-block;background:#ede7ff;color:#5e35b1;border-radius:12px;
+    padding:2px 10px;margin:2px;font-size:.95rem;}
+
+  /* ---- GAME SCREEN ---- */
+  #game{display:none;}
+  #game.active{display:flex;flex-direction:column;height:100vh;padding:0;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;gap:8px;}
+  .pill{background:#fff;border-radius:18px;padding:8px 14px;font-weight:bold;
+    box-shadow:0 4px 0 rgba(0,0,0,.12);font-size:1.05rem;min-width:64px;text-align:center;}
+  .pill small{display:block;font-size:.7rem;color:#9a95b8;font-weight:normal;}
+  #scorePill{color:#2e7d32;}
+  #timePill{color:#c62828;}
+  #comboPill{color:#ef6c00;background:#fff3e0;}
+
+  .taskbar{margin:4px 12px;background:#fff;border-radius:20px;padding:12px 16px;
+    text-align:center;box-shadow:0 5px 0 rgba(0,0,0,.12);border:4px solid var(--yellow);}
+  .taskbar .mode{font-size:.85rem;color:#9a95b8;}
+  .taskbar .task{font-size:1.25rem;font-weight:bold;color:#5e35b1;}
+  .taskbar.flip{animation:flipwarn .5s ease;}
+  @keyframes flipwarn{0%,100%{transform:none;}50%{transform:scale(1.05);background:#fff3e0;}}
+
+  #play{flex:1;position:relative;margin:8px 12px;border-radius:24px;
+    background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.16), rgba(255,255,255,.04));
+    border:3px dashed rgba(255,255,255,.4);overflow:hidden;min-height:240px;}
+
+  .obj{position:absolute;width:60px;height:60px;border-radius:50%;display:flex;
+    align-items:center;justify-content:center;font-size:1.7rem;cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,.25), inset 0 -4px 8px rgba(0,0,0,.15);
+    border:3px solid rgba(255,255,255,.65);user-select:none;
+    animation:bob 3s ease-in-out infinite, pop .3s ease;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+  @keyframes pop{from{transform:scale(0);}to{transform:scale(1);}}
+  .obj.gone{animation:vanish .35s ease forwards;pointer-events:none;}
+  @keyframes vanish{to{transform:scale(1.6);opacity:0;}}
+  .obj.nope{animation:nope .35s ease;}
+  @keyframes nope{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+  .o-blue{background:radial-gradient(circle at 35% 30%,#b3e5fc,var(--blue));}
+  .o-red{background:radial-gradient(circle at 35% 30%,#ffcdd2,var(--red));}
+  .o-yellow{background:radial-gradient(circle at 35% 30%,#fff9c4,var(--yellow));}
+  .o-green{background:radial-gradient(circle at 35% 30%,#c8e6c9,var(--green));}
+  .o-rock{background:radial-gradient(circle at 35% 30%,#bcaaa4,#6d4c41);}
+  .o-hole{background:radial-gradient(circle at 35% 30%,#7e57c2,#1a0033);border-color:rgba(255,255,255,.3);}
+
+  /* memory pads */
+  .mempads{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-wrap:wrap;gap:14px;padding:18px;}
+  .pad{width:84px;height:84px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+    font-size:2.4rem;background:rgba(255,255,255,.85);box-shadow:0 6px 0 rgba(0,0,0,.18);
+    cursor:pointer;transition:.12s;opacity:.85;}
+  .pad.lit{transform:scale(1.12);opacity:1;box-shadow:0 0 0 5px #fff,0 8px 14px rgba(0,0,0,.3);}
+  .pad:active{transform:translateY(3px);}
+  .memhint{position:absolute;top:8px;left:0;right:0;text-align:center;color:#fff;
+    font-size:1.05rem;font-weight:bold;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+
+  .toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);
+    background:rgba(0,0,0,.55);color:#fff;padding:8px 16px;border-radius:16px;font-size:1rem;
+    opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+
+  .floatpt{position:absolute;font-weight:bold;font-size:1.2rem;pointer-events:none;
+    animation:rise .8s ease forwards;}
+  @keyframes rise{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-40px);}}
+
+  .gamebottom{display:flex;gap:10px;padding:10px 12px 16px;}
+  .gamebottom .btn{margin:0;flex:1;font-size:1.1rem;padding:13px;}
+
+  /* pause overlay */
+  #pauseLayer{position:fixed;inset:0;z-index:5;background:rgba(40,30,80,.82);
+    display:none;align-items:center;justify-content:center;}
+  #pauseLayer.show{display:flex;}
+
+  /* results */
+  .badge{font-size:3.4rem;margin:6px;animation:floaty 2.6s ease-in-out infinite;}
+  .stat{display:flex;justify-content:space-between;background:#f6f4ff;border-radius:16px;
+    padding:12px 18px;margin:8px 0;font-size:1.15rem;}
+  .stat b{color:#5e35b1;}
+  .verdict{background:#fff3e0;border-radius:18px;padding:14px;color:#ef6c00;font-weight:bold;
+    margin:14px 0;font-size:1.1rem;line-height:1.5;}
+  .badgeName{font-size:1.3rem;font-weight:bold;color:#5e35b1;}
+
+  .scoreRow{display:flex;justify-content:space-between;background:#f6f4ff;border-radius:14px;
+    padding:10px 16px;margin:6px 0;font-size:1.05rem;}
+  .muted{color:#9a95b8;font-size:.95rem;}
+
+  .soundToggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.9);
+    border:none;border-radius:50%;width:46px;height:46px;font-size:1.3rem;cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.15);}
+  .backHome{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.9);
+    border:none;border-radius:18px;padding:8px 14px;font-family:var(--font);font-weight:bold;
+    color:#5e35b1;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.15);}
+  .topcard{position:relative;}
+
+  .disclaimer{margin-top:18px;font-size:.8rem;color:#b7b2cf;line-height:1.5;}
+  @media(max-width:480px){
+    h1{font-size:1.6rem;} .rocket{font-size:3.4rem;}
+    .obj{width:54px;height:54px;font-size:1.5rem;}
+    .pad{width:70px;height:70px;font-size:2rem;}
+  }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="wrap">
+
+  <!-- ===== HOME ===== -->
+  <section id="home" class="screen active">
+    <div class="card topcard">
+      <a class="backHome" href="../index.html">🏠 樂園</a>
+      <div class="rocket">🚀</div>
+      <h1>魔法太空快遞員</h1>
+      <p class="sub">幫魔法星球送包裹，訓練你的小宇宙專注力！</p>
+      <button class="btn go" onclick="App.toSettings()">▶ 開始遊戲</button>
+      <button class="btn soft" onclick="App.showScores()">🏆 查看分數</button>
+      <button class="btn" onclick="UIManager.show('instructions')">📖 遊戲說明</button>
+      <p class="disclaimer">這是一款專注力訓練小遊戲，純屬寓教於樂，不具任何醫療用途。</p>
+    </div>
+  </section>
+
+  <!-- ===== SETTINGS ===== -->
+  <section id="settings" class="screen">
+    <div class="card">
+      <h2>🛸 出發前準備</h2>
+      <div class="field">小小快遞員的名字</div>
+      <input id="nameInput" type="text" maxlength="10" placeholder="輸入名字（可不填）">
+      <div class="field">遊戲時間</div>
+      <div class="row" id="timeRow">
+        <div class="opt" data-time="180">3 分鐘</div>
+        <div class="opt sel" data-time="300">5 分鐘</div>
+        <div class="opt" data-time="600">10 分鐘</div>
+      </div>
+      <div class="field">難度</div>
+      <div class="row" id="diffRow">
+        <div class="opt sel" data-diff="easy">簡單</div>
+        <div class="opt" data-diff="normal">普通</div>
+        <div class="opt" data-diff="hard">挑戰</div>
+      </div>
+      <button class="btn go" onclick="App.startGame()">🚀 升空出發！</button>
+      <button class="btn soft" onclick="UIManager.show('home')">← 回首頁</button>
+    </div>
+  </section>
+
+  <!-- ===== INSTRUCTIONS ===== -->
+  <section id="instructions" class="screen">
+    <div class="card">
+      <h2>📖 怎麼玩</h2>
+      <div class="instr">
+        <p>你是一位魔法太空快遞員，每一關都有不同任務，看清楚最上面的指示再出手喔！</p>
+        <h3>🔵 專注力任務</h3>
+        <p>畫面會出現很多東西，<b>只點被指定顏色的能量球</b>。</p>
+        <h3>⭐ 抗干擾任務</h3>
+        <p>很多東西想騙你！<b>只收集指定的星星</b>，別被其他顏色拐走。</p>
+        <h3>🔮 記憶任務</h3>
+        <p>魔法符號會依序亮起，<b>記住順序再照著點</b>。</p>
+        <h3>🔁 任務切換</h3>
+        <p>規則會突然改變，<b>隨時注意最新指示</b>！</p>
+        <p style="margin-top:14px">點對 <span class="tag">+10</span> 點錯 <span class="tag">-5</span>
+           記憶過關 <span class="tag">+20</span> 連對5次 <span class="tag">+30</span>
+           整輪零失誤 <span class="tag">+50</span></p>
+        <p class="muted">☄️ 隕石和 🌀 黑洞永遠不要碰喔！</p>
+      </div>
+      <button class="btn go" onclick="UIManager.show('home')">知道了！</button>
+    </div>
+  </section>
+
+  <!-- ===== SCORES ===== -->
+  <section id="scores" class="screen">
+    <div class="card">
+      <h2>🏆 我的成績</h2>
+      <div id="scoreBody"></div>
+      <button class="btn soft" onclick="UIManager.show('home')">← 回首頁</button>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section id="results" class="screen">
+    <div class="card">
+      <h2>🎉 任務完成！</h2>
+      <div id="resBadge" class="badge">🌟</div>
+      <div id="resBadgeName" class="badgeName"></div>
+      <div class="stat"><span>總分</span><b id="resScore">0</b></div>
+      <div class="stat"><span>答對次數</span><b id="resRight">0</b></div>
+      <div class="stat"><span>答錯次數</span><b id="resWrong">0</b></div>
+      <div id="resVerdict" class="verdict"></div>
+      <button class="btn go" onclick="App.startGame()">🔁 再玩一次</button>
+      <button class="btn soft" onclick="UIManager.show('home')">🏠 回首頁</button>
+    </div>
+  </section>
+
+  <!-- ===== GAME ===== -->
+  <section id="game" class="screen">
+    <div class="topbar">
+      <div class="pill" id="scorePill"><small>分數</small><span id="scoreVal">0</span></div>
+      <div class="pill" id="comboPill"><small>連對</small><span id="comboVal">0</span></div>
+      <div class="pill" id="timePill"><small>剩餘</small><span id="timeVal">5:00</span></div>
+    </div>
+    <div class="taskbar" id="taskbar">
+      <div class="mode" id="modeLabel">準備中…</div>
+      <div class="task" id="taskLabel">🚀 出發！</div>
+    </div>
+    <div id="play">
+      <div class="toast" id="toast"></div>
+    </div>
+    <div class="gamebottom">
+      <button class="btn soft" onclick="App.togglePause()" id="pauseBtn">⏸ 暫停</button>
+      <button class="btn" onclick="App.quitToHome()">🏠 返回</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- pause overlay -->
+<div id="pauseLayer">
+  <div class="card" style="max-width:340px">
+    <div class="rocket">⏸️</div>
+    <h2>暫停中</h2>
+    <p class="sub">休息一下，準備好再繼續！</p>
+    <button class="btn go" onclick="App.togglePause()">▶ 繼續遊戲</button>
+    <button class="btn soft" onclick="App.quitToHome()">🏠 返回首頁</button>
+  </div>
+</div>
+
+<button class="soundToggle" id="soundBtn" onclick="SoundManager.toggle()">🔊</button>
+
+<script>
+/* =========================================================
+   《魔法太空快遞員》 兒童專注力訓練小遊戲
+   單一 HTML，無後端、無資料庫。
+   ========================================================= */
+
+/* ---------- StorageManager ---------- */
+const StorageManager = {
+  KEY:'magicDelivery_v1',
+  data:{ playerName:'', highScore:0, lastScore:0, history:[], badges:[], soundOn:true },
+  load(){
+    try{
+      const raw = localStorage.getItem(this.KEY);
+      if(raw) this.data = Object.assign(this.data, JSON.parse(raw));
+    }catch(e){}
+    return this.data;
+  },
+  save(){
+    try{ localStorage.setItem(this.KEY, JSON.stringify(this.data)); }catch(e){}
+  }
+};
+
+/* ---------- Settings ---------- */
+const Settings = {
+  time:300, diff:'easy', name:'',
+  profiles:{
+    easy:  { maxObj:6,  spawn:1400, life:6000, round:20, targetRatio:.5, memLen:3, speed:3.4 },
+    normal:{ maxObj:9,  spawn:1000, life:4500, round:16, targetRatio:.42,memLen:4, speed:2.8 },
+    hard:  { maxObj:12, spawn:750,  life:3500, round:13, targetRatio:.36,memLen:5, speed:2.2 }
+  },
+  get profile(){ return this.profiles[this.diff]; }
+};
+
+/* ---------- SoundManager (Web Audio API) ---------- */
+const SoundManager = {
+  ctx:null, on:true,
+  init(){
+    this.on = StorageManager.data.soundOn !== false;
+    this.render();
+  },
+  ensure(){
+    if(!this.ctx){
+      try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    }
+    if(this.ctx && this.ctx.state==='suspended') this.ctx.resume();
+  },
+  tone(freq,dur,type='sine',vol=.18,delay=0){
+    if(!this.on) return;
+    this.ensure(); if(!this.ctx) return;
+    const t = this.ctx.currentTime + delay;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(vol,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  },
+  correct(){ this.tone(880,.12,'triangle',.2); this.tone(1175,.12,'triangle',.16,.05); },
+  wrong(){ this.tone(180,.22,'sawtooth',.16); },
+  combo(){ [523,659,784,1047].forEach((f,i)=>this.tone(f,.14,'triangle',.18,i*.08)); },
+  level(){ [392,523,659,784].forEach((f,i)=>this.tone(f,.16,'sine',.18,i*.07)); },
+  flip(){ this.tone(660,.1,'square',.14); this.tone(440,.1,'square',.12,.1); },
+  end(){ [659,523,392,330].forEach((f,i)=>this.tone(f,.3,'sine',.18,i*.18)); },
+  beep(f){ this.tone(f,.25,'sine',.2); },
+  toggle(){
+    this.on=!this.on;
+    StorageManager.data.soundOn=this.on; StorageManager.save();
+    this.render();
+    if(this.on) this.correct();
+  },
+  render(){ document.getElementById('soundBtn').textContent = this.on?'🔊':'🔇'; }
+};
+
+/* ---------- ScoreManager ---------- */
+const ScoreManager = {
+  score:0, combo:0, correct:0, wrong:0,
+  reset(){ this.score=0; this.combo=0; this.correct=0; this.wrong=0; this.update(); },
+  add(pts){ this.score=Math.max(0,this.score+pts); this.update(); },
+  hit(){
+    this.correct++; this.combo++; this.add(10);
+    if(this.combo>0 && this.combo%5===0){ this.add(30); SoundManager.combo(); UIManager.toast('連對 5 次！+30 ⭐'); }
+    else SoundManager.correct();
+    this.update();
+  },
+  miss(){ this.wrong++; this.combo=0; this.add(-5); SoundManager.wrong(); this.update(); },
+  update(){
+    document.getElementById('scoreVal').textContent=this.score;
+    document.getElementById('comboVal').textContent=this.combo;
+  },
+  badge(s){
+    if(s>=600) return {emoji:'👑',name:'專注大師'};
+    if(s>=400) return {emoji:'🚀',name:'太空隊長'};
+    if(s>=200) return {emoji:'📦',name:'魔法快遞員'};
+    if(s>=100) return {emoji:'🌟',name:'專注新星'};
+    return {emoji:'🐣',name:'小小學徒'};
+  }
+};
+
+/* ---------- GameState ---------- */
+const GameState = {
+  running:false, paused:false, timeLeft:0, mode:null,
+  roundTimeLeft:0, roundErrors:0, roundCorrect:0, inMemory:false,
+  reset(){ this.running=false; this.paused=false; this.inMemory=false; }
+};
+
+/* ---------- UIManager ---------- */
+const UIManager = {
+  show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  },
+  setTask(mode,text){
+    document.getElementById('modeLabel').textContent=mode;
+    document.getElementById('taskLabel').textContent=text;
+  },
+  flipTask(){
+    const tb=document.getElementById('taskbar');
+    tb.classList.remove('flip'); void tb.offsetWidth; tb.classList.add('flip');
+  },
+  toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(this._tt); this._tt=setTimeout(()=>t.classList.remove('show'),1100);
+  },
+  floatPoint(x,y,txt,color){
+    const p=document.getElementById('play');
+    const el=document.createElement('div');
+    el.className='floatpt'; el.textContent=txt; el.style.color=color;
+    el.style.left=x+'px'; el.style.top=y+'px';
+    p.appendChild(el); setTimeout(()=>el.remove(),800);
+  },
+  clearPlay(){
+    const p=document.getElementById('play');
+    p.querySelectorAll('.obj,.mempads').forEach(e=>e.remove());
+  },
+  fmtTime(s){ const m=Math.floor(s/60); const ss=s%60; return m+':'+(ss<10?'0':'')+ss; }
+};
+
+/* ---------- GameModes ---------- */
+const BALL_COLORS=[
+  {c:'blue',label:'藍色',cls:'o-blue'},
+  {c:'red',label:'紅色',cls:'o-red'},
+  {c:'yellow',label:'黃色',cls:'o-yellow'},
+  {c:'green',label:'綠色',cls:'o-green'}
+];
+const STAR_COLORS=[
+  {c:'yellow',label:'黃色',cls:'o-yellow'},
+  {c:'red',label:'紅色',cls:'o-red'},
+  {c:'blue',label:'藍色',cls:'o-blue'}
+];
+const SYMBOLS=[
+  {e:'🔥',n:'火'},{e:'💧',n:'水'},{e:'🌪️',n:'風'},{e:'⚡',n:'雷'},{e:'🌱',n:'木'}
+];
+
+const GameModes = {
+  spawnTimer:null, lifeTimers:[],
+  task:null,            // {kind, color}
+  flipScheduled:false,
+
+  pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; },
+
+  // choose next round mode (avoid immediate repeat)
+  nextMode(){
+    const modes=['focus','antidistract','memory','switch'];
+    let m; do{ m=this.pick(modes); }while(m===GameState.mode && Math.random()<.6);
+    return m;
+  },
+
+  startRound(){
+    if(!GameState.running||GameState.paused) return;
+    this.stopSpawning();
+    UIManager.clearPlay();
+    GameState.roundErrors=0; GameState.roundCorrect=0; this.flipScheduled=false;
+    GameState.mode=this.nextMode();
+    GameState.inMemory=(GameState.mode==='memory');
+    GameState.roundTimeLeft=Settings.profile.round;
+
+    if(GameState.mode==='memory'){ this.startMemory(); return; }
+
+    if(GameState.mode==='focus'){
+      const t=this.pick(BALL_COLORS);
+      this.task={kind:'ball',color:t.c};
+      UIManager.setTask('🔵 專注力任務','只點 '+t.label+' 能量球');
+    }else if(GameState.mode==='antidistract'){
+      const t=this.pick(STAR_COLORS);
+      this.task={kind:'star',color:t.c};
+      UIManager.setTask('⭐ 抗干擾任務','只收集 '+t.label+' 星星，別碰其他');
+    }else if(GameState.mode==='switch'){
+      const t=this.pick(BALL_COLORS);
+      this.task={kind:'ball',color:t.c};
+      UIManager.setTask('🔁 任務切換','點 '+t.label+' 能量球');
+      this.flipScheduled=true; // will flip at half time
+    }
+    this.startSpawning();
+  },
+
+  /* --- spawning floating objects --- */
+  startSpawning(){
+    this.spawnBurst(Math.ceil(Settings.profile.maxObj/2));
+    this.spawnTimer=setInterval(()=>{
+      if(GameState.paused) return;
+      const p=document.getElementById('play');
+      const count=p.querySelectorAll('.obj').length;
+      if(count<Settings.profile.maxObj) this.spawnOne();
+    },Settings.profile.spawn);
+  },
+  stopSpawning(){
+    clearInterval(this.spawnTimer); this.spawnTimer=null;
+    this.lifeTimers.forEach(t=>clearTimeout(t)); this.lifeTimers=[];
+  },
+  spawnBurst(n){ for(let i=0;i<n;i++) this.spawnOne(); },
+
+  spawnOne(){
+    const p=document.getElementById('play');
+    const w=p.clientWidth, h=p.clientHeight;
+    if(w<40||h<40) return;
+    const isTarget=Math.random()<Settings.profile.targetRatio;
+    let kind,color,cls,glyph;
+
+    if(isTarget){
+      kind=this.task.kind; color=this.task.color;
+      if(kind==='ball'){ cls=BALL_COLORS.find(b=>b.c===color).cls; glyph='✨'; }
+      else { cls=STAR_COLORS.find(b=>b.c===color).cls; glyph='⭐'; }
+    }else{
+      // distractor: balls/stars of other colors, or rock / black hole
+      const r=Math.random();
+      if(r<0.25){ kind='rock'; cls='o-rock'; glyph='☄️'; color='rock'; }
+      else if(r<0.4){ kind='hole'; cls='o-hole'; glyph='🌀'; color='hole'; }
+      else if(r<0.7){
+        kind='ball';
+        let opts=BALL_COLORS.filter(b=>!(this.task.kind==='ball'&&b.c===this.task.color));
+        const o=this.pick(opts); color=o.c; cls=o.cls; glyph='✨';
+      }else{
+        kind='star';
+        let opts=STAR_COLORS.filter(b=>!(this.task.kind==='star'&&b.c===this.task.color));
+        const o=this.pick(opts); color=o.c; cls=o.cls; glyph='⭐';
+      }
+    }
+
+    const el=document.createElement('div');
+    el.className='obj '+cls;
+    el.textContent=glyph;
+    el.dataset.kind=kind; el.dataset.color=color;
+    const size=60;
+    const x=Math.random()*(w-size), y=Math.random()*(h-size);
+    el.style.left=Math.max(0,x)+'px'; el.style.top=Math.max(0,y)+'px';
+    el.style.animationDelay=(Math.random()*1.5)+'s';
+    el.addEventListener('click',(ev)=>this.onObjClick(ev,el));
+    p.appendChild(el);
+
+    // life span -> auto despawn
+    const lt=setTimeout(()=>{ if(el.parentNode){ el.classList.add('gone'); setTimeout(()=>el.remove(),350);} },Settings.profile.life);
+    this.lifeTimers.push(lt);
+  },
+
+  onObjClick(ev,el){
+    if(!GameState.running||GameState.paused||GameState.inMemory) return;
+    if(el.classList.contains('gone')) return;
+    const correct=(el.dataset.kind===this.task.kind && el.dataset.color===this.task.color);
+    const p=document.getElementById('play').getBoundingClientRect();
+    const x=ev.clientX-p.left, y=ev.clientY-p.top;
+    if(correct){
+      GameState.roundCorrect++;
+      ScoreManager.hit();
+      UIManager.floatPoint(x,y,'+10','#2e7d32');
+      el.classList.add('gone'); setTimeout(()=>el.remove(),350);
+    }else{
+      GameState.roundErrors++;
+      ScoreManager.miss();
+      UIManager.floatPoint(x,y,'-5','#c62828');
+      UIManager.toast('哎呀～再看清楚一點 😊');
+      el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope');
+    }
+  },
+
+  // called once per second by main loop for tap rounds
+  tickRound(){
+    if(GameState.mode==='memory') return;
+    GameState.roundTimeLeft--;
+    // task switch flip at half-time
+    if(GameState.mode==='switch' && this.flipScheduled &&
+       GameState.roundTimeLeft===Math.floor(Settings.profile.round/2)){
+      this.flipScheduled=false;
+      let opts=BALL_COLORS.filter(b=>b.c!==this.task.color);
+      const o=this.pick(opts); this.task={kind:'ball',color:o.c};
+      UIManager.setTask('🔁 規則改變！','改點 '+o.label+' 能量球');
+      UIManager.flipTask(); SoundManager.flip();
+      UIManager.toast('🔁 規則變了！');
+    }
+    if(GameState.roundTimeLeft<=0){
+      // round complete -> no-error bonus
+      if(GameState.roundErrors===0 && GameState.roundCorrect>0){
+        ScoreManager.add(50); SoundManager.level(); UIManager.toast('零失誤！+50 🎖️');
+      }
+      this.startRound();
+    }
+  },
+
+  /* --- memory mode --- */
+  startMemory(){
+    UIManager.setTask('🔮 記憶任務','看清楚魔法符號的順序…');
+    const p=document.getElementById('play');
+    const wrap=document.createElement('div'); wrap.className='mempads';
+    const hint=document.createElement('div'); hint.className='memhint'; hint.textContent='記住順序…';
+    p.appendChild(hint);
+    const pads=SYMBOLS.map((s,i)=>{
+      const d=document.createElement('div'); d.className='pad'; d.textContent=s.e; d.dataset.idx=i;
+      wrap.appendChild(d); return d;
+    });
+    p.appendChild(wrap);
+
+    const len=Settings.profile.memLen;
+    const seq=[]; for(let i=0;i<len;i++) seq.push(Math.floor(Math.random()*SYMBOLS.length));
+    this.memSeq=seq; this.memInput=[]; this.memReady=false;
+
+    // play the sequence
+    let i=0;
+    const playStep=()=>{
+      if(GameState.paused){ this._memReplay=setTimeout(playStep,400); return; }
+      if(i>0){ pads[seq[i-1]].classList.remove('lit'); }
+      if(i>=seq.length){
+        hint.textContent='換你了！照順序點 👆'; this.memReady=true;
+        pads.forEach(pd=>pd.addEventListener('click',()=>this.onMemClick(pd,pads,hint)));
+        return;
+      }
+      const pd=pads[seq[i]]; pd.classList.add('lit'); SoundManager.beep(440+seq[i]*110);
+      i++;
+      this._memReplay=setTimeout(()=>{ pads.forEach(p=>p.classList.remove('lit')); setTimeout(playStep,250); },650);
+    };
+    setTimeout(playStep,700);
+  },
+  onMemClick(pd,pads,hint){
+    if(!this.memReady||GameState.paused) return;
+    const idx=parseInt(pd.dataset.idx);
+    pd.classList.add('lit'); SoundManager.beep(440+idx*110);
+    setTimeout(()=>pd.classList.remove('lit'),200);
+    this.memInput.push(idx);
+    const step=this.memInput.length-1;
+    if(this.memInput[step]!==this.memSeq[step]){
+      // wrong -> gentle restart
+      hint.textContent='順序不對～再記一次！'; SoundManager.wrong();
+      GameState.roundErrors++;
+      this.memReady=false;
+      setTimeout(()=>{ if(GameState.running) this.startRound(); },900);
+      return;
+    }
+    if(this.memInput.length===this.memSeq.length){
+      // complete!
+      hint.textContent='太棒了！+20 🎉';
+      ScoreManager.correct++; ScoreManager.combo++; ScoreManager.add(20); SoundManager.level();
+      if(ScoreManager.combo>0 && ScoreManager.combo%5===0){ ScoreManager.add(30); SoundManager.combo(); UIManager.toast('連對 5 次！+30 ⭐'); }
+      ScoreManager.update();
+      this.memReady=false;
+      setTimeout(()=>{ if(GameState.running) this.startRound(); },900);
+    }
+  },
+  stopMemory(){ clearTimeout(this._memReplay); }
+};
+
+/* ---------- App (controller / main loop) ---------- */
+const App = {
+  loop:null,
+
+  init(){
+    StorageManager.load();
+    SoundManager.init();
+    this.buildStars();
+    this.bindOptions();
+    // restore name
+    document.getElementById('nameInput').value = StorageManager.data.playerName||'';
+    UIManager.show('home');
+  },
+
+  buildStars(){
+    const c=document.getElementById('stars'); let html='';
+    for(let i=0;i<40;i++){
+      const x=Math.random()*100, y=Math.random()*100, d=(Math.random()*3).toFixed(1),
+            s=(2+Math.random()*3).toFixed(1);
+      html+=`<span style="left:${x}%;top:${y}%;animation-delay:${d}s;width:${s}px;height:${s}px"></span>`;
+    }
+    c.innerHTML=html;
+  },
+
+  bindOptions(){
+    document.querySelectorAll('#timeRow .opt').forEach(o=>{
+      o.addEventListener('click',()=>{
+        document.querySelectorAll('#timeRow .opt').forEach(x=>x.classList.remove('sel'));
+        o.classList.add('sel'); Settings.time=parseInt(o.dataset.time);
+      });
+    });
+    document.querySelectorAll('#diffRow .opt').forEach(o=>{
+      o.addEventListener('click',()=>{
+        document.querySelectorAll('#diffRow .opt').forEach(x=>x.classList.remove('sel'));
+        o.classList.add('sel'); Settings.diff=o.dataset.diff;
+      });
+    });
+  },
+
+  toSettings(){ SoundManager.ensure(); UIManager.show('settings'); },
+
+  startGame(){
+    SoundManager.ensure();
+    Settings.name=document.getElementById('nameInput').value.trim();
+    StorageManager.data.playerName=Settings.name; StorageManager.save();
+
+    GameState.reset(); GameState.running=true; GameState.paused=false;
+    GameState.timeLeft=Settings.time;
+    ScoreManager.reset();
+    document.getElementById('pauseLayer').classList.remove('show');
+    document.getElementById('pauseBtn').textContent='⏸ 暫停';
+    document.getElementById('timeVal').textContent=UIManager.fmtTime(GameState.timeLeft);
+
+    UIManager.show('game');
+    GameModes.startRound();
+
+    clearInterval(this.loop);
+    this.loop=setInterval(()=>this.tick(),1000);
+  },
+
+  tick(){
+    if(!GameState.running||GameState.paused) return;
+    GameState.timeLeft--;
+    document.getElementById('timeVal').textContent=UIManager.fmtTime(Math.max(0,GameState.timeLeft));
+    GameModes.tickRound();
+    if(GameState.timeLeft<=0) this.endGame();
+  },
+
+  togglePause(){
+    if(!GameState.running) return;
+    GameState.paused=!GameState.paused;
+    document.getElementById('pauseLayer').classList.toggle('show',GameState.paused);
+    document.getElementById('pauseBtn').textContent=GameState.paused?'▶ 繼續':'⏸ 暫停';
+  },
+
+  quitToHome(){
+    this.stopAll();
+    UIManager.show('home');
+  },
+
+  stopAll(){
+    GameState.running=false; GameState.paused=false;
+    clearInterval(this.loop); this.loop=null;
+    GameModes.stopSpawning(); GameModes.stopMemory();
+    document.getElementById('pauseLayer').classList.remove('show');
+  },
+
+  endGame(){
+    this.stopAll();
+    SoundManager.end();
+    const s=ScoreManager.score;
+    const b=ScoreManager.badge(s);
+
+    // persist
+    StorageManager.data.lastScore=s;
+    if(s>StorageManager.data.highScore) StorageManager.data.highScore=s;
+    StorageManager.data.history.unshift({
+      name:Settings.name||'快遞員', score:s, right:ScoreManager.correct,
+      wrong:ScoreManager.wrong, badge:b.name, date:new Date().toLocaleDateString('zh-TW')
+    });
+    if(StorageManager.data.history.length>10) StorageManager.data.history.length=10;
+    if(!StorageManager.data.badges.includes(b.name)) StorageManager.data.badges.push(b.name);
+    StorageManager.save();
+
+    // verdict by accuracy
+    const total=ScoreManager.correct+ScoreManager.wrong;
+    const acc= total? Math.round(ScoreManager.correct/total*100):0;
+    let verdict;
+    if(acc>=90) verdict='哇！你的眼睛像雷達一樣準，超級專注！⭐⭐⭐';
+    else if(acc>=70) verdict='很棒喔！專注力滿分，繼續保持！⭐⭐';
+    else if(acc>=50) verdict='不錯的開始！多練習會越來越穩 💪';
+    else verdict='慢慢來，深呼吸看清楚再點，下次一定更好！🌈';
+
+    document.getElementById('resScore').textContent=s;
+    document.getElementById('resRight').textContent=ScoreManager.correct;
+    document.getElementById('resWrong').textContent=ScoreManager.wrong;
+    document.getElementById('resBadge').textContent=b.emoji;
+    document.getElementById('resBadgeName').textContent='獲得徽章：'+b.name;
+    document.getElementById('resVerdict').textContent=verdict;
+    UIManager.show('results');
+  },
+
+  showScores(){
+    const d=StorageManager.data;
+    let html=`
+      <div class="scoreRow"><span>最高分</span><b>${d.highScore}</b></div>
+      <div class="scoreRow"><span>最近一次</span><b>${d.lastScore}</b></div>`;
+    if(d.badges.length){
+      html+=`<div class="field" style="margin-top:14px">已獲得徽章</div>
+        <div class="row">`+d.badges.map(b=>`<span class="opt" style="cursor:default">🏅 ${b}</span>`).join('')+`</div>`;
+    }
+    html+=`<div class="field" style="margin-top:14px">遊玩紀錄</div>`;
+    if(d.history.length){
+      html+=d.history.map(h=>`<div class="scoreRow"><span>${h.date} ${h.name}</span><b>${h.score} 分</b></div>`).join('');
+    }else{
+      html+=`<p class="muted">還沒有紀錄，快去玩第一場吧！</p>`;
+    }
+    document.getElementById('scoreBody').innerHTML=html;
+    UIManager.show('scores');
+  }
+};
+
+window.addEventListener('DOMContentLoaded',()=>App.init());
+</script>
+</body>
+</html>
