@@ -114,6 +114,16 @@
           <p class="text-[11px] text-slate-500 mt-1">💡 語音非常小聲，表演者可邊看螢幕邊貼近耳邊聽題。</p>
         </div>
 
+        <!-- Auto-speak Toggle -->
+        <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+          <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-comment-dots text-indigo-500"></i> 換題時自動念題目
+          </span>
+          <button id="btn-autospeak-toggle" onclick="toggleAutoSpeak()" class="px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-full transition shadow">
+            已開啟
+          </button>
+        </div>
+
         <!-- BGM Toggle -->
         <div class="flex justify-between items-center pt-2 border-t border-slate-200">
           <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -421,6 +431,7 @@
     let gameMode = 'random'; // 'random' or 'sequential'
     let whisperVolume = 0.08; // 預設微弱音量 8%
     let bgmEnabled = true;
+    let autoSpeakEnabled = true; // 換題時是否自動念題目
     let answerHistory = [];
     let isAnnouncing = false; // 是否正在大聲複誦答案
     let gameActive = false;   // 這一局是否還在進行中
@@ -520,6 +531,19 @@
         audioCtx.resume();
       }
       return audioCtx;
+    }
+
+    function toggleAutoSpeak() {
+      autoSpeakEnabled = !autoSpeakEnabled;
+      const btn = document.getElementById('btn-autospeak-toggle');
+      if (autoSpeakEnabled) {
+        btn.innerText = "已開啟";
+        btn.className = "px-3 py-1 bg-indigo-500 text-white text-xs font-bold rounded-full transition shadow";
+      } else {
+        btn.innerText = "已關閉";
+        btn.className = "px-3 py-1 bg-slate-300 text-slate-600 text-xs font-bold rounded-full transition";
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
     }
 
     function toggleBGM() {
@@ -736,8 +760,8 @@
       document.getElementById('card-category').innerText = item.cat || "🎭 綜合表演";
       document.getElementById('card-topic-text').innerText = item.text;
 
-      // 自動播報小聲音語音
-      speakCurrentTopic();
+      // 換題時自動用耳語播報（可在設定關閉，關閉後仍可按 🔊 手動聽）
+      if (autoSpeakEnabled) speakCurrentTopic();
     }
 
     function handleAnswer(isCorrect) {
