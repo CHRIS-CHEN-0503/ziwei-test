@@ -88,6 +88,13 @@
         }
         .game-card.yumi:hover { box-shadow: 0 11px 0 #ad1457; }
         .game-card.yumi:active { box-shadow: 0 4px 0 #ad1457; }
+        .game-card.space {
+            background: linear-gradient(145deg, #d1c4e9, #b39ddb);
+            border-color: #7e57c2;
+            box-shadow: 0 6px 0 #4527a0;
+        }
+        .game-card.space:hover { box-shadow: 0 11px 0 #4527a0; }
+        .game-card.space:active { box-shadow: 0 4px 0 #4527a0; }
         .game-card.charades {
             background: linear-gradient(145deg, #c8e6c9, #a5d6a7);
             border-color: #66bb6a;
@@ -95,10 +102,6 @@
         }
         .game-card.charades:hover { box-shadow: 0 11px 0 #2e7d32; }
         .game-card.charades:active { box-shadow: 0 4px 0 #2e7d32; }
-        .game-card.wide { grid-column: 1 / -1; }
-        @media (max-width: 600px) {
-            .game-card.wide { grid-column: auto; }
-        }
         .game-emoji {
             font-size: 4.5rem;
             display: block;
@@ -157,7 +160,12 @@
                 <div class="game-title">英文拼音 Phonics</div>
                 <div class="game-desc">成人自學專題 · 6 章拼讀規則</div>
             </a>
-            <a href="./比手畫腳/" class="game-card charades wide">
+            <a href="./太空快遞/" class="game-card space">
+                <span class="game-emoji">🚀</span>
+                <div class="game-title">魔法太空快遞員</div>
+                <div class="game-desc">專注力訓練小遊戲</div>
+            </a>
+            <a href="./比手畫腳/" class="game-card charades">
                 <span class="game-emoji">🎭</span>
                 <div class="game-title">兒童比手畫腳</div>
                 <div class="game-desc">50 題題庫 · 悄悄話語音 · 計時競賽</div>
