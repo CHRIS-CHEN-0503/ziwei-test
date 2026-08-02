@@ -86,11 +86,15 @@
           <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
             <i class="fa-solid fa-clock text-amber-500 mr-1"></i> 每局時間
           </label>
-          <div class="grid grid-cols-3 gap-2">
-            <button onclick="setTimer(30)" class="btn-time py-2 rounded-xl text-xs font-bold border-2 bg-slate-100 border-slate-300" data-time="30">30 秒</button>
-            <button onclick="setTimer(60)" class="btn-time py-2 rounded-xl text-xs font-bold border-2 bg-rose-500 text-white border-rose-600 shadow" data-time="60">60 秒</button>
-            <button onclick="setTimer(90)" class="btn-time py-2 rounded-xl text-xs font-bold border-2 bg-slate-100 border-slate-300" data-time="90">90 秒</button>
+          <div class="flex items-center gap-3">
+            <button onclick="changeMinutes(-1)" class="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 border-2 border-slate-300 text-slate-700 font-black text-2xl leading-none active:scale-95 transition">−</button>
+            <div class="flex-1 text-center bg-white rounded-2xl border-2 border-rose-300 py-1.5 shadow-sm">
+              <div id="timer-minutes" class="text-2xl font-black text-rose-600 leading-tight">3</div>
+              <div class="text-[10px] font-bold text-slate-500">分鐘</div>
+            </div>
+            <button onclick="changeMinutes(1)" class="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 border-2 border-slate-300 text-slate-700 font-black text-2xl leading-none active:scale-95 transition">＋</button>
           </div>
+          <p class="text-[11px] text-slate-500 mt-1">⏰ 剩 30 秒會語音提醒，最後 10 秒開始倒數。</p>
         </div>
 
         <!-- Whisper Volume Setting -->
@@ -151,7 +155,7 @@
         <!-- Timer -->
         <div class="text-right">
           <div class="text-[10px] font-bold text-slate-500 uppercase">剩餘時間</div>
-          <div id="game-timer" class="text-2xl font-black text-rose-600">60s</div>
+          <div id="game-timer" class="text-2xl font-black text-rose-600">3:00</div>
         </div>
       </div>
 
@@ -410,8 +414,9 @@
     let activeTopicPool = [];
     let currentTopicIndex = 0;
     let score = 0;
-    let timerSeconds = 60;
-    let currentRemainingTime = 60;
+    let timerMinutes = 3;              // 每局分鐘數（可調），預設 3 分鐘
+    let timerSeconds = 180;
+    let currentRemainingTime = 180;
     let timerInterval = null;
     let gameMode = 'random'; // 'random' or 'sequential'
     let whisperVolume = 0.08; // 預設微弱音量 8%
@@ -621,6 +626,16 @@
           gain.connect(ctx.destination);
           osc.start();
           osc.stop(ctx.currentTime + 0.2);
+        } else if (type === 'tick') {
+          // 倒數提示音：短促的高音「嗶」
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(1046.50, ctx.currentTime);
+          gain.gain.setValueAtTime(0.05, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.09);
         } else if (type === 'over') {
           [261, 329, 392, 523, 659].forEach((freq, idx) => {
             const o = ctx.createOscillator();
@@ -655,15 +670,28 @@
       }
     }
 
-    function setTimer(sec) {
-      timerSeconds = sec;
-      document.querySelectorAll('.btn-time').forEach(btn => {
-        if (parseInt(btn.getAttribute('data-time')) === sec) {
-          btn.className = "btn-time py-2 rounded-xl text-xs font-bold border-2 bg-rose-500 text-white border-rose-600 shadow";
-        } else {
-          btn.className = "btn-time py-2 rounded-xl text-xs font-bold border-2 bg-slate-100 border-slate-300";
-        }
-      });
+    /* 每局時間以「分鐘」為單位調整，範圍 1~10 分鐘 */
+    function changeMinutes(delta) {
+      timerMinutes = Math.min(10, Math.max(1, timerMinutes + delta));
+      timerSeconds = timerMinutes * 60;
+      document.getElementById('timer-minutes').innerText = timerMinutes;
+    }
+
+    function formatTime(sec) {
+      if (sec < 0) sec = 0;
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function updateTimerDisplay() {
+      const el = document.getElementById('game-timer');
+      el.innerText = formatTime(currentRemainingTime);
+      // 最後 10 秒放大並閃爍，提高警示感
+      const urgent = currentRemainingTime <= 10;
+      el.classList.toggle('animate-pulse-fast', urgent);
+      el.classList.toggle('text-3xl', urgent);
+      el.classList.toggle('text-2xl', !urgent);
     }
 
     function startGame() {
@@ -690,7 +718,7 @@
       document.getElementById('announce-banner').classList.add('hidden');
 
       document.getElementById('game-score').innerText = score;
-      document.getElementById('game-timer').innerText = currentRemainingTime + "s";
+      updateTimerDisplay();
 
       showScreen('screen-game');
       renderCurrentCard();
@@ -789,12 +817,34 @@
       clearInterval(timerInterval);
       timerInterval = setInterval(() => {
         currentRemainingTime--;
-        document.getElementById('game-timer').innerText = currentRemainingTime + "s";
+        updateTimerDisplay();
+
+        if (currentRemainingTime === 30) {
+          announceTime('倒數三十秒');
+        } else if (currentRemainingTime <= 10 && currentRemainingTime > 0) {
+          announceTime(String(currentRemainingTime));
+        }
 
         if (currentRemainingTime <= 0) {
           endGame();
         }
       }, 1000);
+    }
+
+    /* 時間提醒語音。
+       不呼叫 cancel()，避免把正在播的題目耳語切斷；
+       正在公布答案時則只留提示音，不搶話也不會累積延遲。 */
+    function announceTime(text) {
+      playSoundEffect('tick');
+      if (isAnnouncing) return;
+      if (!('speechSynthesis' in window)) return;
+      try {
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'zh-TW';
+        utt.volume = 1.0;   // 正常音量，讓全場都聽得到
+        utt.rate = 1.15;
+        window.speechSynthesis.speak(utt);
+      } catch (e) {}
     }
 
     function endGame() {
