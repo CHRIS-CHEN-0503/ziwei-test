@@ -61,7 +61,7 @@
         <h1 class="text-4xl font-extrabold text-rose-600 tracking-wide text-shadow-fun flex items-center justify-center gap-2">
           <span>🎭</span> 兒童比手畫腳
         </h1>
-        <p class="text-sm font-bold text-amber-900 mt-1">👂 悄悄話語音：貼近耳朵聽題目！</p>
+        <p class="text-sm font-bold text-amber-900 mt-1">🎧 比劃者戴耳機聽題目<span class="text-amber-700 font-normal"> ·</span> 👀 猜題者看螢幕按按鈕</p>
       </div>
 
       <!-- Settings Panel -->
@@ -101,17 +101,17 @@
         <div>
           <div class="flex justify-between items-center mb-1">
             <label class="text-xs font-bold text-slate-600">
-              <i class="fa-solid fa-volume-low text-indigo-500 mr-1"></i> 耳語音量 (預設極小聲)
+              <i class="fa-solid fa-headphones text-indigo-500 mr-1"></i> 耳機音量
             </label>
-            <span id="volume-val" class="text-xs font-bold text-indigo-600">8%</span>
+            <span id="volume-val" class="text-xs font-bold text-indigo-600">100%</span>
           </div>
           <div class="flex items-center gap-2">
-            <input id="volume-slider" type="range" min="1" max="40" value="8" oninput="updateVolume(this.value)" class="w-full accent-indigo-500 cursor-pointer">
+            <input id="volume-slider" type="range" min="10" max="100" value="100" oninput="updateVolume(this.value)" class="w-full accent-indigo-500 cursor-pointer">
             <button onclick="testWhisper()" class="px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-300 whitespace-nowrap active:scale-95">
               🔊 試聽
             </button>
           </div>
-          <p class="text-[11px] text-slate-500 mt-1">💡 語音非常小聲，表演者可邊看螢幕邊貼近耳邊聽題。</p>
+          <p class="text-[11px] text-slate-500 mt-1">💡 比劃者請先戴上耳機，題目只會從耳機播出。沒戴耳機的話請把音量調小。</p>
         </div>
 
         <!-- Auto-speak Toggle -->
@@ -169,31 +169,35 @@
         </div>
       </div>
 
-      <!-- Main Topic Card (直接可見) -->
-      <div class="my-auto py-2">
-        <div class="glass-card rounded-3xl p-6 shadow-2xl border-4 border-white text-center relative overflow-hidden flex flex-col items-center">
-          <!-- Category Tag -->
-          <div class="inline-block bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-sm border border-teal-200" id="card-category">
+      <!-- Main Topic Card（題目對猜題者保密） -->
+      <div class="my-auto py-2 space-y-3">
+        <div class="glass-card rounded-3xl p-5 shadow-2xl border-4 border-white text-center relative overflow-hidden flex flex-col items-center">
+          <!-- 類別提示：給猜題者縮小範圍，不透露題目 -->
+          <div class="inline-block bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full mb-2 shadow-sm border border-teal-200" id="card-category">
             🐾 動作體驗
           </div>
 
-          <!-- Direct Topic Display Area -->
-          <div class="my-2 min-h-[100px] flex items-center justify-center w-full">
-            <div id="card-topic-text" class="text-4xl font-black text-slate-800 tracking-wide leading-tight">
-              猴子吃香蕉
-            </div>
+          <!-- 題目隱藏區 -->
+          <div class="my-1 min-h-[92px] flex flex-col items-center justify-center w-full">
+            <div class="text-5xl mb-1">🤫</div>
+            <div class="text-lg font-black text-slate-700">題目保密中</div>
+            <div class="text-[11px] font-bold text-slate-500 mt-0.5">只有戴耳機的比劃者聽得到</div>
           </div>
 
-          <!-- 公布答案提示（複誦中才顯示） -->
-          <div id="announce-banner" class="hidden w-full mt-1 py-2 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-sm font-black animate-pulse-fast">
-            📢 公布答案中…
-          </div>
-
-          <!-- Audio Replay Button -->
-          <button onclick="speakCurrentTopic()" class="mt-4 px-5 py-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-2xl border border-indigo-300 active:scale-95 transition flex items-center justify-center gap-2 text-xs font-bold shadow-sm">
-            <span>🔊 聽小語音播報</span>
-            <span class="text-[10px] text-indigo-500">(靠近耳朵聽)</span>
+          <!-- 猜題者可幫比劃者重播 -->
+          <button onclick="speakCurrentTopic()" class="mt-2 px-5 py-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-2xl border border-indigo-300 active:scale-95 transition flex items-center justify-center gap-2 text-xs font-bold shadow-sm">
+            <span>🔊 再聽一次</span>
+            <span class="text-[10px] text-indigo-500">(幫比劃者重播)</span>
           </button>
+        </div>
+
+        <!-- 上一題：答完才顯示，讓猜題者知道剛剛那題是什麼 -->
+        <div id="prev-topic-panel" class="hidden glass-card rounded-2xl px-4 py-2.5 border-2 border-white shadow flex items-center justify-between gap-3">
+          <div class="text-left min-w-0 flex-1">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">上一題</div>
+            <div id="prev-topic-text" class="text-base font-black text-slate-800 truncate"></div>
+          </div>
+          <div id="prev-topic-result" class="text-sm font-black whitespace-nowrap"></div>
         </div>
       </div>
 
@@ -227,7 +231,10 @@
 
         <!-- Answer History -->
         <div class="glass-card rounded-2xl p-4 text-left max-h-48 overflow-y-auto space-y-1 border border-white text-xs">
-          <div class="font-bold text-slate-500 mb-2 border-b pb-1">本局答題紀錄：</div>
+          <div class="flex justify-between items-center font-bold text-slate-500 mb-2 border-b pb-1 gap-2">
+            <span>本局答題紀錄：</span>
+            <span id="avg-time" class="text-[11px] text-indigo-600 whitespace-nowrap"></span>
+          </div>
           <div id="result-list" class="space-y-1">
             <!-- Dynamically populated -->
           </div>
@@ -429,11 +436,11 @@
     let currentRemainingTime = 180;
     let timerInterval = null;
     let gameMode = 'random'; // 'random' or 'sequential'
-    let whisperVolume = 0.08; // 預設微弱音量 8%
+    let whisperVolume = 1.0;  // 題目只從耳機播給比劃者聽，預設正常音量
     let bgmEnabled = true;
     let autoSpeakEnabled = true; // 換題時是否自動念題目
     let answerHistory = [];
-    let isAnnouncing = false; // 是否正在大聲複誦答案
+    let topicStartTime = 0;   // 本題開始的時間，用來算每題花了幾秒
     let gameActive = false;   // 這一局是否還在進行中
 
     /* ===================================================
@@ -504,7 +511,7 @@
     function testWhisper() {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const testUtt = new SpeechSynthesisUtterance("這是有好聽的耳語聲音，請貼近耳朵。");
+        const testUtt = new SpeechSynthesisUtterance("測試音量，比劃者請確認聽得清楚。");
         testUtt.lang = 'zh-TW';
         testUtt.volume = whisperVolume;
         testUtt.rate = 0.85;
@@ -737,9 +744,7 @@
       currentRemainingTime = timerSeconds;
       answerHistory = [];
       gameActive = true;
-      isAnnouncing = false;
-      setAnswerButtonsEnabled(true);
-      document.getElementById('announce-banner').classList.add('hidden');
+      document.getElementById('prev-topic-panel').classList.add('hidden');
 
       document.getElementById('game-score').innerText = score;
       updateTimerDisplay();
@@ -758,20 +763,23 @@
 
       const item = activeTopicPool[currentTopicIndex];
       document.getElementById('card-category').innerText = item.cat || "🎭 綜合表演";
-      document.getElementById('card-topic-text').innerText = item.text;
+      topicStartTime = Date.now();
 
-      // 換題時自動用耳語播報（可在設定關閉，關閉後仍可按 🔊 手動聽）
+      // 換題時自動念題目給戴耳機的比劃者聽（可在設定關閉，關閉後仍可按 🔊 手動聽）
       if (autoSpeakEnabled) speakCurrentTopic();
     }
 
     function handleAnswer(isCorrect) {
-      if (isAnnouncing) return;                                  // 複誦中，忽略連點
+      if (!gameActive) return;
       if (currentTopicIndex >= activeTopicPool.length) return;
 
       const currentItem = activeTopicPool[currentTopicIndex];
+      const seconds = Math.max(0, Math.round((Date.now() - topicStartTime) / 1000));
+
       answerHistory.push({
         text: currentItem.text,
-        isCorrect: isCorrect
+        isCorrect: isCorrect,
+        seconds: seconds
       });
 
       if (isCorrect) {
@@ -782,59 +790,22 @@
         playSoundEffect('pass');
       }
 
-      // 用正常音量、1.3 倍速大聲複誦一次題目，念完才換下一題
-      announceAnswer(currentItem.text, () => {
-        if (!gameActive) return;                                 // 期間時間到就不再換題
-        currentTopicIndex++;
-        renderCurrentCard();
-      });
+      // 螢幕上公布剛剛那一題（不再用語音複誦）
+      showPreviousTopic(currentItem.text, isCorrect, seconds);
+
+      currentTopicIndex++;
+      renderCurrentCard();
     }
 
-    /* 公布答案：正常音量 + 1.3 倍速複誦，結束後執行 done() */
-    function announceAnswer(text, done) {
-      isAnnouncing = true;
-      setAnswerButtonsEnabled(false);
-      document.getElementById('announce-banner').classList.remove('hidden');
-
-      let finished = false;
-      const finish = () => {
-        if (finished) return;
-        finished = true;
-        clearTimeout(guardTimer);
-        isAnnouncing = false;
-        setAnswerButtonsEnabled(true);
-        document.getElementById('announce-banner').classList.add('hidden');
-        done();
-      };
-
-      // 保險：萬一 onend 沒被觸發（部分瀏覽器），最多等 5 秒就繼續
-      const guardTimer = setTimeout(finish, 5000);
-
-      if (!('speechSynthesis' in window)) {
-        setTimeout(finish, 400);
-        return;
-      }
-
-      window.speechSynthesis.cancel();
-      // 先讓答對／跳過的音效響完，再開始複誦
-      setTimeout(() => {
-        if (finished) return;
-        const utt = new SpeechSynthesisUtterance(text);
-        utt.lang = 'zh-TW';
-        utt.volume = 1.0;   // 正常音量，讓在場所有人都聽得到答案
-        utt.rate = 1.3;     // 1.3 倍速
-        utt.onend = finish;
-        utt.onerror = finish;
-        window.speechSynthesis.speak(utt);
-      }, 320);
-    }
-
-    function setAnswerButtonsEnabled(enabled) {
-      document.querySelectorAll('.btn-answer').forEach(btn => {
-        btn.disabled = !enabled;
-        btn.classList.toggle('opacity-40', !enabled);
-        btn.classList.toggle('pointer-events-none', !enabled);
-      });
+    /* 讓猜題者看到剛答完的題目 */
+    function showPreviousTopic(text, isCorrect, seconds) {
+      const panel = document.getElementById('prev-topic-panel');
+      document.getElementById('prev-topic-text').innerText = text;
+      const result = document.getElementById('prev-topic-result');
+      result.innerText = (isCorrect ? '✓ 答對' : '✕ 跳過') + ' · ' + seconds + '秒';
+      result.className = 'text-sm font-black whitespace-nowrap ' +
+        (isCorrect ? 'text-emerald-500' : 'text-amber-500');
+      panel.classList.remove('hidden');
     }
 
     function startTimer() {
@@ -857,11 +828,11 @@
 
     /* 時間提醒語音。
        不呼叫 cancel()，避免把正在播的題目耳語切斷；
-       正在公布答案時則只留提示音，不搶話也不會累積延遲。 */
+       題目正在播的時候只留提示音，不搶話也不會讓數字排隊延遲。 */
     function announceTime(text) {
       playSoundEffect('tick');
-      if (isAnnouncing) return;
       if (!('speechSynthesis' in window)) return;
+      if (speechSynthesis.speaking || speechSynthesis.pending) return;
       try {
         const utt = new SpeechSynthesisUtterance(text);
         utt.lang = 'zh-TW';
@@ -873,12 +844,9 @@
 
     function endGame() {
       gameActive = false;
-      isAnnouncing = false;
       clearInterval(timerInterval);
       stopBGM();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      setAnswerButtonsEnabled(true);
-      document.getElementById('announce-banner').classList.add('hidden');
       playSoundEffect('over');
 
       document.getElementById('final-score').innerText = score;
@@ -888,17 +856,32 @@
       if (answerHistory.length === 0) {
         listEl.innerHTML = '<div class="text-slate-400">本局未答題</div>';
       } else {
-        answerHistory.forEach(item => {
+        answerHistory.forEach((item, idx) => {
           const div = document.createElement('div');
-          div.className = "flex justify-between items-center py-1 border-b border-slate-100";
+          div.className = "flex justify-between items-center gap-2 py-1 border-b border-slate-100";
           div.innerHTML = `
-            <span class="font-bold ${item.isCorrect ? 'text-slate-800' : 'text-slate-400'}">${item.text}</span>
-            <span class="${item.isCorrect ? 'text-emerald-500 font-black' : 'text-amber-500 font-bold'}">
-              ${item.isCorrect ? '✓ 答對' : '✕ 跳過'}
+            <span class="font-bold truncate ${item.isCorrect ? 'text-slate-800' : 'text-slate-400'}">
+              <span class="text-slate-400 font-normal">${idx + 1}.</span> ${item.text}
+            </span>
+            <span class="flex items-center gap-2 whitespace-nowrap">
+              <span class="text-slate-500 font-bold">${item.seconds} 秒</span>
+              <span class="${item.isCorrect ? 'text-emerald-500 font-black' : 'text-amber-500 font-bold'}">
+                ${item.isCorrect ? '✓ 答對' : '✕ 跳過'}
+              </span>
             </span>
           `;
           listEl.appendChild(div);
         });
+      }
+
+      // 平均答對用時
+      const correctItems = answerHistory.filter(a => a.isCorrect);
+      const avgEl = document.getElementById('avg-time');
+      if (correctItems.length) {
+        const avg = correctItems.reduce((s, a) => s + a.seconds, 0) / correctItems.length;
+        avgEl.innerText = '平均答對用時 ' + avg.toFixed(1) + ' 秒';
+      } else {
+        avgEl.innerText = '';
       }
 
       showScreen('screen-result');
