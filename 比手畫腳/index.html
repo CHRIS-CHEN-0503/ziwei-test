@@ -113,7 +113,7 @@
         <!-- BGM Toggle -->
         <div class="flex justify-between items-center pt-2 border-t border-slate-200">
           <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-            <i class="fa-solid fa-music text-teal-500"></i> 歡樂背景音樂
+            <i class="fa-solid fa-music text-teal-500"></i> 8-bit 電玩背景音樂
           </span>
           <button id="btn-bgm-toggle" onclick="toggleBGM()" class="px-3 py-1 bg-teal-500 text-white text-xs font-bold rounded-full transition shadow">
             已開啟
@@ -128,7 +128,7 @@
         </button>
 
         <button onclick="openTopicModal()" class="w-full py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-2xl shadow border-2 border-slate-200 flex items-center justify-center gap-2">
-          <i class="fa-solid fa-boxes-stacked text-amber-500"></i> 管理 / 新增題目 (<span id="topic-count-badge">50</span>題)
+          <i class="fa-solid fa-boxes-stacked text-amber-500"></i> 管理 / 新增題目 (<span id="topic-count-badge">100</span>題)
         </button>
       </div>
     </div>
@@ -170,6 +170,11 @@
             </div>
           </div>
 
+          <!-- 公布答案提示（複誦中才顯示） -->
+          <div id="announce-banner" class="hidden w-full mt-1 py-2 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-sm font-black animate-pulse-fast">
+            📢 公布答案中…
+          </div>
+
           <!-- Audio Replay Button -->
           <button onclick="speakCurrentTopic()" class="mt-4 px-5 py-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-2xl border border-indigo-300 active:scale-95 transition flex items-center justify-center gap-2 text-xs font-bold shadow-sm">
             <span>🔊 聽小語音播報</span>
@@ -181,10 +186,10 @@
       <!-- Game Action Buttons -->
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
-          <button onclick="handleAnswer(true)" class="py-5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl rounded-2xl shadow-lg border-b-4 border-emerald-700 active:translate-y-1 active:border-b-0 transition flex items-center justify-center gap-2">
+          <button onclick="handleAnswer(true)" class="btn-answer py-5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl rounded-2xl shadow-lg border-b-4 border-emerald-700 active:translate-y-1 active:border-b-0 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-circle-check text-2xl"></i> 猜對了 (+1)
           </button>
-          <button onclick="handleAnswer(false)" class="py-5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xl rounded-2xl shadow-lg border-b-4 border-amber-700 active:translate-y-1 active:border-b-0 transition flex items-center justify-center gap-2">
+          <button onclick="handleAnswer(false)" class="btn-answer py-5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xl rounded-2xl shadow-lg border-b-4 border-amber-700 active:translate-y-1 active:border-b-0 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-forward text-2xl"></i> 跳過 (PASS)
           </button>
         </div>
@@ -263,7 +268,7 @@
       <!-- Modal Footer -->
       <div class="pt-3 border-t mt-3 flex justify-between items-center">
         <button onclick="resetDefaultTopics()" class="text-xs text-rose-600 font-bold hover:underline">
-          🔄 重設為預設50題
+          🔄 重設為預設題庫
         </button>
         <button onclick="closeTopicModal()" class="px-4 py-2 bg-slate-800 text-white font-bold text-xs rounded-xl">
           完成
@@ -274,59 +279,128 @@
 
   <script>
     /* ===================================================
-       1. 預設 50 組適合 5~9 歲兒童的題目庫
+       1. 預設 100 組適合 5~9 歲兒童的題目庫
+          用字盡量白話，避免「咆哮」「漫步」這類小孩聽不懂的詞。
+          部分題目刻意同主角、不同動作（例：獅子大聲吼叫 / 睡覺的獅子）。
        =================================================== */
     const DEFAULT_TOPICS = [
-      { text: "刷牙", cat: "🍕 生活" },
-      { text: "大象長鼻子", cat: "🐱 動物" },
-      { text: "彈吉他", cat: "🏃 動作" },
+      // ---------- 動物 ----------
+      { text: "大象用長鼻子噴水", cat: "🐱 動物" },
+      { text: "大象慢慢走路", cat: "🐱 動物" },
       { text: "猴子吃香蕉", cat: "🐱 動物" },
+      { text: "猴子爬樹", cat: "🐱 動物" },
+      { text: "兔子跳跳跳", cat: "🐱 動物" },
+      { text: "睡覺的兔子", cat: "🐱 動物" },
+      { text: "兔子吃紅蘿蔔", cat: "🐱 動物" },
+      { text: "獅子大聲吼叫", cat: "🐱 動物" },
+      { text: "睡覺的獅子", cat: "🐱 動物" },
+      { text: "貓咪洗臉", cat: "🐱 動物" },
+      { text: "貓咪伸懶腰", cat: "🐱 動物" },
+      { text: "貓咪抓老鼠", cat: "🐱 動物" },
+      { text: "小狗汪汪叫", cat: "🐱 動物" },
+      { text: "小狗搖尾巴", cat: "🐱 動物" },
+      { text: "小狗撿球", cat: "🐱 動物" },
+      { text: "企鵝走路搖搖晃晃", cat: "🐱 動物" },
+      { text: "大恐龍大聲吼叫", cat: "🐱 動物" },
+      { text: "恐龍走路地板搖晃", cat: "🐱 動物" },
+      { text: "青蛙跳進水裡", cat: "🐱 動物" },
+      { text: "小雞從蛋裡鑽出來", cat: "🐱 動物" },
+      { text: "小鳥拍拍翅膀飛", cat: "🐱 動物" },
+      { text: "長頸鹿吃樹上的葉子", cat: "🐱 動物" },
+      { text: "螃蟹橫著走", cat: "🐱 動物" },
+      { text: "蛇在地上爬", cat: "🐱 動物" },
+      { text: "袋鼠帶著寶寶跳", cat: "🐱 動物" },
+      { text: "烏龜慢慢爬", cat: "🐱 動物" },
+      { text: "貓頭鷹轉頭", cat: "🐱 動物" },
+      { text: "小魚游來游去", cat: "🐱 動物" },
+      { text: "蜜蜂在花上採蜜", cat: "🐱 動物" },
+      { text: "小豬在泥巴裡打滾", cat: "🐱 動物" },
+
+      // ---------- 動作 ----------
+      { text: "彈吉他", cat: "🏃 動作" },
       { text: "開飛機", cat: "🏃 動作" },
       { text: "游泳", cat: "🏃 動作" },
-      { text: "喝很熱的湯", cat: "🍕 生活" },
-      { text: "兔子跳跳跳", cat: "🐱 動物" },
       { text: "打乒乓球", cat: "🏃 動作" },
-      { text: "企鵝搖擺走路", cat: "🐱 動物" },
-      { text: "背癢抓不到", cat: "🏃 動作" },
-      { text: "踢足球進門", cat: "🏃 動作" },
-      { text: "睡覺打呼嚕", cat: "🍕 生活" },
-      { text: "貓咪洗臉", cat: "🐱 動物" },
+      { text: "打羽毛球", cat: "🏃 動作" },
+      { text: "打棒球揮棒", cat: "🏃 動作" },
+      { text: "拍籃球", cat: "🏃 動作" },
+      { text: "踢足球射門", cat: "🏃 動作" },
+      { text: "打保齡球", cat: "🏃 動作" },
+      { text: "背後好癢抓不到", cat: "🏃 動作" },
       { text: "放風箏", cat: "🏃 動作" },
       { text: "吹氣球吹到很大", cat: "🏃 動作" },
       { text: "騎腳踏車摔倒", cat: "🏃 動作" },
+      { text: "拿網子抓蝴蝶", cat: "🏃 動作" },
+      { text: "搖呼啦圈", cat: "🏃 動作" },
+      { text: "跳繩", cat: "🏃 動作" },
+      { text: "溜滑梯", cat: "🏃 動作" },
+      { text: "盪鞦韆", cat: "🏃 動作" },
+      { text: "爬樓梯爬到很喘", cat: "🏃 動作" },
+      { text: "跑步跑到好累", cat: "🏃 動作" },
+      { text: "單腳跳", cat: "🏃 動作" },
+      { text: "學小鳥飛", cat: "🏃 動作" },
+      { text: "打哈欠伸懶腰", cat: "🏃 動作" },
+      { text: "推很重的東西", cat: "🏃 動作" },
+      { text: "跳芭蕾轉圈圈", cat: "🏃 動作" },
+
+      // ---------- 生活 ----------
+      { text: "刷牙", cat: "🍕 生活" },
+      { text: "洗頭髮搓泡泡", cat: "🍕 生活" },
+      { text: "喝很熱的湯", cat: "🍕 生活" },
+      { text: "睡覺打呼", cat: "🍕 生活" },
       { text: "照鏡子梳頭髮", cat: "🍕 生活" },
-      { text: "大恐龍咆哮", cat: "🐱 動物" },
-      { text: "吃辣椒燙舌頭", cat: "🍕 生活" },
+      { text: "吃辣椒辣到吐舌頭", cat: "🍕 生活" },
       { text: "拆開生日禮物", cat: "🍕 生活" },
+      { text: "吹生日蠟燭", cat: "🍕 生活" },
       { text: "切大西瓜", cat: "🍕 生活" },
       { text: "戴眼鏡跌倒", cat: "🍕 生活" },
-      { text: "青蛙撲通跳水", cat: "🐱 動物" },
-      { text: "穿鞋子繫鞋帶", cat: "🍕 生活" },
-      { text: "變魔術拉出兔子", cat: "🦸 角色" },
+      { text: "穿鞋子綁鞋帶", cat: "🍕 生活" },
       { text: "扮家家酒煮菜", cat: "🍕 生活" },
+      { text: "下大雨撐傘", cat: "🍕 生活" },
+      { text: "跌倒了膝蓋好痛在哭", cat: "🍕 生活" },
+      { text: "打針痛到流眼淚", cat: "🍕 生活" },
+      { text: "冰淇淋掉到地上", cat: "🍕 生活" },
+      { text: "切洋蔥一直流眼淚", cat: "🍕 生活" },
+      { text: "拿掃把掃地", cat: "🍕 生活" },
+      { text: "拖地板", cat: "🍕 生活" },
+      { text: "摺衣服", cat: "🍕 生活" },
+      { text: "擦防曬乳", cat: "🍕 生活" },
+      { text: "全家人一起拍照", cat: "🍕 生活" },
+      { text: "吃很長的麵", cat: "🍕 生活" },
+      { text: "喝珍珠奶茶", cat: "🍕 生活" },
+      { text: "剝橘子來吃", cat: "🍕 生活" },
+      { text: "講電話", cat: "🍕 生活" },
+      { text: "用電腦打字", cat: "🍕 生活" },
+      { text: "綁頭髮", cat: "🍕 生活" },
+      { text: "穿外套拉拉鍊", cat: "🍕 生活" },
+      { text: "冷到一直發抖", cat: "🍕 生活" },
+      { text: "熱到流汗搧風", cat: "🍕 生活" },
+      { text: "打噴嚏", cat: "🍕 生活" },
+      { text: "肚子餓咕嚕咕嚕叫", cat: "🍕 生活" },
+      { text: "偷吃東西被發現", cat: "🍕 生活" },
+      { text: "揹書包上學去", cat: "🍕 生活" },
+
+      // ---------- 角色 ----------
+      { text: "變魔術變出兔子", cat: "🦸 角色" },
       { text: "消防員噴水滅火", cat: "🦸 角色" },
       { text: "警察指揮交通", cat: "🦸 角色" },
-      { text: "醫生給病人看病", cat: "🦸 角色" },
-      { text: "跳舞機器人", cat: "🦸 角色" },
-      { text: "太空人月球漫步", cat: "🦸 角色" },
-      { text: "蜘蛛人發射蜘蛛絲", cat: "🦸 角色" },
+      { text: "醫生幫病人看病", cat: "🦸 角色" },
+      { text: "機器人走路跳舞", cat: "🦸 角色" },
+      { text: "太空人在月球上走路", cat: "🦸 角色" },
+      { text: "蜘蛛人射出蜘蛛絲", cat: "🦸 角色" },
       { text: "皮卡丘放電", cat: "🦸 角色" },
-      { text: "超人披風飛天", cat: "🦸 角色" },
-      { text: "下大雨撐傘", cat: "🍕 生活" },
-      { text: "跌倒膝蓋痛哭泣", cat: "🍕 生活" },
-      { text: "打流感疫苗流眼淚", cat: "🍕 生活" },
-      { text: "冰淇淋融化掉地上", cat: "🍕 生活" },
-      { text: "切洋蔥一直流眼淚", cat: "🍕 生活" },
-      { text: "小雞破殼而出", cat: "🐱 動物" },
-      { text: "打羽毛球", cat: "🏃 動作" },
-      { text: "拿掃把掃地", cat: "🍕 生活" },
-      { text: "塗防曬乳抹臉", cat: "🍕 生活" },
-      { text: "拿網子抓蝴蝶", cat: "🏃 動作" },
-      { text: "擺姿勢拍全家福", cat: "🍕 生活" },
-      { text: "丟保齡球全倒", cat: "🏃 動作" },
-      { text: "搖呼啦圈", cat: "🏃 動作" },
-      { text: "汪汪隊立大功狗吠", cat: "🐱 動物" },
-      { text: "小鳥揮翅膀飛翔", cat: "🐱 動物" }
+      { text: "超人飛上天", cat: "🦸 角色" },
+      { text: "老師在黑板上寫字", cat: "🦸 角色" },
+      { text: "廚師炒菜", cat: "🦸 角色" },
+      { text: "司機開公車", cat: "🦸 角色" },
+      { text: "郵差送信", cat: "🦸 角色" },
+      { text: "農夫種菜", cat: "🦸 角色" },
+      { text: "歌手拿麥克風唱歌", cat: "🦸 角色" },
+      { text: "畫家在畫畫", cat: "🦸 角色" },
+      { text: "海盜找寶藏", cat: "🦸 角色" },
+      { text: "國王坐在王位上", cat: "🦸 角色" },
+      { text: "忍者偷偷走路", cat: "🦸 角色" },
+      { text: "牛仔騎馬", cat: "🦸 角色" }
     ];
 
     /* ===================================================
@@ -343,6 +417,8 @@
     let whisperVolume = 0.08; // 預設微弱音量 8%
     let bgmEnabled = true;
     let answerHistory = [];
+    let isAnnouncing = false; // 是否正在大聲複誦答案
+    let gameActive = false;   // 這一局是否還在進行中
 
     /* ===================================================
        3. 初始化與載入
@@ -353,21 +429,29 @@
       initAudioEngine();
     };
 
+    // 題庫改版時把版本號 +1，舊使用者下次開啟會自動換成新題庫
+    const TOPICS_VERSION = '2';
+
     function loadTopicsFromStorage() {
       const saved = localStorage.getItem('charades_kids_topics');
-      if (saved) {
-        try {
-          topics = JSON.parse(saved);
-        } catch (e) {
-          topics = [...DEFAULT_TOPICS];
-        }
-      } else {
+      const savedVersion = localStorage.getItem('charades_topics_version');
+
+      // 沒存過、或存的是舊版題庫（用字較難、只有 50 題）→ 換成新題庫
+      if (!saved || savedVersion !== TOPICS_VERSION) {
+        topics = [...DEFAULT_TOPICS];
+        saveTopicsToStorage();
+        return;
+      }
+      try {
+        topics = JSON.parse(saved);
+      } catch (e) {
         topics = [...DEFAULT_TOPICS];
       }
     }
 
     function saveTopicsToStorage() {
       localStorage.setItem('charades_kids_topics', JSON.stringify(topics));
+      localStorage.setItem('charades_topics_version', TOPICS_VERSION);
       updateTopicBadgeCount();
     }
 
@@ -446,33 +530,62 @@
       }
     }
 
+    /* ---------------------------------------------------
+       原創 8-bit 電玩風背景音樂
+       方波主旋律 + 三角波低音，營造復古紅白機的輕快感。
+       旋律為自行編寫，未使用任何市售遊戲的既有配樂。
+       --------------------------------------------------- */
+    const NOTE_HZ = {
+      C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00,
+      C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00,
+      C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00,
+      R: 0 // 休止符
+    };
+    // 每格為一個十六分音符，兩軌長度必須相同
+    const BGM_MELODY = [
+      'G4','C5','E5','G5',  'E5','C5','D5','E5',
+      'F5','E5','D5','C5',  'D5','R' ,'G4','R' ,
+      'A4','C5','F5','A5',  'F5','C5','D5','E5',
+      'G5','F5','E5','D5',  'C5','R' ,'R' ,'R'
+    ];
+    const BGM_BASS = [
+      'C3','R' ,'G3','R' ,  'C3','R' ,'G3','R' ,
+      'F3','R' ,'C3','R' ,  'G3','R' ,'G3','R' ,
+      'F3','R' ,'C3','R' ,  'F3','R' ,'C3','R' ,
+      'G3','R' ,'D3','R' ,  'C3','R' ,'C3','R'
+    ];
+    const BGM_STEP_MS = 165;
+
+    function playChipNote(ctx, freq, type, vol, dur) {
+      if (!freq) return; // 休止符不發聲
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch (e) {}
+    }
+
     function playBGM() {
       if (!bgmEnabled) return;
       const ctx = getAudioContext();
       stopBGM();
 
-      const notes = [261.63, 329.63, 392.00, 523.25, 440.00, 392.00, 329.63, 293.66];
       let step = 0;
-
       bgmTimer = setInterval(() => {
         if (!bgmEnabled) return;
-        try {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(notes[step % notes.length], ctx.currentTime);
-          
-          gain.gain.setValueAtTime(0.015, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc.start();
-          osc.stop(ctx.currentTime + 0.3);
-          step++;
-        } catch(e){}
-      }, 400);
+        const i = step % BGM_MELODY.length;
+        // 音量壓得很低，才不會蓋過耳語提示音
+        playChipNote(ctx, NOTE_HZ[BGM_MELODY[i]], 'square',   0.022, 0.13);
+        playChipNote(ctx, NOTE_HZ[BGM_BASS[i]],   'triangle', 0.030, 0.16);
+        step++;
+      }, BGM_STEP_MS);
     }
 
     function stopBGM() {
@@ -571,6 +684,10 @@
       score = 0;
       currentRemainingTime = timerSeconds;
       answerHistory = [];
+      gameActive = true;
+      isAnnouncing = false;
+      setAnswerButtonsEnabled(true);
+      document.getElementById('announce-banner').classList.add('hidden');
 
       document.getElementById('game-score').innerText = score;
       document.getElementById('game-timer').innerText = currentRemainingTime + "s";
@@ -596,6 +713,7 @@
     }
 
     function handleAnswer(isCorrect) {
+      if (isAnnouncing) return;                                  // 複誦中，忽略連點
       if (currentTopicIndex >= activeTopicPool.length) return;
 
       const currentItem = activeTopicPool[currentTopicIndex];
@@ -612,8 +730,59 @@
         playSoundEffect('pass');
       }
 
-      currentTopicIndex++;
-      renderCurrentCard();
+      // 用正常音量、1.3 倍速大聲複誦一次題目，念完才換下一題
+      announceAnswer(currentItem.text, () => {
+        if (!gameActive) return;                                 // 期間時間到就不再換題
+        currentTopicIndex++;
+        renderCurrentCard();
+      });
+    }
+
+    /* 公布答案：正常音量 + 1.3 倍速複誦，結束後執行 done() */
+    function announceAnswer(text, done) {
+      isAnnouncing = true;
+      setAnswerButtonsEnabled(false);
+      document.getElementById('announce-banner').classList.remove('hidden');
+
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(guardTimer);
+        isAnnouncing = false;
+        setAnswerButtonsEnabled(true);
+        document.getElementById('announce-banner').classList.add('hidden');
+        done();
+      };
+
+      // 保險：萬一 onend 沒被觸發（部分瀏覽器），最多等 5 秒就繼續
+      const guardTimer = setTimeout(finish, 5000);
+
+      if (!('speechSynthesis' in window)) {
+        setTimeout(finish, 400);
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      // 先讓答對／跳過的音效響完，再開始複誦
+      setTimeout(() => {
+        if (finished) return;
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'zh-TW';
+        utt.volume = 1.0;   // 正常音量，讓在場所有人都聽得到答案
+        utt.rate = 1.3;     // 1.3 倍速
+        utt.onend = finish;
+        utt.onerror = finish;
+        window.speechSynthesis.speak(utt);
+      }, 320);
+    }
+
+    function setAnswerButtonsEnabled(enabled) {
+      document.querySelectorAll('.btn-answer').forEach(btn => {
+        btn.disabled = !enabled;
+        btn.classList.toggle('opacity-40', !enabled);
+        btn.classList.toggle('pointer-events-none', !enabled);
+      });
     }
 
     function startTimer() {
@@ -629,9 +798,13 @@
     }
 
     function endGame() {
+      gameActive = false;
+      isAnnouncing = false;
       clearInterval(timerInterval);
       stopBGM();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      setAnswerButtonsEnabled(true);
+      document.getElementById('announce-banner').classList.add('hidden');
       playSoundEffect('over');
 
       document.getElementById('final-score').innerText = score;
@@ -716,7 +889,7 @@
     }
 
     function resetDefaultTopics() {
-      if (confirm("確定要將題目庫重置為預設的50題嗎？")) {
+      if (confirm("確定要將題目庫重置為預設的 " + DEFAULT_TOPICS.length + " 題嗎？")) {
         topics = [...DEFAULT_TOPICS];
         saveTopicsToStorage();
         renderTopicList();
