@@ -567,6 +567,7 @@ button{font-family:var(--font);}
     <div>🌀 迷宮變形時<b>出口也會搬家</b>（外圈的角落或邊線上），記得看小地圖。</div>
     <div>🛒 <b>搶購模式</b>（單機跟兩個電腦玩，或多人連線）：場景變成<b>大賣場</b>——低天花板、輕鋼架、日光燈盤、會轉的吊扇、擺滿商品的<b>矮貨架</b>、靠牆的收銀台。因為貨架很矮，所以看得到遠方的商品和其他人，但走法還是迷宮！地上到處是商品：🍬糖果 $10、🍞麵包 $20、🥛牛奶 $30、🧃果汁 $35、🍫巧克力 $45、🧀起司 $60、🍖大肉排 $80、🦞龍蝦 $120，撿到就進購物車。<b>這個模式沒有任何技能</b>（不能攻擊、不能隱身、職業能力也不算），道具只有 ⚡加速藥水 和 😜調皮鬼；<b>大家的速度都一樣，而且比平常快 1.2 倍</b>。商品被搶走後過幾秒會在別的地方<b>重新上架</b>，時間到<b>誰的購物車金額最多誰就贏</b>！</div>
     <div style="padding-left:14px;">
+      🛒 <b>每個人身前都推著一台購物車</b>：一開始是空的，買越多車上堆得越滿（最多 8 格，顏色就是你買到的東西），被搶走東西車上也會跟著變少——遠遠看就知道誰買得最多。<br>
       🤏 <b>搶奪</b>：從對手身邊經過時按右下角的<b>搶奪鈕</b>（電腦按 <b>X</b>），會<b>隨機搶走對方購物車裡的一件商品</b>。有對手在旁邊時按鈕會變成橘色閃爍，離太遠會「搶空了」。搶到會顯示<b>搶到什麼</b>，被搶的人也會看到<b>被搶走什麼</b>。冷卻 1.5 秒；電腦也會搶你的東西（開場 8 秒後才開始，之後每 8 秒一次）。
     </div>
     <div>👥 <b>多人連線</b>（2～5 人，房主可選人數上限，視角可自由切換）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了；💎 尋寶：搶寶藏帶出口；🛒 搶購：比誰的購物車金額多（大地圖人數不足電腦會補位（最多補到房間上限））。</div>
@@ -584,7 +585,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.13.0';
+const GAME_VERSION='1.14.0';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',roomMax:3,goodsCount:16,shopMin:2.5,views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -652,15 +653,17 @@ const SHOP_THEME={id:'shop',name:'大賣場',emoji:'🛒',
   sky:0xdff0fb,fog:[0xeef3f8,90,400],floor:0xf5f5f5,wall:0xbcd6e6,wall3d:0xfdfdfd,
   amb:0xffffff,ambI:1.0,dirI:.45,music:1,wallTex:'shelf',floorTex:'tile'};
 const GOODS=[
- {emoji:'🍬',name:'糖果',   price:10, weight:22},
- {emoji:'🍞',name:'麵包',   price:20, weight:20},
- {emoji:'🥛',name:'牛奶',   price:30, weight:18},
- {emoji:'🧃',name:'果汁',   price:35, weight:14},
- {emoji:'🍫',name:'巧克力', price:45, weight:12},
- {emoji:'🧀',name:'起司',   price:60, weight:8},
- {emoji:'🍖',name:'大肉排', price:80, weight:5},
- {emoji:'🦞',name:'龍蝦',   price:120,weight:3},
+ {emoji:'🍬',name:'糖果',   price:10, weight:22, color:0xff8a80},
+ {emoji:'🍞',name:'麵包',   price:20, weight:20, color:0xffcc80},
+ {emoji:'🥛',name:'牛奶',   price:30, weight:18, color:0xf5f5f5},
+ {emoji:'🧃',name:'果汁',   price:35, weight:14, color:0xffe082},
+ {emoji:'🍫',name:'巧克力', price:45, weight:12, color:0x8d6e63},
+ {emoji:'🧀',name:'起司',   price:60, weight:8,  color:0xffd54f},
+ {emoji:'🍖',name:'大肉排', price:80, weight:5,  color:0xef9a9a},
+ {emoji:'🦞',name:'龍蝦',   price:120,weight:3,  color:0xff7043},
 ];
+const CART_SLOTS=8;          // 購物車最多堆幾格（兩層 × 每層 4 格）
+const CART_PER_SLOT=60;      // 每多 $60 就多堆一格
 const SHOP_RESTOCK_MS=6000; // 商品被搶走後幾秒重新上架
 const SHOP_SPEED_MUL=1.2;   // 搶購模式：所有人（含電腦）速度都 ×1.2
 const SHOP_ROB_RANGE=2.4;   // 搶奪商品的距離（公尺）
@@ -1879,6 +1882,16 @@ function cameraClearDist(dx,dz,maxD){
   }
   return maxD;
 }
+/* 身體正前方還有多少空間（購物車靠牆時要縮回來，不然會插進貨架） */
+function frontClear(maxD){
+  const m=0.3, sx=Math.sin(G.heading), sz=Math.cos(G.heading);
+  for(let st=0.4;st<=maxD;st+=0.15){
+    const x=G.px+sx*st, z=G.pz+sz*st;
+    for(const wb of G.wallBoxes)
+      if(x+m>wb.minX&&x-m<wb.maxX&&z+m>wb.minZ&&z-m<wb.maxZ)return st-0.15;
+  }
+  return maxD;
+}
 function collideMove(nx,nz){
   const r=0.42;
   const ghost=performance.now()<G.ghostUntil;
@@ -1943,6 +1956,7 @@ function updatePlayer(dt,t){
   }
   playerGroup.position.set(G.px,0,G.pz);
   playerGroup.rotation.y=G.heading;
+  if(G.myCart)G.myCart.position.z=Math.max(0.24,Math.min(0.62,frontClear(1.05)-0.36));
   playerGroup.visible=(G.view!=='fp');
   // 撿道具
   for(const [ii,it] of G.items.entries()){
@@ -2291,6 +2305,63 @@ function updateTopMask(){
   el.style.background=`radial-gradient(circle at ${cx.toFixed(0)}px ${cy.toFixed(0)}px, rgba(0,0,0,0) ${r0.toFixed(0)}px, ${col} ${r1.toFixed(0)}px)`;
 }
 
+/* 🛒 每個人身前的購物車：一開始空空的，買越多堆得越滿 */
+function buildCart(){
+  const g=new THREE.Group();
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const box=(w,h,d,c)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));
+  const metal=0xcfd8dc, dark=0x546e7a;
+  const put=(w,h,d,x,y,z,c)=>{const m=box(w,h,d,c||metal);m.position.set(x,y,z);g.add(m);return m;};
+  const inW=0.62, inD=0.70;          // 籃子內寬 / 內深
+  const by=0.42, rim=0.18;           // 籃底高度 / 圍邊高度（做矮一點，才看得到裡面買了什麼）
+  // 下方車架與輪子
+  put(inW,0.05,inD, 0,0.17,0, dark);
+  put(0.07,0.27,0.07, 0,0.29,0, dark);
+  for(const [wx,wz] of [[-0.24,-0.28],[0.24,-0.28],[-0.24,0.28],[0.24,0.28]])
+    put(0.08,0.16,0.16, wx,0.09,wz, 0x37474f);
+  // 籃子：底板＋四片矮圍邊
+  put(inW,0.05,inD, 0,by,0);
+  put(inW,rim,0.05, 0,by+rim/2,-inD/2);
+  put(inW,rim,0.05, 0,by+rim/2, inD/2);
+  put(0.05,rim,inD, -inW/2,by+rim/2,0);
+  put(0.05,rim,inD,  inW/2,by+rim/2,0);
+  // 推把
+  put(0.05,0.34,0.05, -inW/2,by+0.17,-inD/2-0.07, dark);
+  put(0.05,0.34,0.05,  inW/2,by+0.17,-inD/2-0.07, dark);
+  put(inW+0.12,0.06,0.06, 0,by+0.34,-inD/2-0.07, dark);
+  // 車裡的商品格（一開始全部隱藏，買越多疊越高）
+  const slots=[];
+  for(let i=0;i<CART_SLOTS;i++){
+    const layer=Math.floor(i/4), k=i%4;
+    const bx=(k%2?1:-1)*0.15, bz=(k<2?-1:1)*0.17;
+    const blk=box(0.26,0.18,0.30,0xffffff);
+    blk.position.set(bx,by+0.13+layer*0.19,bz);
+    blk.visible=false; g.add(blk); slots.push(blk);
+  }
+  g.userData.slots=slots;
+  g.position.set(0,0,0.62);          // 推在身體前面
+  return g;
+}
+/* 依照購物車金額與買到的東西更新堆疊 */
+function fillCart(cart,id){
+  if(!cart)return;
+  const total=MP.carts[id]||0, list=MP.cartList[id]||[];
+  // 堆幾格看金額，但不會多過實際買到的件數
+  const n=Math.min(CART_SLOTS,list.length,total<=0?0:1+Math.floor(total/CART_PER_SLOT));
+  const recent=list.slice(-n);   // 用最近買到的東西上色
+  cart.userData.slots.forEach((blk,i)=>{
+    blk.visible=i<n;
+    if(i<n){
+      const g=GOODS[recent[i]]||GOODS[i%GOODS.length];
+      blk.material.color.setHex(g.color);
+    }
+  });
+}
+function refreshCarts(){
+  if(!isShop())return;
+  fillCart(G.myCart,MP.id);
+  for(const id in MP.players)fillCart(MP.players[id].cart,id);
+}
 /* 🛒 購物車：記錄每個人買到哪些商品（搶奪要知道搶走的是什麼） */
 function cartAdd(id,gi){
   const g=GOODS[gi]||GOODS[0];
@@ -2344,6 +2415,7 @@ function swingRob(){ // 搶奪動作：手往前抓一下
 /* 🛒 搶購模式 HUD：自己的金額、名次、剩餘商品 */
 function updateShopHud(){
   const on=isShop()&&MP.started&&!MP.ended;
+  refreshCarts();
   $('cartWrap').style.display=on?'':'none';
   if(!on)return;
   const mine=MP.carts[MP.id]||0;
@@ -2750,6 +2822,8 @@ function startGame(){
   // 玩家
   playerGroup=buildCharacter(CHARS[G.charIdx]);
   playerGroup.position.set(G.px,0,G.pz);
+  G.myCart=null;
+  if(isShop()){ G.myCart=buildCart(); playerGroup.add(G.myCart); }
   scene.add(playerGroup);
   // 3D 指南針箭頭
   compass3D=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.7,8),new THREE.MeshBasicMaterial({color:0xffd54f}));
@@ -3457,11 +3531,13 @@ function mpAfterStart(){
     const dizzy=makeEmojiSprite('💫',1.2); dizzy.position.y=2.5; dizzy.visible=false; mesh.add(dizzy);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.08,8,20),new THREE.MeshBasicMaterial({color:0xff1744}));
     ring.rotation.x=Math.PI/2; ring.position.y=0.15; ring.visible=false; mesh.add(ring);
+    let cart=null;
+    if(MP.mode==='shop'){ cart=buildCart(); mesh.add(cart); }
     const ci=Math.max(0,MP.order.indexOf(r.id))%starts.length;
     const cp=cellToWorld(starts[ci].x,starts[ci].y);
     mesh.position.set(cp.x,0,cp.z);
     scene.add(mesh);
-    MP.players[r.id]={name:r.name,charIdx:r.charIdx,bot:!!r.bot,mesh,oni,ring,gem,dizzy,tx:cp.x,tz:cp.z,th:0,lastSeen:performance.now(),stunnedUntil:0};
+    MP.players[r.id]={name:r.name,charIdx:r.charIdx,bot:!!r.bot,mesh,oni,ring,gem,dizzy,cart,tx:cp.x,tz:cp.z,th:0,lastSeen:performance.now(),stunnedUntil:0};
   });
   clearInterval(MP.posTimer);
   MP.posTimer=setInterval(()=>{
