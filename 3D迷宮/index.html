@@ -280,6 +280,8 @@ button{font-family:var(--font);}
   <div id="hudRightBtns">
     <button class="round-btn" id="viewToggle">🎥<span class="bl">視角</span></button>
     <button class="round-btn" id="soundToggle">🔊<span class="bl">音樂</span></button>
+    <button class="round-btn" id="zoomInBtn" style="display:none;">➕<span class="bl">拉近</span></button>
+    <button class="round-btn" id="zoomOutBtn" style="display:none;">➖<span class="bl">拉遠</span></button>
     <button class="round-btn" id="quitBtn">🏠<span class="bl">離開</span></button>
   </div>
   <div id="compassHud"><div id="compassArrow">🔺</div></div>
@@ -401,7 +403,7 @@ button{font-family:var(--font);}
       </div>
     </div>
     <div class="adm-row"><label>🧱 迷宮大小</label>
-      <select id="cfgSize"><option value="11">小 11×11</option><option value="13">中 13×13</option><option value="15">大 15×15</option></select>
+      <select id="cfgSize"><option value="11">小 11×11</option><option value="13">中 13×13</option><option value="15">大 15×15</option><option value="19">特大 19×19</option><option value="25">超大 25×25</option></select>
     </div>
     <div class="adm-row"><label>🎵 預設開啟音樂</label>
       <select id="cfgMusic"><option value="1">開</option><option value="0">關</option></select>
@@ -423,7 +425,8 @@ button{font-family:var(--font);}
 <div class="modal" id="helpModal">
   <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
     <h3 style="text-align:center;">❓ 玩法說明</h3>
-    <div>🕹️ <b>左半邊</b>拖曳搖桿移動；<b>右半邊</b>拖曳轉視角。電腦可用 WASD / 方向鍵。</div>
+    <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。</div>
+    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
     <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
     <div>🎁 道具（每次變形會重新出現）：</div>
@@ -533,7 +536,7 @@ const G={
  nextShiftAt:0, shifting:false, preWarned:false,
  items:[], foods:[], effects:{}, shovels:0, starBonus:0,
  satiety:100, drainPerSec:100/180, hungerMul:1, hungerOn:true,
- kites:0, visionUntil:0, owlUntil:0, viewBefore:null,
+ kites:0, visionUntil:0, owlUntil:0, viewBefore:null, topZoom:22,
  visited:null, solutionPath:null, mapUntil:0, compassUntil:0, ghostUntil:0,
  muted:!CFG.musicOn,
 };
@@ -571,28 +574,54 @@ const AudioEng={
    const g=this.ctx.createGain(); g.gain.value=vol;
    src.connect(f); f.connect(g); g.connect(this.fxGain); src.start(t);
  },
- /* --- 背景電子音樂：每個關卡不同調性的琶音 --- */
+ /* --- 背景電子音樂：五個關卡五種完全不同的曲風 --- */
  SONGS:[
-  {bpm:108,bass:[110,110,82.4,98],  arp:[220,277,330,440,330,277,220,277]},        // 城堡 A小調
-  {bpm:120,bass:[130.8,130.8,98,110],arp:[261.6,329.6,392,523.3,392,329.6,261.6,392]}, // 草原 C大調
-  {bpm:96, bass:[73.4,73.4,65.4,82.4],arp:[146.8,174.6,220,293.7,220,174.6,146.8,110]}, // 山洞 D小調低沉
-  {bpm:112,bass:[98,98,73.4,87.3],  arp:[196,246.9,293.7,392,293.7,246.9,196,246.9]},  // 森林 G大調
-  {bpm:90, bass:[87.3,87.3,65.4,73.4],arp:[174.6,207.7,261.6,349.2,261.6,207.7,174.6,130.8]}, // 迷霧 F小調
+  // 0 🏰 神祕城堡：鐘樓圓舞曲（三拍感、鐘聲疊音、A小調）
+  {bpm:104,leadType:'triangle',bassType:'sine',leadVol:.18,bassVol:.15,leadLen:1.4,
+   arp:[220,0,262,330,0,262,220,0,330,392,0,330],
+   bassSeq:[110,87.3,98,82.4],bassEvery:6,kickEvery:12,hatEvery:3,hatOff:1,bell:true},
+  // 1 🌻 陽光草原：蹦蹦跳跳快板（C大調、四四拍、每步都有節奏）
+  {bpm:132,leadType:'square',bassType:'square',leadVol:.13,bassVol:.12,leadLen:.8,
+   arp:[523,392,440,523,587,523,440,392,330,392,440,523,587,659,587,523],
+   bassSeq:[131,131,98,110],bassEvery:2,kickEvery:4,hatEvery:2,hatOff:1},
+  // 2 ⛰️ 幽暗山洞：深邃回音（慢板、稀疏長音、回聲、隨機水滴聲）
+  {bpm:76,leadType:'sine',bassType:'sawtooth',leadVol:.2,bassVol:.09,leadLen:2.2,
+   arp:[147,0,0,175,0,0,220,0,0,0,131,0,0,0,0,0],
+   bassSeq:[73.4,0,65.4,0],bassEvery:8,kickEvery:16,hatEvery:0,echo:true,drip:true},
+  // 3 🌲 綠色森林：木笛五聲音階（G大調、輕快、句尾小鳥啁啾）
+  {bpm:116,leadType:'triangle',bassType:'sine',leadVol:.18,bassVol:.12,leadLen:1,
+   arp:[392,440,494,587,494,440,392,330,392,494,587,659,587,494,440,392],
+   bassSeq:[98,110,123.5,98],bassEvery:4,kickEvery:8,hatEvery:2,hatOff:0,chirp:true},
+  // 4 🌫️ 迷霧沼澤：幽靈慢板（F小調、下滑音、五度長音鋪底、幾乎沒有鼓）
+  {bpm:72,leadType:'sine',bassType:'sawtooth',leadVol:.2,bassVol:.07,leadLen:2.4,
+   arp:[349,0,311,0,262,0,0,0,233,0,262,0,0,0,0,0],
+   bassSeq:[87.3,0,77.8,0],bassEvery:8,kickEvery:0,hatEvery:0,slide:-30,pad:true},
  ],
  startMusic(songIdx){
    this.stopMusic(); if(!this.ctx) return;
    this.songIdx=songIdx; this.step=0; this.playing=true;
-   const song=this.SONGS[songIdx], stepDur=60/song.bpm/2;
+   const g=this.SONGS[songIdx], stepDur=60/g.bpm/2;
    this.seqTimer=setInterval(()=>{
      if(G.muted||!this.playing) return;
      const s=this.step;
-     // 琶音主旋律
-     this.tone(song.arp[s%8],stepDur*0.9,'sawtooth',this.musicGain,0.16);
-     // 貝斯（每2步）
-     if(s%2===0) this.tone(song.bass[(s>>2)%4],stepDur*1.6,'square',this.musicGain,0.13);
-     // 鼓點
-     if(s%4===0) this.tone(150,0.1,'sine',this.musicGain,0.5,-110); // kick
-     if(s%4===2) this.noiseHat(stepDur*0.3);
+     // 主旋律（0＝休止符）
+     const n=g.arp[s%g.arp.length];
+     if(n){
+       this.tone(n,stepDur*g.leadLen,g.leadType,this.musicGain,g.leadVol,g.slide||0);
+       if(g.bell)this.tone(n*2,stepDur*0.6,'sine',this.musicGain,g.leadVol*0.35);       // 鐘聲泛音
+       if(g.echo)setTimeout(()=>this.tone(n,stepDur*1.4,g.leadType,this.musicGain,g.leadVol*0.3),stepDur*700); // 山洞回音
+       if(g.chirp&&s%8===7)this.tone(n*3,stepDur*0.3,'sine',this.musicGain,g.leadVol*0.3,200); // 小鳥啁啾
+     }
+     // 貝斯（0＝休止符）＋ 迷霧的五度鋪底
+     const b=g.bassSeq[(s>>2)%g.bassSeq.length];
+     if(b&&s%g.bassEvery===0){
+       this.tone(b,stepDur*g.bassEvery*0.9,g.bassType,this.musicGain,g.bassVol);
+       if(g.pad)this.tone(b*1.5,stepDur*g.bassEvery*0.9,'sine',this.musicGain,g.bassVol*0.7);
+     }
+     // 鼓組
+     if(g.kickEvery&&s%g.kickEvery===0)this.tone(150,0.1,'sine',this.musicGain,0.5,-110);
+     if(g.hatEvery&&s%g.hatEvery===(g.hatOff||0))this.noiseHat(stepDur*0.3);
+     if(g.drip&&Math.random()<0.05)this.tone(1400+Math.random()*600,0.5,'sine',this.musicGain,0.07,-500); // 水滴
      this.step++;
    },stepDur*1000);
  },
@@ -1367,9 +1396,10 @@ function updateCamera(dt){
     tx=Math.max(-cbx,Math.min(cbx,tx)); tz=Math.max(-cbz,Math.min(cbz,tz));
     camera.position.lerp(new V3(tx,hh,tz),Math.min(1,dt*5));
     camera.lookAt(G.px,1.4,G.pz);
-  }else{ // top
+  }else{ // top（滾輪 / 雙指 / ＋－按鈕可拉近拉遠）
     const owl=performance.now()<G.owlUntil;
-    camera.position.lerp(new V3(G.px,owl?58:22,G.pz+(owl?2:3.5)),Math.min(1,dt*5));
+    const h=owl?58:G.topZoom;
+    camera.position.lerp(new V3(G.px,h,G.pz+h*0.16),Math.min(1,dt*5));
     camera.lookAt(G.px,0,G.pz);
   }
   // 火把跟著玩家（山洞）
@@ -1433,8 +1463,18 @@ function setupTouch(){
   });
   // 電腦鍵盤 Q/E 轉視角
   window.addEventListener('keydown',e=>{
-    if(e.key==='q')G.camYaw+=0.15; if(e.key==='e')G.camYaw-=0.15;
-    if(e.key===' ')useShovel();
+    if(!$('gameScreen').classList.contains('active'))return;
+    const k=e.key.toLowerCase();
+    if(k==='q')G.camYaw+=0.15; if(k==='e')G.camYaw-=0.15;
+    if(k===' '){e.preventDefault();useShovel();}
+    if(k==='f')useKite();
+    if(k==='v')$('viewToggle').click();
+    if(k==='m'){
+      if($('bigMapOverlay').style.display==='flex')$('bigMapOverlay').style.display='none';
+      else{$('bigMapOverlay').style.display='flex';sizeBigMap();drawMap($('bigMap'),true);}
+    }
+    if((k==='+'||k==='=')&&G.view==='top')G.topZoom=Math.max(10,G.topZoom-4);
+    if(k==='-'&&G.view==='top')G.topZoom=Math.min(48,G.topZoom+4);
   });
 }
 
@@ -1618,23 +1658,24 @@ function getPlayerName(){
 function loadLocalRecords(){
   try{return JSON.parse(localStorage.getItem('maze3d_lb')||'[]');}catch(e){return [];}
 }
+function scoreApiUrl(){ return CFG.apiUrl||'/api/scores'; } // 沒填就試同網域（Cloudflare Pages Function）
 async function fetchRemoteRecords(){
-  if(!CFG.apiUrl)return null;
   try{
-    const r=await fetch(CFG.apiUrl,{method:'GET'});
+    const r=await fetch(scoreApiUrl(),{method:'GET'});
+    if(!r.ok){G._remoteOk=false;return null;}
     const j=await r.json();
-    return Array.isArray(j)?j:(Array.isArray(j.records)?j.records:null);
-  }catch(e){return null;}
+    const arr=Array.isArray(j)?j:(Array.isArray(j.records)?j.records:null);
+    G._remoteOk=!!arr;
+    return arr;
+  }catch(e){G._remoteOk=false;return null;}
 }
 async function saveRecord(rec){
   const local=loadLocalRecords(); local.push(rec);
   local.sort((a,b)=>a.timeSec-b.timeSec);
   localStorage.setItem('maze3d_lb',JSON.stringify(local.slice(0,200)));
-  if(CFG.apiUrl){
-    try{
-      await fetch(CFG.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(rec)});
-    }catch(e){/* 離線也沒關係，本機有存 */}
-  }
+  try{
+    await fetch(scoreApiUrl(),{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(rec)});
+  }catch(e){/* 沒有雲端 API 或離線也沒關係，本機有存 */}
   const all=(await getAllRecords()).filter(r=>r.level===rec.level).sort((a,b)=>a.timeSec-b.timeSec);
   const idx=all.findIndex(r=>r.name===rec.name&&r.timeSec===rec.timeSec&&r.date===rec.date);
   return idx>=0?idx+1:null;
@@ -1660,9 +1701,9 @@ async function renderLeaderboard(){
   };
   mkTab('all','全部');
   LEVELS.forEach(l=>mkTab(l.id,l.emoji+l.name));
-  $('lbSyncState').textContent=CFG.apiUrl?'☁️ 雲端分數牆（大家都看得到）':'📱 目前只存在這台裝置（後台可設定雲端分享）';
   const body=$('lbBody'); body.innerHTML='<tr><td colspan="5">載入中…</td></tr>';
   let recs=await getAllRecords();
+  $('lbSyncState').textContent=G._remoteOk?'☁️ 雲端分數牆（大家都看得到）':'📱 目前只存在這台裝置（部署雲端分數牆的方法見 README）';
   if(lbFilter!=='all')recs=recs.filter(r=>r.level===lbFilter);
   recs.sort((a,b)=>a.timeSec-b.timeSec);
   recs=recs.slice(0,30);
@@ -1826,6 +1867,9 @@ function loop(tms){
   chipAcc+=dt; if(chipAcc>0.5){chipAcc=0;renderChips();
     if(G.ghostUntil&&performance.now()>G.ghostUntil){G.ghostUntil=0;setGhostLook(false);unstuckPlayer();}
     if(G.owlUntil&&performance.now()>G.owlUntil){G.owlUntil=0;G.view=MP.on?'fp':(G.viewBefore||allowedViews()[0]);}
+    const isTop=G.view==='top';
+    $('zoomInBtn').style.display=isTop?'':'none';
+    $('zoomOutBtn').style.display=isTop?'':'none';
   }
   // 道具漂浮動畫
   const bob=Math.sin(t*3)*0.15;
@@ -1890,6 +1934,21 @@ function wireUI(){
   };
   $('shovelBtn').onclick=useShovel;
   $('kiteBtn').onclick=useKite;
+  const zoomBy=d=>{G.topZoom=Math.max(10,Math.min(48,G.topZoom+d));};
+  $('zoomInBtn').onclick=()=>zoomBy(-5);
+  $('zoomOutBtn').onclick=()=>zoomBy(5);
+  window.addEventListener('wheel',e=>{
+    if(G.view==='top'&&$('gameScreen').classList.contains('active'))zoomBy(e.deltaY*0.02);
+  },{passive:true});
+  // 雙指縮放（俯視）
+  let pinchDist=0;
+  $('gameScreen').addEventListener('touchmove',e=>{
+    if(G.view!=='top'||e.touches.length<2)return;
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if(pinchDist)zoomBy((pinchDist-d)*0.08);
+    pinchDist=d;
+  },{passive:true});
+  $('gameScreen').addEventListener('touchend',()=>{pinchDist=0;});
   $('minimapWrap').onclick=()=>{$('bigMapOverlay').style.display='flex';sizeBigMap();drawMap($('bigMap'),true);};
   $('bigMapClose').onclick=()=>$('bigMapOverlay').style.display='none';
   $('bigMapOverlay').onclick=e=>{if(e.target===$('bigMapOverlay'))$('bigMapOverlay').style.display='none';};
