@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌀 3D移動迷宮</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+<style>
+:root{
+  --font:'Comic Sans MS','Microsoft JhengHei','PingFang TC',cursive,sans-serif;
+  --ink:#2d2a4a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+body{font-family:var(--font);color:var(--ink);background:#1a1636;}
+button{font-family:var(--font);}
+
+/* ===== 畫面切換 ===== */
+.screen{position:fixed;inset:0;display:none;}
+.screen.active{display:flex;}
+
+/* ===== 標題畫面 ===== */
+#titleScreen{
+  background:linear-gradient(160deg,#2b2160 0%,#4a3a9c 50%,#7761d6 100%);
+  flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;padding:14px;
+}
+.title-card{
+  background:rgba(255,255,255,.95);border-radius:28px;border:6px solid #ffd54f;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);max-width:680px;width:100%;
+  padding:18px 16px;text-align:center;margin:auto 0;
+}
+.title-card h1{color:#ff5722;font-size:1.9rem;margin:2px 0 2px;text-shadow:2px 2px #fff;}
+.title-card .sub{color:#8a85a8;margin:0 0 10px;font-size:.95rem;}
+.sec-label{font-weight:bold;color:#5e35b1;font-size:1.05rem;margin:10px 0 6px;text-align:left;}
+.char-row{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
+@media(max-width:520px){.char-row{grid-template-columns:repeat(3,1fr);}}
+.char-btn{
+  border:3px solid #ddd;border-radius:16px;background:#faf7ff;padding:6px 2px;cursor:pointer;
+  font-size:.8rem;color:#5d4037;transition:transform .12s;
+}
+.char-btn .ce{font-size:1.7rem;display:block;}
+.char-btn.sel{border-color:#ff9800;background:#fff3e0;transform:scale(1.06);box-shadow:0 3px 10px rgba(255,152,0,.4);}
+#charPreviewWrap{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px;}
+#charPreview{width:120px;height:130px;border-radius:18px;background:linear-gradient(180deg,#c5e8ff,#e8f9e8);border:3px solid #90caf9;}
+#charDesc{font-size:.9rem;color:#666;max-width:180px;text-align:left;}
+.lvl-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+@media(max-width:520px){.lvl-row{grid-template-columns:repeat(3,1fr);}}
+.lvl-btn{
+  border:3px solid #ddd;border-radius:16px;padding:8px 2px;cursor:pointer;font-size:.78rem;
+  color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.5);transition:transform .12s;
+}
+.lvl-btn .le{font-size:1.5rem;display:block;}
+.lvl-btn.sel{border-color:#ffd54f;transform:scale(1.06);box-shadow:0 3px 12px rgba(255,213,79,.6);}
+.view-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.view-btn{border:3px solid #ddd;border-radius:14px;background:#f5f5f5;padding:8px 14px;cursor:pointer;font-size:.95rem;}
+.view-btn.sel{border-color:#29b6f6;background:#e1f5fe;color:#0277bd;font-weight:bold;}
+#playerName{
+  font-family:var(--font);font-size:1.05rem;padding:9px 12px;border-radius:14px;border:3px solid #b39ddb;
+  width:min(240px,60%);text-align:center;
+}
+.start-btn{
+  display:block;width:100%;max-width:340px;margin:14px auto 4px;border:none;cursor:pointer;
+  font-size:1.35rem;font-weight:bold;color:#fff;padding:14px;border-radius:22px;
+  background:linear-gradient(145deg,#ffb74d,#ff9800);box-shadow:0 6px 0 #ef6c00;transition:transform .1s;
+}
+.start-btn:active{transform:translateY(3px);box-shadow:0 3px 0 #ef6c00;}
+.mini-btn{
+  border:none;cursor:pointer;background:#ede7f6;color:#5e35b1;border-radius:14px;
+  padding:8px 14px;font-size:.95rem;font-weight:bold;margin:4px;
+}
+.title-foot{display:flex;justify-content:center;flex-wrap:wrap;margin-top:6px;}
+
+/* ===== 遊戲 HUD ===== */
+#gameScreen{background:#000;}
+#c3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none;}
+.hud{position:absolute;pointer-events:none;z-index:5;}
+#hudTop{
+  top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:8px;
+}
+#hudInfo{
+  background:rgba(20,16,50,.72);color:#fff;border-radius:16px;padding:7px 12px;font-size:.95rem;
+  display:flex;gap:14px;align-items:center;backdrop-filter:blur(3px);
+}
+#hudInfo b{color:#ffd54f;}
+#shiftCountdown{color:#8be9fd;}
+#minimapWrap{pointer-events:auto;position:relative;}
+#minimap{
+  width:120px;height:120px;border-radius:14px;border:3px solid rgba(255,255,255,.75);
+  background:rgba(10,8,30,.78);display:block;
+}
+#minimapHint{position:absolute;bottom:2px;right:6px;font-size:.6rem;color:#fff;opacity:.8;}
+#hudRightBtns{
+  position:absolute;top:150px;right:8px;display:flex;flex-direction:column;gap:10px;pointer-events:auto;z-index:6;
+}
+.round-btn{
+  width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.8);cursor:pointer;
+  background:rgba(30,24,70,.75);color:#fff;font-size:1.35rem;box-shadow:0 3px 8px rgba(0,0,0,.4);
+}
+.round-btn:active{transform:scale(.92);}
+.round-btn .bl{display:block;font-size:.5rem;margin-top:-3px;}
+#effectChips{
+  position:absolute;top:60px;left:8px;display:flex;flex-direction:column;gap:6px;z-index:6;pointer-events:none;
+}
+.chip{
+  background:rgba(255,255,255,.9);border-radius:20px;padding:4px 12px;font-size:.85rem;font-weight:bold;
+  color:#5d4037;box-shadow:0 2px 6px rgba(0,0,0,.35);animation:chipIn .25s ease;
+}
+@keyframes chipIn{from{opacity:0;transform:translateX(-16px);}to{opacity:1;transform:none;}}
+#joyZone{
+  position:absolute;left:0;bottom:0;width:45%;height:55%;z-index:6;touch-action:none;
+}
+#joyBase{
+  position:absolute;width:110px;height:110px;border-radius:50%;
+  background:rgba(255,255,255,.14);border:3px solid rgba(255,255,255,.4);display:none;
+}
+#joyStick{
+  position:absolute;width:52px;height:52px;border-radius:50%;
+  background:rgba(255,255,255,.55);border:3px solid rgba(255,255,255,.8);display:none;
+}
+#lookZone{position:absolute;right:0;bottom:0;width:55%;height:55%;z-index:5;touch-action:none;}
+#shovelBtn{
+  position:absolute;right:14px;bottom:96px;width:74px;height:74px;border-radius:50%;
+  border:4px solid #fff;background:linear-gradient(145deg,#ff8a65,#f4511e);color:#fff;
+  font-size:1.7rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);
+}
+#shovelBtn:active{transform:scale(.92);}
+#shovelBtn .cnt{
+  position:absolute;top:-6px;right:-6px;background:#ffd54f;color:#5d4037;border-radius:50%;
+  width:26px;height:26px;font-size:.9rem;font-weight:bold;line-height:26px;
+}
+#compassHud{
+  position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:6;display:none;
+  background:rgba(20,16,50,.7);border-radius:50%;width:56px;height:56px;border:2px solid #ffd54f;
+}
+#compassArrow{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.7rem;}
+
+/* ===== 變換警告 ===== */
+#shiftWarn{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;
+  background:rgba(120,20,40,.28);pointer-events:none;
+}
+#shiftWarn .box{
+  background:rgba(40,10,20,.88);border:4px solid #ff5252;color:#fff;border-radius:24px;
+  padding:20px 34px;font-size:1.5rem;font-weight:bold;text-align:center;animation:pulseWarn .7s infinite;
+}
+@keyframes pulseWarn{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+#preWarn{
+  position:absolute;top:18%;left:50%;transform:translateX(-50%);z-index:19;display:none;
+  background:rgba(255,152,0,.92);color:#fff;font-weight:bold;border-radius:18px;padding:8px 20px;font-size:1.1rem;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+#toast{
+  position:absolute;bottom:32%;left:50%;transform:translateX(-50%);z-index:18;display:none;
+  background:rgba(30,24,70,.9);color:#ffd54f;border-radius:18px;padding:9px 20px;font-size:1.05rem;font-weight:bold;
+  border:2px solid #ffd54f;text-align:center;max-width:80%;
+}
+
+/* ===== 大地圖 ===== */
+#bigMapOverlay{
+  position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
+  background:rgba(8,6,24,.85);
+}
+#bigMap{border-radius:18px;border:4px solid #ffd54f;background:#141031;}
+#bigMapClose{
+  position:absolute;top:16px;right:16px;width:52px;height:52px;border-radius:50%;font-size:1.5rem;
+  border:3px solid #fff;background:#e53935;color:#fff;cursor:pointer;
+}
+
+/* ===== 過關畫面 ===== */
+#winScreen{
+  background:radial-gradient(circle at 50% 30%,#5b4aa0,#241c50 70%);
+  flex-direction:column;align-items:center;justify-content:center;padding:14px;overflow-y:auto;
+}
+.win-card{
+  background:#fff;border-radius:28px;border:6px solid #ffd54f;max-width:520px;width:100%;
+  padding:22px 18px;text-align:center;box-shadow:0 14px 36px rgba(0,0,0,.4);
+}
+.win-card h2{color:#ff9800;font-size:2rem;margin:4px 0;}
+.win-stats{font-size:1.15rem;margin:10px 0;color:#4527a0;}
+.win-stats b{font-size:1.5rem;color:#e65100;}
+.confetti{font-size:2.4rem;}
+
+/* ===== 分數牆 & 後台 modal ===== */
+.modal{
+  position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+  background:rgba(8,6,24,.8);padding:12px;
+}
+.modal .m-card{
+  background:#fff;border-radius:24px;border:5px solid #b39ddb;max-width:520px;width:100%;
+  max-height:88vh;overflow-y:auto;padding:18px 16px;text-align:center;
+}
+.m-card h3{color:#5e35b1;margin:2px 0 10px;font-size:1.35rem;}
+.lb-table{width:100%;border-collapse:collapse;font-size:.92rem;}
+.lb-table th{background:#ede7f6;color:#5e35b1;padding:6px 4px;border-radius:6px;}
+.lb-table td{padding:6px 4px;border-bottom:2px dashed #eee;color:#444;}
+.lb-table tr.me td{background:#fff8e1;font-weight:bold;}
+.lb-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:8px;flex-wrap:wrap;}
+.lb-tab{border:2px solid #ddd;background:#fafafa;border-radius:12px;padding:5px 10px;font-size:.85rem;cursor:pointer;}
+.lb-tab.sel{border-color:#7e57c2;background:#ede7f6;color:#4527a0;font-weight:bold;}
+.adm-row{display:flex;justify-content:space-between;align-items:center;margin:10px 0;text-align:left;gap:8px;}
+.adm-row label{font-size:.95rem;color:#444;flex:1;}
+.adm-row input[type=number],.adm-row select{
+  font-family:var(--font);font-size:1rem;padding:6px 8px;border-radius:10px;border:2px solid #b39ddb;width:110px;text-align:center;
+}
+.adm-row input[type=text]{
+  font-family:var(--font);font-size:.85rem;padding:6px 8px;border-radius:10px;border:2px solid #b39ddb;width:100%;
+}
+.adm-note{font-size:.78rem;color:#999;text-align:left;margin:2px 0 8px;}
+.m-close{border:none;background:#7e57c2;color:#fff;border-radius:16px;padding:10px 26px;font-size:1.05rem;font-weight:bold;cursor:pointer;margin-top:10px;}
+
+#orientTip{
+  position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;text-align:center;
+  background:rgba(20,14,50,.95);color:#fff;font-size:1.2rem;padding:20px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 標題畫面 ============ -->
+<div id="titleScreen" class="screen active">
+  <div class="title-card">
+    <h1>🌀 3D移動迷宮</h1>
+    <p class="sub">迷宮會變形！撿道具、找出口，比誰最快過關！</p>
+    <div class="sec-label">1️⃣ 選擇你的角色</div>
+    <div class="char-row" id="charRow"></div>
+    <div id="charPreviewWrap">
+      <canvas id="charPreview" width="240" height="260"></canvas>
+      <div id="charDesc"></div>
+    </div>
+    <div class="sec-label">2️⃣ 選擇關卡環境</div>
+    <div class="lvl-row" id="lvlRow"></div>
+    <div class="sec-label">3️⃣ 選擇視角（遊戲中可隨時切換）</div>
+    <div class="view-row" id="viewRow">
+      <button class="view-btn sel" data-v="tp">🎥 第三人稱</button>
+      <button class="view-btn" data-v="fp">👀 第一人稱</button>
+      <button class="view-btn" data-v="top">🗺️ 俯視</button>
+    </div>
+    <div class="sec-label">4️⃣ 你的名字（會顯示在分數牆上）</div>
+    <input id="playerName" maxlength="10" placeholder="輸入名字">
+    <button class="start-btn" id="startBtn">🚩 開始冒險！</button>
+    <div class="title-foot">
+      <button class="mini-btn" id="lbBtn">🏆 分數牆</button>
+      <button class="mini-btn" id="admBtn">⚙️ 後台設定</button>
+      <button class="mini-btn" id="helpBtn">❓ 玩法說明</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 遊戲畫面 ============ -->
+<div id="gameScreen" class="screen">
+  <canvas id="c3d"></canvas>
+  <div class="hud" id="hudTop">
+    <div id="hudInfo">
+      <span>⏱ <b id="hudTime">0:00</b></span>
+      <span>🌀 <span id="shiftCountdown">--</span></span>
+      <span id="hudLvlName"></span>
+    </div>
+    <div id="minimapWrap">
+      <canvas id="minimap" width="240" height="240"></canvas>
+      <div id="minimapHint">點我放大</div>
+    </div>
+  </div>
+  <div id="effectChips"></div>
+  <div id="hudRightBtns">
+    <button class="round-btn" id="viewToggle">🎥<span class="bl">視角</span></button>
+    <button class="round-btn" id="soundToggle">🔊<span class="bl">音樂</span></button>
+    <button class="round-btn" id="quitBtn">🏠<span class="bl">離開</span></button>
+  </div>
+  <div id="compassHud"><div id="compassArrow">🔺</div></div>
+  <button id="shovelBtn">⛏️<span class="cnt" id="shovelCnt">1</span></button>
+  <div id="joyZone"><div id="joyBase"></div><div id="joyStick"></div></div>
+  <div id="lookZone"></div>
+  <div id="preWarn">⚠️ 迷宮即將變換：<span id="preWarnSec">3</span> 秒</div>
+  <div id="shiftWarn"><div class="box">🌀 迷宮變換中...<br><span style="font-size:1rem;">牆壁正在移動，請稍等！</span></div></div>
+  <div id="toast"></div>
+</div>
+
+<!-- ============ 大地圖 ============ -->
+<div id="bigMapOverlay">
+  <canvas id="bigMap" width="600" height="600"></canvas>
+  <button id="bigMapClose">✖</button>
+</div>
+
+<!-- ============ 過關畫面 ============ -->
+<div id="winScreen" class="screen">
+  <div class="win-card">
+    <div class="confetti">🎉🎊🏆🎊🎉</div>
+    <h2>恭喜過關！</h2>
+    <div class="win-stats">
+      <div>關卡：<span id="winLvl"></span></div>
+      <div>過關時間：<b id="winTime"></b></div>
+      <div>獲得分數：<b id="winScore"></b> 分</div>
+      <div id="winRank" style="font-size:.95rem;color:#7e57c2;margin-top:4px;"></div>
+    </div>
+    <button class="start-btn" id="againBtn">🔁 再玩一次</button>
+    <button class="mini-btn" id="winLbBtn">🏆 看分數牆</button>
+    <button class="mini-btn" id="winHomeBtn">🏠 回到選單</button>
+  </div>
+</div>
+
+<!-- ============ 分數牆 ============ -->
+<div class="modal" id="lbModal">
+  <div class="m-card">
+    <h3>🏆 分數牆</h3>
+    <div class="lb-tabs" id="lbTabs"></div>
+    <div id="lbSyncState" style="font-size:.75rem;color:#999;margin-bottom:6px;"></div>
+    <div style="overflow-x:auto;">
+      <table class="lb-table"><thead><tr><th>名次</th><th>名字</th><th>角色</th><th>時間</th><th>分數</th></tr></thead>
+      <tbody id="lbBody"></tbody></table>
+    </div>
+    <button class="m-close" id="lbClose">關閉</button>
+  </div>
+</div>
+
+<!-- ============ 後台設定 ============ -->
+<div class="modal" id="admModal">
+  <div class="m-card">
+    <h3>⚙️ 後台設定</h3>
+    <div class="adm-row"><label>🌀 迷宮每幾分鐘變換一次</label><input type="number" id="cfgShiftMin" min="0.5" max="10" step="0.5"></div>
+    <div class="adm-row"><label>🎁 每次出現的道具數量</label><input type="number" id="cfgItems" min="3" max="12" step="1"></div>
+    <div class="adm-row"><label>🧱 迷宮大小</label>
+      <select id="cfgSize"><option value="11">小 11×11</option><option value="13">中 13×13</option><option value="15">大 15×15</option></select>
+    </div>
+    <div class="adm-row"><label>🎵 預設開啟音樂</label>
+      <select id="cfgMusic"><option value="1">開</option><option value="0">關</option></select>
+    </div>
+    <div class="adm-row" style="flex-direction:column;align-items:stretch;">
+      <label>☁️ 雲端分數牆 API 網址（選填）</label>
+      <input type="text" id="cfgApi" placeholder="https://script.google.com/...（留空＝只存在本機）">
+    </div>
+    <div class="adm-note">💡 填入 Google Apps Script 網址後，所有玩家的分數就能互相看見。做法請看資料夾內 README.md。</div>
+    <button class="m-close" id="admSave">💾 儲存設定</button>
+  </div>
+</div>
+
+<!-- ============ 玩法說明 ============ -->
+<div class="modal" id="helpModal">
+  <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
+    <h3 style="text-align:center;">❓ 玩法說明</h3>
+    <div>🕹️ <b>左半邊</b>拖曳搖桿移動；<b>右半邊</b>拖曳轉視角。電腦可用 WASD / 方向鍵。</div>
+    <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
+    <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
+    <div>🎁 道具（每次變形會重新出現）：</div>
+    <div style="padding-left:14px;">
+      ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕）<br>
+      🗺️ 魔法地圖：顯示通往出口的路線<br>🧭 指南針：箭頭指向出口<br>👻 穿牆斗篷：可以穿過牆壁<br>
+      ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100
+    </div>
+    <div>🗺️ 點右上角小地圖可以放大。</div>
+    <button class="m-close" id="helpClose" style="display:block;margin:10px auto 0;">知道了！</button>
+  </div>
+</div>
+
+<div id="orientTip">📱 建議把平板/手機<b>橫著拿</b>會更好玩喔！<br><br><button class="m-close" id="orientOk">繼續</button></div>
+
+<script src="./lib/three.min.js"></script>
+<script>
+'use strict';
+/* =====================================================
+   3D移動迷宮 — 給小朋友的變形迷宮冒險
+   ===================================================== */
+const $=id=>document.getElementById(id);
+
+/* ---------- 設定（後台可調） ---------- */
+const DEFAULT_CFG={shiftMin:3,itemCount:6,mazeSize:13,musicOn:1,apiUrl:''};
+let CFG={...DEFAULT_CFG};
+try{const s=JSON.parse(localStorage.getItem('maze3d_cfg')||'{}');CFG={...DEFAULT_CFG,...s};}catch(e){}
+function saveCfg(){localStorage.setItem('maze3d_cfg',JSON.stringify(CFG));}
+
+/* ---------- 角色資料 ---------- */
+const CHARS=[
+ {id:'yong', name:'小勇', emoji:'👦', desc:'活力小男孩，藍色上衣', skin:0xffcc99, hair:0x4a3220, shirt:0x2196f3, pants:0x37474f, type:'human'},
+ {id:'hua',  name:'小花', emoji:'👧', desc:'愛笑女孩，粉紅洋裝＋雙馬尾', skin:0xffd9b3, hair:0x8d5524, shirt:0xf06292, pants:0xf8bbd0, type:'girl'},
+ {id:'dan',  name:'阿丹', emoji:'🧒', desc:'跑步高手，綠色運動服', skin:0x8d5524, hair:0x1a1a1a, shirt:0x43a047, pants:0x263238, type:'human'},
+ {id:'liya', name:'莉亞', emoji:'👩', desc:'聰明女孩，紫色洋裝', skin:0xc68642, hair:0x111111, shirt:0x7e57c2, pants:0xd1c4e9, type:'girl'},
+ {id:'robot',name:'鐵蛋', emoji:'🤖', desc:'迷宮探測機器人', skin:0x9e9e9e, hair:0x616161, shirt:0x78909c, pants:0x455a64, type:'robot'},
+ {id:'cat',  name:'喵喵', emoji:'🐱', desc:'橘色小貓咪，有尾巴喔', skin:0xffa040, hair:0xef6c00, shirt:0xffb74d, pants:0xef6c00, type:'cat'},
+];
+
+/* ---------- 關卡環境 ---------- */
+const LEVELS=[
+ {id:'indoor',name:'神祕城堡',emoji:'🏰',css:'linear-gradient(145deg,#a1887f,#6d4c41)',
+  sky:0x3e2723,fog:[0x3e2723,30,90],floor:0x8d6e63,wall:0xb0785a,amb:0xffe0b2,ambI:.55,dirI:.5,music:0},
+ {id:'field',name:'陽光草原',emoji:'🌻',css:'linear-gradient(145deg,#81d4fa,#4caf50)',
+  sky:0x87ceeb,fog:[0x87ceeb,50,160],floor:0x7cb342,wall:0x66964f,amb:0xffffff,ambI:.75,dirI:.85,music:1},
+ {id:'cave',name:'幽暗山洞',emoji:'⛰️',css:'linear-gradient(145deg,#455a64,#1a1a2e)',
+  sky:0x0a0a14,fog:[0x0a0a14,10,45],floor:0x4e4257,wall:0x5d5068,amb:0x9fa8da,ambI:.5,dirI:.2,music:2},
+ {id:'forest',name:'綠色森林',emoji:'🌲',css:'linear-gradient(145deg,#66bb6a,#1b5e20)',
+  sky:0xa5d6a7,fog:[0x9ccc8f,25,110],floor:0x558b2f,wall:0x795548,amb:0xd7ffd9,ambI:.6,dirI:.6,music:3},
+ {id:'mist',name:'迷霧沼澤',emoji:'🌫️',css:'linear-gradient(145deg,#b0bec5,#546e7a)',
+  sky:0x8b93a8,fog:[0x8b93a8,6,30],floor:0x607d8b,wall:0x78909c,amb:0xcfd8dc,ambI:.55,dirI:.3,music:4},
+];
+
+/* ---------- 道具資料 ---------- */
+const ITEM_TYPES=[
+ {id:'speed', emoji:'⚡', name:'加速藥水',   weight:20, dur:8,  msg:'⚡ 加速 8 秒！'},
+ {id:'superspeed',emoji:'🚀',name:'強力加速藥水',weight:10, dur:6, msg:'🚀 超級加速 6 秒！'},
+ {id:'shovel',emoji:'⛏️', name:'鐵鍬',      weight:14, dur:0,  msg:'⛏️ 拿到鐵鍬！按按鈕敲牆'},
+ {id:'map',   emoji:'🗺️', name:'魔法地圖',  weight:12, dur:12, msg:'🗺️ 地圖顯示出口路線 12 秒！'},
+ {id:'compass',emoji:'🧭',name:'指南針',    weight:14, dur:15, msg:'🧭 指南針指向出口 15 秒！'},
+ {id:'ghost', emoji:'👻', name:'穿牆斗篷',  weight:8,  dur:5,  msg:'👻 穿牆 5 秒！快穿過去！'},
+ {id:'timegem',emoji:'⏱️',name:'時間寶石', weight:10, dur:0,  msg:'⏱️ 時間倒退 15 秒！'},
+ {id:'star',  emoji:'⭐', name:'幸運星',    weight:12, dur:0,  msg:'⭐ 分數 +100！'},
+];
+
+/* ---------- 遊戲狀態 ---------- */
+const G={
+ running:false, frozen:false, charIdx:0, lvlIdx:0, view:'tp',
+ mazeW:13, mazeH:13, cell:4, wallH:3, wallT:0.7,
+ hWalls:null, vWalls:null,          // 牆壁格子資料
+ wallBoxes:[],                       // 碰撞用 AABB
+ px:0, pz:0, heading:0, camYaw:0, camPitch:0,
+ baseSpeed:5.2, speedMul:1,
+ exitCell:{x:0,y:0}, startTime:0, elapsed:0, timeOffset:0,
+ nextShiftAt:0, shifting:false, preWarned:false,
+ items:[], effects:{}, shovels:0, starBonus:0,
+ visited:null, solutionPath:null, mapUntil:0, compassUntil:0, ghostUntil:0,
+ muted:!CFG.musicOn,
+};
+
+/* =====================================================
+   音效引擎（WebAudio 電子音樂 + 特效音）
+   ===================================================== */
+const AudioEng={
+ ctx:null, master:null, musicGain:null, fxGain:null, itemGain:null,
+ seqTimer:null, step:0, playing:false, songIdx:0, itemLoopTimer:null,
+ init(){
+   if(this.ctx) return;
+   const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+   this.ctx=new AC();
+   this.master=this.ctx.createGain(); this.master.gain.value=0.9; this.master.connect(this.ctx.destination);
+   this.musicGain=this.ctx.createGain(); this.musicGain.gain.value=0.32; this.musicGain.connect(this.master);
+   this.fxGain=this.ctx.createGain(); this.fxGain.gain.value=0.8; this.fxGain.connect(this.master);
+   this.itemGain=this.ctx.createGain(); this.itemGain.gain.value=0.4; this.itemGain.connect(this.master);
+ },
+ resume(){ if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume(); },
+ tone(freq,dur,type,gainNode,vol=0.5,slide=0){
+   if(!this.ctx||G.muted) return;
+   const t=this.ctx.currentTime, o=this.ctx.createOscillator(), g=this.ctx.createGain();
+   o.type=type; o.frequency.setValueAtTime(freq,t);
+   if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),t+dur);
+   g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+   o.connect(g); g.connect(gainNode||this.fxGain); o.start(t); o.stop(t+dur+0.05);
+ },
+ noise(dur,vol=0.4,freq=1000){
+   if(!this.ctx||G.muted) return;
+   const t=this.ctx.currentTime, len=this.ctx.sampleRate*dur, buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate);
+   const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+   const src=this.ctx.createBufferSource(); src.buffer=buf;
+   const f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq;
+   const g=this.ctx.createGain(); g.gain.value=vol;
+   src.connect(f); f.connect(g); g.connect(this.fxGain); src.start(t);
+ },
+ /* --- 背景電子音樂：每個關卡不同調性的琶音 --- */
+ SONGS:[
+  {bpm:108,bass:[110,110,82.4,98],  arp:[220,277,330,440,330,277,220,277]},        // 城堡 A小調
+  {bpm:120,bass:[130.8,130.8,98,110],arp:[261.6,329.6,392,523.3,392,329.6,261.6,392]}, // 草原 C大調
+  {bpm:96, bass:[73.4,73.4,65.4,82.4],arp:[146.8,174.6,220,293.7,220,174.6,146.8,110]}, // 山洞 D小調低沉
+  {bpm:112,bass:[98,98,73.4,87.3],  arp:[196,246.9,293.7,392,293.7,246.9,196,246.9]},  // 森林 G大調
+  {bpm:90, bass:[87.3,87.3,65.4,73.4],arp:[174.6,207.7,261.6,349.2,261.6,207.7,174.6,130.8]}, // 迷霧 F小調
+ ],
+ startMusic(songIdx){
+   this.stopMusic(); if(!this.ctx) return;
+   this.songIdx=songIdx; this.step=0; this.playing=true;
+   const song=this.SONGS[songIdx], stepDur=60/song.bpm/2;
+   this.seqTimer=setInterval(()=>{
+     if(G.muted||!this.playing) return;
+     const s=this.step;
+     // 琶音主旋律
+     this.tone(song.arp[s%8],stepDur*0.9,'sawtooth',this.musicGain,0.16);
+     // 貝斯（每2步）
+     if(s%2===0) this.tone(song.bass[(s>>2)%4],stepDur*1.6,'square',this.musicGain,0.13);
+     // 鼓點
+     if(s%4===0) this.tone(150,0.1,'sine',this.musicGain,0.5,-110); // kick
+     if(s%4===2) this.noiseHat(stepDur*0.3);
+     this.step++;
+   },stepDur*1000);
+ },
+ noiseHat(dur){
+   if(!this.ctx||G.muted) return;
+   const t=this.ctx.currentTime,len=this.ctx.sampleRate*dur,buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate);
+   const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len)*0.5;
+   const src=this.ctx.createBufferSource(); src.buffer=buf;
+   const f=this.ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=6000;
+   const g=this.ctx.createGain(); g.gain.value=0.12;
+   src.connect(f); f.connect(g); g.connect(this.musicGain); src.start(t);
+ },
+ stopMusic(){ this.playing=false; if(this.seqTimer){clearInterval(this.seqTimer);this.seqTimer=null;} },
+ /* --- 道具「使用中」的循環音樂 --- */
+ startItemLoop(){
+   if(this.itemLoopTimer) return;
+   let i=0; const notes=[523.3,659.3,784,1046.5,784,659.3];
+   this.itemLoopTimer=setInterval(()=>{
+     if(G.muted) return;
+     this.tone(notes[i%6],0.12,'triangle',this.itemGain,0.3); i++;
+   },140);
+ },
+ stopItemLoop(){ if(this.itemLoopTimer){clearInterval(this.itemLoopTimer);this.itemLoopTimer=null;} },
+ /* --- 特效音 --- */
+ sfxPickup(){ this.tone(660,0.08,'square',this.fxGain,0.4); setTimeout(()=>this.tone(990,0.12,'square',this.fxGain,0.4),70); },
+ sfxUse(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,0.15,'triangle',this.fxGain,0.45),i*80)); },
+ sfxBreak(){ this.noise(0.35,0.7,700); this.tone(90,0.3,'sawtooth',this.fxGain,0.5,-40); },
+ sfxAlarm(){ this.tone(880,0.28,'square',this.fxGain,0.3); setTimeout(()=>this.tone(660,0.28,'square',this.fxGain,0.3),300); },
+ sfxTick(){ this.tone(1200,0.06,'square',this.fxGain,0.25); },
+ sfxWin(){ [523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,0.3,'triangle',this.fxGain,0.5),i*130)); },
+ sfxStep(){ this.tone(180,0.04,'sine',this.fxGain,0.06); },
+};
+</script>
+<script>
+'use strict';
+/* =====================================================
+   Three.js 場景
+   ===================================================== */
+let renderer,scene,camera,wallMesh,floorMesh,exitGroup,playerGroup,envGroup,itemGroup,compass3D;
+let previewRenderer,previewScene,previewCam,previewChar;
+const V3=THREE.Vector3;
+
+function initRenderer(){
+  const canvas=$('c3d');
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,300);
+  window.addEventListener('resize',()=>{
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+}
+
+/* =====================================================
+   迷宮產生（遞迴回溯 → 完美迷宮，保證全部相通）
+   從指定格子開始長出來 → 迷宮變換以玩家為中心，永遠不會被困住
+   ===================================================== */
+function genMaze(fromX,fromY){
+  const W=G.mazeW,H=G.mazeH;
+  // hWalls[y][x]: (x,y) 與 (x,y+1) 之間的牆； vWalls[y][x]: (x,y) 與 (x+1,y) 之間的牆
+  const hW=Array.from({length:H-1},()=>Array(W).fill(true));
+  const vW=Array.from({length:H},()=>Array(W-1).fill(true));
+  const seen=Array.from({length:H},()=>Array(W).fill(false));
+  const stack=[[fromX,fromY]]; seen[fromY][fromX]=true;
+  while(stack.length){
+    const [cx,cy]=stack[stack.length-1];
+    const nbs=[];
+    if(cx>0&&!seen[cy][cx-1])nbs.push([cx-1,cy,'v',cx-1,cy]);
+    if(cx<W-1&&!seen[cy][cx+1])nbs.push([cx+1,cy,'v',cx,cy]);
+    if(cy>0&&!seen[cy-1][cx])nbs.push([cx,cy-1,'h',cx,cy-1]);
+    if(cy<H-1&&!seen[cy+1][cx])nbs.push([cx,cy+1,'h',cx,cy]);
+    if(!nbs.length){stack.pop();continue;}
+    const [nx,ny,t,wx,wy]=nbs[Math.floor(Math.random()*nbs.length)];
+    if(t==='h')hW[wy][wx]=false; else vW[wy][wx]=false;
+    seen[ny][nx]=true; stack.push([nx,ny]);
+  }
+  // 打通一些死路（做出環路，比較不容易卡住，小朋友友善）
+  const braid=Math.floor(W*H*0.08);
+  for(let i=0;i<braid;i++){
+    if(Math.random()<0.5){const y=Math.floor(Math.random()*(H-1)),x=Math.floor(Math.random()*W);hW[y][x]=false;}
+    else{const y=Math.floor(Math.random()*H),x=Math.floor(Math.random()*(W-1));vW[y][x]=false;}
+  }
+  G.hWalls=hW; G.vWalls=vW;
+}
+
+/* 世界座標 <-> 格子 */
+function cellToWorld(cx,cy){const c=G.cell;return{x:(cx-(G.mazeW-1)/2)*c,z:(cy-(G.mazeH-1)/2)*c};}
+function worldToCell(x,z){const c=G.cell;return{
+  x:Math.max(0,Math.min(G.mazeW-1,Math.round(x/c+(G.mazeW-1)/2))),
+  y:Math.max(0,Math.min(G.mazeH-1,Math.round(z/c+(G.mazeH-1)/2)))};}
+
+/* =====================================================
+   牆壁建置（InstancedMesh 一次畫完，行動裝置也順暢）
+   ===================================================== */
+function buildWalls(theme){
+  if(wallMesh){scene.remove(wallMesh);wallMesh.geometry.dispose();wallMesh.material.dispose();}
+  G.wallBoxes=[];
+  const W=G.mazeW,H=G.mazeH,c=G.cell,t=G.wallT,h=G.wallH;
+  const mats=[]; // 收集每面牆的變換
+  const add=(x,z,lenX,lenZ,info)=>{
+    mats.push({x,z,sx:lenX,sz:lenZ});
+    G.wallBoxes.push({minX:x-lenX/2,maxX:x+lenX/2,minZ:z-lenZ/2,maxZ:z+lenZ/2,...info});
+  };
+  const oX=-(W/2)*c, oZ=-(H/2)*c; // 迷宮左上角世界座標
+  // 內部橫牆（h）
+  for(let y=0;y<H-1;y++)for(let x=0;x<W;x++) if(G.hWalls[y][x]){
+    const p=cellToWorld(x,y); add(p.x,p.z+c/2,c+t,t,{type:'h',gx:x,gy:y,boundary:false});
+  }
+  // 內部直牆（v）
+  for(let y=0;y<H;y++)for(let x=0;x<W-1;x++) if(G.vWalls[y][x]){
+    const p=cellToWorld(x,y); add(p.x+c/2,p.z,t,c+t,{type:'v',gx:x,gy:y,boundary:false});
+  }
+  // 外圍牆（不可敲破）
+  add(0,oZ,W*c+t,t,{boundary:true}); add(0,oZ+H*c,W*c+t,t,{boundary:true});
+  add(oX,0,t,H*c+t,{boundary:true}); add(oX+W*c,0,t,H*c+t,{boundary:true});
+
+  const geo=new THREE.BoxGeometry(1,h,1);
+  const mat=new THREE.MeshLambertMaterial({color:theme.wall,map:wallTexture()});
+  wallMesh=new THREE.InstancedMesh(geo,mat,mats.length);
+  const m=new THREE.Matrix4(),s=new V3(),p=new V3(),q=new THREE.Quaternion();
+  mats.forEach((w,i)=>{
+    p.set(w.x,h/2,w.z); s.set(w.sx,1,w.sz);
+    m.compose(p,q,s); wallMesh.setMatrixAt(i,m);
+    G.wallBoxes[i].inst=i;
+  });
+  wallMesh.instanceMatrix.needsUpdate=true;
+  scene.add(wallMesh);
+}
+
+/* 敲破一面牆：把該牆縮到看不見 + 更新格子與碰撞資料 */
+function removeWallBox(wb){
+  if(wb.type==='h')G.hWalls[wb.gy][wb.gx]=false;
+  else if(wb.type==='v')G.vWalls[wb.gy][wb.gx]=false;
+  const m=new THREE.Matrix4(); m.makeScale(0.001,0.001,0.001);
+  wallMesh.setMatrixAt(wb.inst,m); wallMesh.instanceMatrix.needsUpdate=true;
+  const idx=G.wallBoxes.indexOf(wb); if(idx>=0)G.wallBoxes.splice(idx,1);
+}
+
+/* =====================================================
+   BFS：從玩家到出口的路線（魔法地圖用）
+   ===================================================== */
+function solveMaze(fromX,fromY){
+  const W=G.mazeW,H=G.mazeH;
+  const prev=Array.from({length:H},()=>Array(W).fill(null));
+  const q=[[fromX,fromY]]; prev[fromY][fromX]=[fromX,fromY];
+  while(q.length){
+    const [x,y]=q.shift();
+    if(x===G.exitCell.x&&y===G.exitCell.y)break;
+    const tryGo=(nx,ny,blocked)=>{ if(!blocked&&nx>=0&&nx<W&&ny>=0&&ny<H&&!prev[ny][nx]){prev[ny][nx]=[x,y];q.push([nx,ny]);} };
+    tryGo(x-1,y, x<=0||G.vWalls[y][x-1]);
+    tryGo(x+1,y, x>=W-1||G.vWalls[y][x]);
+    tryGo(x,y-1, y<=0||G.hWalls[y-1][x]);
+    tryGo(x,y+1, y>=H-1||G.hWalls[y][x]);
+  }
+  const path=[]; let cur=[G.exitCell.x,G.exitCell.y];
+  if(!prev[cur[1]][cur[0]])return path;
+  while(!(cur[0]===fromX&&cur[1]===fromY)){path.push(cur);cur=prev[cur[1]][cur[0]];}
+  path.push([fromX,fromY]); path.reverse(); return path;
+}
+
+/* =====================================================
+   地板 + 出口傳送門
+   ===================================================== */
+function buildFloor(theme){
+  if(floorMesh){scene.remove(floorMesh);floorMesh.geometry.dispose();floorMesh.material.dispose();}
+  const size=Math.max(G.mazeW,G.mazeH)*G.cell*3;
+  const geo=new THREE.PlaneGeometry(size,size,1,1);
+  const ft=floorTexture().clone(); ft.needsUpdate=true;
+  ft.wrapS=ft.wrapT=THREE.RepeatWrapping; ft.repeat.set(size/8,size/8);
+  const mat=new THREE.MeshLambertMaterial({color:theme.floor,map:ft});
+  floorMesh=new THREE.Mesh(geo,mat); floorMesh.rotation.x=-Math.PI/2; floorMesh.position.y=0;
+  scene.add(floorMesh);
+}
+function buildExit(){
+  if(exitGroup)scene.remove(exitGroup);
+  exitGroup=new THREE.Group();
+  const p=cellToWorld(G.exitCell.x,G.exitCell.y);
+  const ringGeo=new THREE.TorusGeometry(1.1,0.14,10,28);
+  const ringMat=new THREE.MeshBasicMaterial({color:0xffd54f});
+  const ring=new THREE.Mesh(ringGeo,ringMat); ring.position.y=1.6; exitGroup.add(ring);
+  const beamGeo=new THREE.CylinderGeometry(0.55,0.9,14,10,1,true);
+  const beamMat=new THREE.MeshBasicMaterial({color:0xfff176,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false});
+  const beam=new THREE.Mesh(beamGeo,beamMat); beam.position.y=7; exitGroup.add(beam);
+  const star=makeEmojiSprite('🚩',2.2); star.position.y=3.4; exitGroup.add(star);
+  exitGroup.position.set(p.x,0,p.z);
+  exitGroup.userData.ring=ring;
+  scene.add(exitGroup);
+}
+
+
+/* 程序化貼圖：石磚牆 + 方格地板（白底 × 材質色染色） */
+let _wallTex=null,_floorTex=null;
+function wallTexture(){
+  if(_wallTex)return _wallTex;
+  const cv=document.createElement('canvas');cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  c.fillStyle='#ffffff';c.fillRect(0,0,128,128);
+  for(let i=0;i<420;i++){ // 細顆粒
+    const v=200+Math.floor(Math.random()*56);
+    c.fillStyle=`rgba(${v},${v},${v},0.5)`;
+    c.fillRect(Math.random()*128,Math.random()*128,2.2,2.2);
+  }
+  c.strokeStyle='rgba(90,90,90,0.4)';c.lineWidth=3;
+  for(let r=0;r<4;r++){ // 石磚縫
+    const y=r*32;c.beginPath();c.moveTo(0,y);c.lineTo(128,y);c.stroke();
+    const off=(r%2)*32;
+    for(let x=off;x<=128;x+=64){c.beginPath();c.moveTo(x,y);c.lineTo(x,y+32);c.stroke();}
+  }
+  _wallTex=new THREE.CanvasTexture(cv);
+  _wallTex.wrapS=_wallTex.wrapT=THREE.RepeatWrapping;
+  return _wallTex;
+}
+function floorTexture(){
+  if(_floorTex)return _floorTex;
+  const cv=document.createElement('canvas');cv.width=cv.height=256;
+  const c=cv.getContext('2d');
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+    const v=(x+y)%2?255:228;
+    c.fillStyle=`rgb(${v},${v},${v})`;c.fillRect(x*32,y*32,32,32);
+  }
+  for(let i=0;i<600;i++){
+    const v=205+Math.floor(Math.random()*50);
+    c.fillStyle=`rgba(${v},${v},${v},0.45)`;
+    c.fillRect(Math.random()*256,Math.random()*256,3,3);
+  }
+  _floorTex=new THREE.CanvasTexture(cv);
+  _floorTex.wrapS=_floorTex.wrapT=THREE.RepeatWrapping;
+  return _floorTex;
+}
+
+/* Emoji → Sprite 貼圖（道具、雲、月亮都用這招，超省效能） */
+const spriteCache={};
+function makeEmojiSprite(emoji,size){
+  if(!spriteCache[emoji]){
+    const cv=document.createElement('canvas'); cv.width=cv.height=128;
+    const ctx=cv.getContext('2d'); ctx.font='100px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emoji,64,70);
+    const tex=new THREE.CanvasTexture(cv); spriteCache[emoji]=tex;
+  }
+  const mat=new THREE.SpriteMaterial({map:spriteCache[emoji],transparent:true,depthWrite:false});
+  const sp=new THREE.Sprite(mat); sp.scale.set(size,size,1); return sp;
+}
+</script>
+<script>
+'use strict';
+/* =====================================================
+   角色建造（方塊小人，會擺手走路）
+   ===================================================== */
+function buildCharacter(cd){
+  const g=new THREE.Group();
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const box=(w,h,d,c)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));
+  // 身體
+  const body=box(0.62,0.62,0.36,cd.shirt); body.position.y=0.95; g.add(body);
+  // 頭
+  const head=box(0.52,0.5,0.48,cd.skin); head.position.y=1.55; g.add(head);
+  // 眼睛
+  const eyeMat=M(0x222222);
+  [-0.13,0.13].forEach(ex=>{
+    const eye=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.09,0.05),eyeMat);
+    eye.position.set(ex,1.58,0.25); g.add(eye);
+  });
+  // 頭髮 / 頭頂
+  if(cd.type==='robot'){
+    const ant=box(0.05,0.3,0.05,0x616161); ant.position.y=1.94; g.add(ant);
+    const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.08,8,8),new THREE.MeshBasicMaterial({color:0x00e5ff}));
+    bulb.position.y=2.12; g.add(bulb);
+    head.material=M(0xb0bec5);
+    [-0.13,0.13].forEach(ex=>{const led=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.05),new THREE.MeshBasicMaterial({color:0x00e5ff}));led.position.set(ex,1.58,0.26);g.add(led);});
+  }else if(cd.type==='cat'){
+    [-0.17,0.17].forEach(ex=>{const ear=new THREE.Mesh(new THREE.ConeGeometry(0.11,0.22,4),M(cd.hair));ear.position.set(ex,1.9,0);g.add(ear);});
+    const tail=box(0.09,0.09,0.5,cd.hair); tail.position.set(0,0.85,-0.4); tail.rotation.x=0.6; g.add(tail);
+    const nose=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.06,0.05),M(0xef9a9a)); nose.position.set(0,1.48,0.26); g.add(nose);
+    head.material=M(cd.skin);
+  }else{
+    const hairTop=box(0.56,0.16,0.52,cd.hair); hairTop.position.y=1.83; g.add(hairTop);
+    if(cd.type==='girl'){
+      [-0.33,0.33].forEach(ex=>{const pig=box(0.14,0.4,0.14,cd.hair);pig.position.set(ex,1.55,-0.05);g.add(pig);});
+    }
+  }
+  // 手
+  const armL=box(0.16,0.5,0.16,cd.type==='robot'?0x90a4ae:cd.skin); armL.position.set(-0.42,1.12,0); armL.geometry.translate(0,-0.18,0);
+  const armR=armL.clone(); armR.position.x=0.42;
+  g.add(armL); g.add(armR);
+  // 腳
+  const legL=box(0.2,0.55,0.2,cd.pants); legL.position.set(-0.16,0.62,0); legL.geometry.translate(0,-0.24,0);
+  const legR=legL.clone(); legR.position.x=0.16;
+  g.add(legL); g.add(legR);
+  // 裙子（女生）
+  if(cd.type==='girl'){const skirt=new THREE.Mesh(new THREE.ConeGeometry(0.42,0.4,8),M(cd.shirt));skirt.position.y=0.62;g.add(skirt);}
+  g.userData={armL,armR,legL,legR,body};
+  return g;
+}
+
+/* =====================================================
+   五種環境（抬頭看得到東西，但物件數量刻意精簡）
+   ===================================================== */
+function buildEnvironment(theme){
+  if(envGroup){scene.remove(envGroup);envGroup=null;}
+  envGroup=new THREE.Group(); envGroup.userData.anim=[];
+  scene.background=new THREE.Color(theme.sky);
+  scene.fog=new THREE.Fog(theme.fog[0],theme.fog[1],theme.fog[2]);
+  // 燈光
+  const amb=new THREE.AmbientLight(theme.amb,theme.ambI); envGroup.add(amb);
+  const dir=new THREE.DirectionalLight(0xffffff,theme.dirI); dir.position.set(30,60,20); envGroup.add(dir);
+  const span=Math.max(G.mazeW,G.mazeH)*G.cell;
+  const R=span*0.62;
+  const M=(c,e)=>new THREE.MeshLambertMaterial(e?{color:c,emissive:e}:{color:c});
+
+  if(theme.id==='indoor'){ /* 🏰 城堡室內：天花板 + 吊燈 + 火把光 */
+    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(span*2.2,span*2.2),M(0x4e342e));
+    ceil.rotation.x=Math.PI/2; ceil.position.y=7; envGroup.add(ceil);
+    for(let i=0;i<5;i++){
+      const lamp=new THREE.Group();
+      const chain=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.6),M(0x3e2723));
+      chain.position.y=6.2; lamp.add(chain);
+      const bulb=new THREE.Mesh(new THREE.SphereGeometry(0.5,10,10),new THREE.MeshBasicMaterial({color:0xffe082}));
+      bulb.position.y=5.2; lamp.add(bulb);
+      const lx=(Math.random()-0.5)*span*0.8, lz=(Math.random()-0.5)*span*0.8;
+      lamp.position.set(lx,0,lz); envGroup.add(lamp);
+    }
+    const pl=new THREE.PointLight(0xffcc80,0.7,40); pl.position.set(0,6,0); envGroup.add(pl);
+  }
+  else if(theme.id==='field'){ /* 🌻 草原：太陽 + 白雲 + 小鳥 */
+    const sun=makeEmojiSprite('☀️',14); sun.position.set(span*0.5,42,-span*0.6); envGroup.add(sun);
+    for(let i=0;i<6;i++){
+      const cl=makeEmojiSprite('☁️',10+Math.random()*8);
+      cl.position.set((Math.random()-0.5)*span*2.2,24+Math.random()*12,(Math.random()-0.5)*span*2.2);
+      envGroup.add(cl); envGroup.userData.anim.push(t=>{cl.position.x+=0.015;if(cl.position.x>span*1.4)cl.position.x=-span*1.4;});
+    }
+    for(let i=0;i<3;i++){
+      const bird=makeEmojiSprite('🐦',2.2); const ph=Math.random()*6.28,rr=span*0.4+i*6;
+      envGroup.add(bird);
+      envGroup.userData.anim.push(t=>{bird.position.set(Math.cos(t*0.3+ph)*rr,17+Math.sin(t*0.9+ph)*2,Math.sin(t*0.3+ph)*rr);});
+    }
+    for(let i=0;i<6;i++){ // 迷宮外圍幾朵花
+      const fl=makeEmojiSprite(['🌻','🌼','🌷'][i%3],2.4);
+      const a=i/6*6.28; fl.position.set(Math.cos(a)*R,1.1,Math.sin(a)*R); envGroup.add(fl);
+    }
+  }
+  else if(theme.id==='cave'){ /* ⛰️ 山洞：洞頂鐘乳石 + 水晶 + 火把光暈 */
+    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(span*2.4,span*2.4),M(0x4a3f5e));
+    ceil.rotation.x=Math.PI/2; ceil.position.y=8; envGroup.add(ceil);
+    for(let i=0;i<16;i++){
+      const st=new THREE.Mesh(new THREE.ConeGeometry(0.5+Math.random()*0.6,2+Math.random()*2.4,6),M(0x6a5c80));
+      st.rotation.x=Math.PI; st.position.set((Math.random()-0.5)*span*1.1,7,(Math.random()-0.5)*span*1.1);
+      envGroup.add(st);
+    }
+    for(let i=0;i<7;i++){
+      const cr=new THREE.Mesh(new THREE.OctahedronGeometry(0.4),new THREE.MeshBasicMaterial({color:[0x40c4ff,0xb388ff,0x69f0ae][i%3]}));
+      cr.position.set((Math.random()-0.5)*span*1.2,0.4,(Math.random()-0.5)*span*1.2);
+      envGroup.add(cr);
+      envGroup.userData.anim.push(t=>{cr.rotation.y=t;cr.position.y=0.5+Math.sin(t*2+i)*0.12;});
+    }
+    for(let i=0;i<9;i++){
+      const gem=makeEmojiSprite(['💎','✨','🔮'][i%3],1.6);
+      gem.position.set((Math.random()-0.5)*span*1.05,5.4+Math.random()*1.6,(Math.random()-0.5)*span*1.05);
+      envGroup.add(gem);
+      envGroup.userData.anim.push(t=>{gem.material.opacity=0.65+Math.sin(t*1.8+i*1.4)*0.3;});
+    }
+    const caveGlow=new THREE.PointLight(0x7c6bb8,0.8,60); caveGlow.position.set(0,7,0); envGroup.add(caveGlow);
+    const torch=new THREE.PointLight(0xffab40,2.2,22); torch.position.y=2.4; envGroup.add(torch);
+    envGroup.userData.torch=torch;
+    for(let i=0;i<3;i++){
+      const bat=makeEmojiSprite('🦇',1.8); const ph=i*2.1; envGroup.add(bat);
+      envGroup.userData.anim.push(t=>{bat.position.set(Math.cos(t*0.5+ph)*span*0.4,5.4+Math.sin(t*1.7+ph),Math.sin(t*0.5+ph)*span*0.4);});
+    }
+  }
+  else if(theme.id==='forest'){ /* 🌲 森林：外圈大樹 + 頭上樹冠 + 螢火蟲 */
+    for(let i=0;i<10;i++){
+      const a=i/10*6.28, tr=new THREE.Group();
+      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.7,1,9),M(0x5d4037)); trunk.position.y=4.5; tr.add(trunk);
+      const leaf=new THREE.Mesh(new THREE.ConeGeometry(3.6,7,7),M(0x2e7d32)); leaf.position.y=11; tr.add(leaf);
+      tr.position.set(Math.cos(a)*R,0,Math.sin(a)*R); envGroup.add(tr);
+    }
+    for(let i=0;i<6;i++){ // 頭頂樹冠
+      const cano=new THREE.Mesh(new THREE.CircleGeometry(6+Math.random()*4,10),
+        new THREE.MeshLambertMaterial({color:0x1b5e20,transparent:true,opacity:0.85,side:THREE.DoubleSide}));
+      cano.rotation.x=Math.PI/2; cano.position.set((Math.random()-0.5)*span,11+Math.random()*3,(Math.random()-0.5)*span);
+      envGroup.add(cano);
+    }
+    for(let i=0;i<8;i++){
+      const ff=new THREE.Mesh(new THREE.SphereGeometry(0.09,6,6),new THREE.MeshBasicMaterial({color:0xffff8d}));
+      const ph=Math.random()*6.28,rr=Math.random()*span*0.5;
+      envGroup.add(ff);
+      envGroup.userData.anim.push(t=>{ff.position.set(Math.cos(t*0.7+ph)*rr,1.4+Math.sin(t*1.3+ph)*0.8,Math.sin(t*0.7+ph)*rr);});
+    }
+    const bf=makeEmojiSprite('🦋',1.6); envGroup.add(bf);
+    envGroup.userData.anim.push(t=>{bf.position.set(Math.cos(t*0.4)*span*0.3,3+Math.sin(t*2)*0.8,Math.sin(t*0.4)*span*0.3);});
+  }
+  else{ /* 🌫️ 迷霧沼澤：月亮 + 幽靈鬼火 + 枯樹 */
+    const moon=makeEmojiSprite('🌕',9); moon.position.set(-span*0.4,30,-span*0.5); envGroup.add(moon);
+    for(let i=0;i<5;i++){
+      const wisp=makeEmojiSprite('💠',1.6); const ph=i*1.3,rr=span*(0.2+i*0.08);
+      envGroup.add(wisp);
+      envGroup.userData.anim.push(t=>{wisp.position.set(Math.cos(t*0.35+ph)*rr,2+Math.sin(t*1.1+ph)*1.1,Math.sin(t*0.35+ph)*rr);
+        wisp.material.opacity=0.5+Math.sin(t*2+ph)*0.35;});
+    }
+    for(let i=0;i<5;i++){
+      const a=i/5*6.28+0.4, dt=new THREE.Group();
+      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.55,7),M(0x37323e)); trunk.position.y=3.5; dt.add(trunk);
+      [-0.7,0.5].forEach((rx,j)=>{const br=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.2,3),M(0x37323e));
+        br.position.set(rx,6,0); br.rotation.z=rx>0?-0.7:0.7; dt.add(br);});
+      dt.position.set(Math.cos(a)*R,0,Math.sin(a)*R); envGroup.add(dt);
+    }
+  }
+  scene.add(envGroup);
+}
+</script>
+<script>
+'use strict';
+/* =====================================================
+   道具系統
+   ===================================================== */
+function pickItemType(){
+  const tot=ITEM_TYPES.reduce((a,b)=>a+b.weight,0);
+  let r=Math.random()*tot;
+  for(const it of ITEM_TYPES){ if((r-=it.weight)<0) return it; }
+  return ITEM_TYPES[0];
+}
+function spawnItems(){
+  if(itemGroup){scene.remove(itemGroup);}
+  itemGroup=new THREE.Group(); G.items=[];
+  const pc=worldToCell(G.px,G.pz);
+  const used=new Set([pc.x+','+pc.y, G.exitCell.x+','+G.exitCell.y]);
+  let tries=0;
+  while(G.items.length<CFG.itemCount&&tries<300){
+    tries++;
+    const cx=Math.floor(Math.random()*G.mazeW), cy=Math.floor(Math.random()*G.mazeH);
+    const key=cx+','+cy; if(used.has(key))continue; used.add(key);
+    const type=pickItemType(), p=cellToWorld(cx,cy);
+    const sp=makeEmojiSprite(type.emoji,1.5); sp.position.set(p.x,1.2,p.z);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.06,8,20),
+      new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.55}));
+    ring.rotation.x=Math.PI/2; ring.position.set(p.x,0.25,p.z);
+    itemGroup.add(sp); itemGroup.add(ring);
+    G.items.push({type,sprite:sp,ring,x:p.x,z:p.z,taken:false});
+  }
+  scene.add(itemGroup);
+}
+function showToast(msg,ms=1800){
+  const t=$('toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.style.display='none',ms);
+}
+function addEffect(id,label,dur){
+  G.effects[id]={until:performance.now()+dur*1000,label};
+  AudioEng.startItemLoop(); renderChips();
+}
+function renderChips(){
+  const wrap=$('effectChips'); wrap.innerHTML='';
+  const now=performance.now();
+  for(const k in G.effects){
+    const e=G.effects[k], left=Math.ceil((e.until-now)/1000);
+    if(left<=0){delete G.effects[k];continue;}
+    const d=document.createElement('div'); d.className='chip'; d.textContent=`${e.label} ${left}s`;
+    wrap.appendChild(d);
+  }
+  if(!Object.keys(G.effects).length) AudioEng.stopItemLoop();
+}
+function applyItem(it){
+  AudioEng.sfxPickup();
+  const t=it.type;
+  showToast(t.msg);
+  if(t.id==='speed'){ AudioEng.sfxUse(); addEffect('speed','⚡加速',t.dur); }
+  else if(t.id==='superspeed'){ AudioEng.sfxUse(); addEffect('superspeed','🚀強力加速',t.dur); }
+  else if(t.id==='shovel'){ G.shovels++; updateShovelBtn(); }
+  else if(t.id==='map'){ AudioEng.sfxUse(); const pc=worldToCell(G.px,G.pz); G.solutionPath=solveMaze(pc.x,pc.y); G.mapUntil=performance.now()+t.dur*1000; addEffect('map','🗺️地圖',t.dur); }
+  else if(t.id==='compass'){ AudioEng.sfxUse(); G.compassUntil=performance.now()+t.dur*1000; $('compassHud').style.display='block'; addEffect('compass','🧭指南針',t.dur); }
+  else if(t.id==='ghost'){ AudioEng.sfxUse(); G.ghostUntil=performance.now()+t.dur*1000; setGhostLook(true); addEffect('ghost','👻穿牆',t.dur); }
+  else if(t.id==='timegem'){ AudioEng.sfxUse(); G.timeOffset+=15; }
+  else if(t.id==='star'){ G.starBonus+=100; }
+}
+function setGhostLook(on){
+  playerGroup.traverse(o=>{ if(o.material){o.material.transparent=on;o.material.opacity=on?0.45:1;} });
+}
+function updateShovelBtn(){
+  $('shovelBtn').style.display=G.shovels>0?'block':'none';
+  $('shovelCnt').textContent=G.shovels;
+}
+/* 鐵鍬敲牆：找面前 2.2 單位內最近的內牆 */
+function useShovel(){
+  if(G.shovels<=0||G.frozen)return;
+  const dx=Math.sin(G.heading), dz=Math.cos(G.heading);
+  let best=null,bestD=1e9;
+  for(let d=0.6;d<=2.4;d+=0.3){
+    const sx=G.px+dx*d, sz=G.pz+dz*d;
+    for(const wb of G.wallBoxes){
+      if(wb.boundary)continue;
+      if(sx>wb.minX-0.1&&sx<wb.maxX+0.1&&sz>wb.minZ-0.1&&sz<wb.maxZ+0.1){
+        const cx=(wb.minX+wb.maxX)/2,cz=(wb.minZ+wb.maxZ)/2;
+        const dist=(cx-G.px)**2+(cz-G.pz)**2;
+        if(dist<bestD){bestD=dist;best=wb;}
+      }
+    }
+    if(best)break;
+  }
+  if(best){
+    G.shovels--; updateShovelBtn();
+    removeWallBox(best); AudioEng.sfxBreak();
+    burstParticles((best.minX+best.maxX)/2,(best.minZ+best.maxZ)/2);
+    showToast('⛏️ 牆壁被敲破了！');
+  }else{
+    showToast('😅 面前沒有可以敲的牆（外圍牆敲不破）');
+  }
+}
+let particles=[];
+function burstParticles(x,z){
+  const geo=new THREE.BoxGeometry(0.25,0.25,0.25);
+  for(let i=0;i<10;i++){
+    const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xbcaaa4}));
+    m.position.set(x,1.4,z);
+    m.userData.v=new V3((Math.random()-0.5)*6,Math.random()*6+2,(Math.random()-0.5)*6);
+    scene.add(m); particles.push({m,life:1});
+  }
+}
+function updateParticles(dt){
+  particles=particles.filter(p=>{
+    p.life-=dt; p.m.userData.v.y-=14*dt;
+    p.m.position.addScaledVector(p.m.userData.v,dt);
+    p.m.rotation.x+=dt*6; p.m.rotation.z+=dt*4;
+    if(p.life<=0||p.m.position.y<0){scene.remove(p.m);return false;}
+    return true;
+  });
+}
+
+/* =====================================================
+   玩家移動 + 牆壁碰撞（分軸滑行）
+   ===================================================== */
+const keys={};
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
+window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+const joy={active:false,dx:0,dy:0,id:null};
+
+function collideMove(nx,nz){
+  const r=0.42;
+  const ghost=performance.now()<G.ghostUntil;
+  const half=G.cell*0.5;
+  const bx=(G.mazeW/2)*G.cell-r-0.36, bz=(G.mazeH/2)*G.cell-r-0.36;
+  if(ghost){ // 穿牆但不能出迷宮
+    G.px=Math.max(-bx,Math.min(bx,nx)); G.pz=Math.max(-bz,Math.min(bz,nz)); return;
+  }
+  // X 軸
+  let ok=true;
+  for(const wb of G.wallBoxes){
+    if(nx+r>wb.minX&&nx-r<wb.maxX&&G.pz+r>wb.minZ&&G.pz-r<wb.maxZ){ok=false;break;}
+  }
+  if(ok)G.px=nx;
+  // Z 軸
+  ok=true;
+  for(const wb of G.wallBoxes){
+    if(G.px+r>wb.minX&&G.px-r<wb.maxX&&nz+r>wb.minZ&&nz-r<wb.maxZ){ok=false;break;}
+  }
+  if(ok)G.pz=nz;
+}
+
+let stepAcc=0;
+function updatePlayer(dt,t){
+  if(G.frozen)return;
+  // 讀輸入：搖桿 or 鍵盤
+  let ix=joy.dx, iy=joy.dy;
+  if(!joy.active){
+    ix=(keys['d']||keys['arrowright']?1:0)-(keys['a']||keys['arrowleft']?1:0);
+    iy=(keys['s']||keys['arrowdown']?1:0)-(keys['w']||keys['arrowup']?1:0);
+  }
+  const mag=Math.min(1,Math.hypot(ix,iy));
+  if(mag>0.12){
+    // 速度效果
+    G.speedMul=1;
+    if(G.effects.superspeed)G.speedMul=2.3; else if(G.effects.speed)G.speedMul=1.6;
+    const sp=G.baseSpeed*G.speedMul*mag;
+    // 相對於相機方向移動（俯視時相機固定朝北）
+    const base=(G.view==='top')?Math.PI:G.camYaw+Math.PI;
+    const ang=base+Math.atan2(-ix,-iy);
+    const dx=Math.sin(ang)*sp*dt, dz=Math.cos(ang)*sp*dt;
+    collideMove(G.px+dx,G.pz+dz);
+    // 角色面向移動方向（平滑轉向）
+    let target=ang;
+    let diff=target-G.heading;
+    while(diff>Math.PI)diff-=Math.PI*2; while(diff<-Math.PI)diff+=Math.PI*2;
+    G.heading+=diff*Math.min(1,dt*12);
+    // 走路動畫 + 腳步聲
+    const u=playerGroup.userData;
+    const sw=Math.sin(t*10*G.speedMul)*0.7;
+    u.armL.rotation.x=sw; u.armR.rotation.x=-sw; u.legL.rotation.x=-sw; u.legR.rotation.x=sw;
+    stepAcc+=dt*G.speedMul; if(stepAcc>0.34){stepAcc=0;AudioEng.sfxStep();}
+  }else{
+    const u=playerGroup.userData;
+    u.armL.rotation.x*=0.85;u.armR.rotation.x*=0.85;u.legL.rotation.x*=0.85;u.legR.rotation.x*=0.85;
+  }
+  playerGroup.position.set(G.px,0,G.pz);
+  playerGroup.rotation.y=G.heading;
+  playerGroup.visible=(G.view!=='fp');
+  // 撿道具
+  for(const it of G.items){
+    if(it.taken)continue;
+    if((it.x-G.px)**2+(it.z-G.pz)**2<1.3){
+      it.taken=true; it.sprite.visible=false; it.ring.visible=false; applyItem(it);
+    }
+  }
+  // 到出口了嗎？
+  const ep=cellToWorld(G.exitCell.x,G.exitCell.y);
+  if((ep.x-G.px)**2+(ep.z-G.pz)**2<2.2) winGame();
+}
+
+/* =====================================================
+   相機（第一人稱 / 第三人稱 / 俯視）
+   ===================================================== */
+function updateCamera(dt){
+  if(G.view==='fp'){
+    camera.position.set(G.px,1.6,G.pz);
+    const lx=G.px+Math.sin(G.camYaw+Math.PI), lz=G.pz+Math.cos(G.camYaw+Math.PI);
+    camera.lookAt(lx,1.6+G.camPitch*3.2,lz);
+  }else if(G.view==='tp'){
+    const dist=6.5,hh=6.4;
+    let tx=G.px+Math.sin(G.camYaw)*dist, tz=G.pz+Math.cos(G.camYaw)*dist;
+    // 相機不跑出外牆（免得角色被外牆擋住）
+    const cbx=(G.mazeW/2)*G.cell-1.3, cbz=(G.mazeH/2)*G.cell-1.3;
+    tx=Math.max(-cbx,Math.min(cbx,tx)); tz=Math.max(-cbz,Math.min(cbz,tz));
+    camera.position.lerp(new V3(tx,hh,tz),Math.min(1,dt*5));
+    camera.lookAt(G.px,1.4,G.pz);
+  }else{ // top
+    camera.position.lerp(new V3(G.px,22,G.pz+3.5),Math.min(1,dt*5));
+    camera.lookAt(G.px,0,G.pz);
+  }
+  // 火把跟著玩家（山洞）
+  if(envGroup&&envGroup.userData.torch){
+    envGroup.userData.torch.position.set(G.px,2.6,G.pz);
+    envGroup.userData.torch.intensity=2.2+Math.sin(performance.now()*0.01)*0.25;
+  }
+}
+</script>
+<script>
+'use strict';
+/* =====================================================
+   觸控：左搖桿 + 右視角拖曳 + 小地圖
+   ===================================================== */
+function setupTouch(){
+  const zone=$('joyZone'), base=$('joyBase'), stick=$('joyStick');
+  const setStick=(bx,by,sx,sy)=>{
+    base.style.left=(bx-55)+'px'; base.style.top=(by-55)+'px';
+    stick.style.left=(sx-26)+'px'; stick.style.top=(sy-26)+'px';
+  };
+  let ox=0,oy=0;
+  const start=(x,y,id)=>{joy.active=true;joy.id=id;ox=x;oy=y;base.style.display='block';stick.style.display='block';setStick(x,y,x,y);};
+  const move=(x,y)=>{
+    let dx=x-ox,dy=y-oy; const len=Math.hypot(dx,dy),max=52;
+    if(len>max){dx=dx/len*max;dy=dy/len*max;}
+    joy.dx=dx/max; joy.dy=dy/max; setStick(ox,oy,ox+dx,oy+dy);
+  };
+  const end=()=>{joy.active=false;joy.dx=0;joy.dy=0;joy.id=null;base.style.display='none';stick.style.display='none';};
+  zone.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];start(t.clientX,t.clientY,t.identifier);},{passive:false});
+  zone.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===joy.id)move(t.clientX,t.clientY);},{passive:false});
+  zone.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===joy.id)end();});
+  zone.addEventListener('touchcancel',end);
+  // 滑鼠也能玩（電腦）
+  zone.addEventListener('mousedown',e=>{start(e.clientX,e.clientY,'m');
+    const mm=ev=>move(ev.clientX,ev.clientY);
+    const mu=()=>{end();window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',mu);};
+    window.addEventListener('mousemove',mm); window.addEventListener('mouseup',mu);
+  });
+  // 右半邊拖曳 → 轉視角
+  const look=$('lookZone'); let lkId=null,lx=0,ly=0;
+  look.addEventListener('touchstart',e=>{const t=e.changedTouches[0];lkId=t.identifier;lx=t.clientX;ly=t.clientY;},{passive:true});
+  look.addEventListener('touchmove',e=>{
+    for(const t of e.changedTouches)if(t.identifier===lkId){
+      G.camYaw-=(t.clientX-lx)*0.008; G.camPitch=Math.max(-0.6,Math.min(1.0,G.camPitch-(t.clientY-ly)*0.004));
+      lx=t.clientX; ly=t.clientY;
+    }
+  },{passive:true});
+  look.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===lkId)lkId=null;});
+  look.addEventListener('mousedown',e=>{
+    let px=e.clientX,py=e.clientY;
+    const mm=ev=>{G.camYaw-=(ev.clientX-px)*0.008;G.camPitch=Math.max(-0.6,Math.min(1.0,G.camPitch-(ev.clientY-py)*0.004));px=ev.clientX;py=ev.clientY;};
+    const mu=()=>{window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',mu);};
+    window.addEventListener('mousemove',mm); window.addEventListener('mouseup',mu);
+  });
+  // 電腦鍵盤 Q/E 轉視角
+  window.addEventListener('keydown',e=>{
+    if(e.key==='q')G.camYaw+=0.15; if(e.key==='e')G.camYaw-=0.15;
+    if(e.key===' ')useShovel();
+  });
+}
+
+/* =====================================================
+   小地圖 / 大地圖
+   ===================================================== */
+function drawMap(cv,big){
+  const ctx=cv.getContext('2d');
+  const W=G.mazeW,H=G.mazeH,pad=big?24:12;
+  const cw=(cv.width-pad*2)/W, ch=(cv.height-pad*2)/H;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle=big?'#141031':'rgba(10,8,30,0)'; if(big)ctx.fillRect(0,0,cv.width,cv.height);
+  const gx=x=>pad+x*cw, gy=y=>pad+y*ch;
+  // 牆
+  ctx.strokeStyle=big?'#b39ddb':'rgba(255,255,255,.85)'; ctx.lineWidth=big?4:2; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.rect(gx(0),gy(0),W*cw,H*ch);
+  for(let y=0;y<H-1;y++)for(let x=0;x<W;x++) if(G.hWalls[y][x]){ctx.moveTo(gx(x),gy(y+1));ctx.lineTo(gx(x+1),gy(y+1));}
+  for(let y=0;y<H;y++)for(let x=0;x<W-1;x++) if(G.vWalls[y][x]){ctx.moveTo(gx(x+1),gy(y));ctx.lineTo(gx(x+1),gy(y+1));}
+  ctx.stroke();
+  // 魔法地圖：金色路線
+  if(performance.now()<G.mapUntil&&G.solutionPath&&G.solutionPath.length){
+    ctx.strokeStyle='#ffd54f'; ctx.lineWidth=big?6:3;
+    ctx.beginPath();
+    G.solutionPath.forEach(([x,y],i)=>{
+      const px=gx(x)+cw/2,py=gy(y)+ch/2;
+      if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    });
+    ctx.stroke();
+    // 道具位置也顯示
+    ctx.font=(big?18:9)+'px sans-serif'; ctx.textAlign='center';
+    for(const it of G.items)if(!it.taken){
+      const c=worldToCell(it.x,it.z);
+      ctx.fillText(it.type.emoji,gx(c.x)+cw/2,gy(c.y)+ch*0.8);
+    }
+  }
+  // 出口
+  ctx.font=(big?26:12)+'px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('🚩',gx(G.exitCell.x)+cw/2,gy(G.exitCell.y)+ch*0.85);
+  // 玩家（帶方向的三角形）
+  const PX=pad+(G.px/G.cell+(W-1)/2)*cw+cw*0.5;
+  const PZ=pad+(G.pz/G.cell+(H-1)/2)*ch+ch*0.5;
+  ctx.save();
+  ctx.translate(PX,PZ); ctx.rotate(-G.heading);
+  ctx.fillStyle='#ff5252';
+  ctx.beginPath(); ctx.moveTo(0,(big?14:7)); ctx.lineTo((big?-9:-4.5),(big?-10:-5)); ctx.lineTo((big?9:4.5),(big?-10:-5)); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+/* =====================================================
+   指南針
+   ===================================================== */
+function updateCompass(){
+  const on=performance.now()<G.compassUntil;
+  $('compassHud').style.display=on?'block':'none';
+  if(!on){if(compass3D)compass3D.visible=false;return;}
+  const ep=cellToWorld(G.exitCell.x,G.exitCell.y);
+  const worldAng=Math.atan2(ep.x-G.px,ep.z-G.pz);
+  // HUD 箭頭：相對於目前相機朝向
+  const camF=(G.view==='top')?Math.PI:G.camYaw+Math.PI;
+  const rel=worldAng-camF;
+  $('compassArrow').style.transform=`rotate(${(-rel*180/Math.PI).toFixed(1)}deg)`;
+  // 3D 箭頭浮在頭上
+  if(compass3D){
+    compass3D.visible=true;
+    compass3D.position.set(G.px,2.9,G.pz);
+    compass3D.rotation.y=worldAng;
+  }
+}
+</script>
+<script>
+'use strict';
+/* =====================================================
+   迷宮變換（以玩家為中心重新生長，絕不困住玩家）
+   ===================================================== */
+function scheduleNextShift(){
+  G.nextShiftAt=performance.now()+CFG.shiftMin*60*1000;
+  G.preWarned=false;
+}
+function updateShiftTimer(){
+  if(!G.running||G.shifting)return;
+  const left=(G.nextShiftAt-performance.now())/1000;
+  $('shiftCountdown').textContent=left>60?Math.ceil(left/60)+'分':Math.ceil(Math.max(0,left))+'秒';
+  if(left<=3.5&&!G.preWarned){
+    G.preWarned=true; $('preWarn').style.display='block';
+    let n=3; $('preWarnSec').textContent=n; AudioEng.sfxTick();
+    const iv=setInterval(()=>{n--; if(n<=0){clearInterval(iv);$('preWarn').style.display='none';} else {$('preWarnSec').textContent=n;AudioEng.sfxTick();}},1000);
+  }
+  if(left<=0) doShift();
+}
+function doShift(){
+  G.shifting=true; G.frozen=true;
+  $('shiftWarn').style.display='flex';
+  AudioEng.sfxAlarm(); setTimeout(()=>AudioEng.sfxAlarm(),700);
+  // 玩家先吸到目前格子的正中央（避免變換後卡在牆裡）
+  const pc=worldToCell(G.px,G.pz);
+  const cp=cellToWorld(pc.x,pc.y);
+  const theme=LEVELS[G.lvlIdx];
+  // 牆壁沉下去 → 換迷宮 → 升上來
+  const t0=performance.now(),down=900,up=900,hold=500;
+  const animDown=()=>{
+    const k=Math.min(1,(performance.now()-t0)/down);
+    wallMesh.position.y=-(G.wallH+0.35)*k;
+    // 玩家滑向格子中央
+    G.px+=(cp.x-G.px)*0.12; G.pz+=(cp.z-G.pz)*0.12;
+    playerGroup.position.set(G.px,0,G.pz);
+    if(k<1)requestAnimationFrame(animDown);
+    else{
+      genMaze(pc.x,pc.y);           // ★ 從玩家所在格子長出新迷宮
+      buildWalls(theme);
+      wallMesh.position.y=-(G.wallH+0.35);
+      spawnItems();
+      setTimeout(()=>{
+        const t1=performance.now();
+        const animUp=()=>{
+          const k2=Math.min(1,(performance.now()-t1)/up);
+          wallMesh.position.y=-(G.wallH+0.35)*(1-k2);
+          if(k2<1)requestAnimationFrame(animUp);
+          else{
+            wallMesh.position.y=0;
+            $('shiftWarn').style.display='none';
+            G.shifting=false; G.frozen=false;
+            scheduleNextShift();
+            showToast('🌀 新迷宮出現了！道具也重新出現囉');
+          }
+        };
+        animUp();
+      },hold);
+    }
+  };
+  animDown();
+}
+
+/* =====================================================
+   計分 + 過關
+   ===================================================== */
+function fmtTime(sec){
+  sec=Math.max(0,Math.round(sec));
+  return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+}
+function calcScore(timeSec){
+  return Math.max(100, Math.round(6000-timeSec*15) ) + G.starBonus;
+}
+function winGame(){
+  if(!G.running)return;
+  G.running=false; G.frozen=true;
+  AudioEng.stopMusic(); AudioEng.stopItemLoop(); AudioEng.sfxWin();
+  const timeSec=G.elapsed;
+  const score=calcScore(timeSec);
+  $('winLvl').textContent=LEVELS[G.lvlIdx].emoji+' '+LEVELS[G.lvlIdx].name;
+  $('winTime').textContent=fmtTime(timeSec);
+  $('winScore').textContent=score;
+  const rec={name:getPlayerName(),char:CHARS[G.charIdx].emoji,level:LEVELS[G.lvlIdx].id,
+    timeSec:Math.round(timeSec),score,date:new Date().toISOString().slice(0,10)};
+  saveRecord(rec).then(rank=>{
+    $('winRank').textContent=rank?`🎖️ 你是「${LEVELS[G.lvlIdx].name}」第 ${rank} 名！`:'';
+  });
+  switchScreen('winScreen');
+}
+
+/* =====================================================
+   分數牆（本機儲存；後台可設定雲端 API 讓大家互相看見）
+   ===================================================== */
+function getPlayerName(){
+  return ($('playerName').value||'').trim()||'小勇士';
+}
+function loadLocalRecords(){
+  try{return JSON.parse(localStorage.getItem('maze3d_lb')||'[]');}catch(e){return [];}
+}
+async function fetchRemoteRecords(){
+  if(!CFG.apiUrl)return null;
+  try{
+    const r=await fetch(CFG.apiUrl,{method:'GET'});
+    const j=await r.json();
+    return Array.isArray(j)?j:(Array.isArray(j.records)?j.records:null);
+  }catch(e){return null;}
+}
+async function saveRecord(rec){
+  const local=loadLocalRecords(); local.push(rec);
+  local.sort((a,b)=>a.timeSec-b.timeSec);
+  localStorage.setItem('maze3d_lb',JSON.stringify(local.slice(0,200)));
+  if(CFG.apiUrl){
+    try{
+      await fetch(CFG.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(rec)});
+    }catch(e){/* 離線也沒關係，本機有存 */}
+  }
+  const all=(await getAllRecords()).filter(r=>r.level===rec.level).sort((a,b)=>a.timeSec-b.timeSec);
+  const idx=all.findIndex(r=>r.name===rec.name&&r.timeSec===rec.timeSec&&r.date===rec.date);
+  return idx>=0?idx+1:null;
+}
+async function getAllRecords(){
+  const local=loadLocalRecords();
+  const remote=await fetchRemoteRecords();
+  if(!remote)return local;
+  // 合併去重
+  const seen=new Set(), out=[];
+  for(const r of [...remote,...local]){
+    const k=`${r.name}|${r.level}|${r.timeSec}|${r.date}`;
+    if(!seen.has(k)){seen.add(k);out.push(r);}
+  }
+  return out;
+}
+let lbFilter='all';
+async function renderLeaderboard(){
+  const tabs=$('lbTabs'); tabs.innerHTML='';
+  const mkTab=(id,label)=>{
+    const b=document.createElement('button'); b.className='lb-tab'+(lbFilter===id?' sel':''); b.textContent=label;
+    b.onclick=()=>{lbFilter=id;renderLeaderboard();}; tabs.appendChild(b);
+  };
+  mkTab('all','全部');
+  LEVELS.forEach(l=>mkTab(l.id,l.emoji+l.name));
+  $('lbSyncState').textContent=CFG.apiUrl?'☁️ 雲端分數牆（大家都看得到）':'📱 目前只存在這台裝置（後台可設定雲端分享）';
+  const body=$('lbBody'); body.innerHTML='<tr><td colspan="5">載入中…</td></tr>';
+  let recs=await getAllRecords();
+  if(lbFilter!=='all')recs=recs.filter(r=>r.level===lbFilter);
+  recs.sort((a,b)=>a.timeSec-b.timeSec);
+  recs=recs.slice(0,30);
+  const myName=getPlayerName();
+  body.innerHTML=recs.length?'':'<tr><td colspan="5">還沒有紀錄，快去玩一場吧！</td></tr>';
+  recs.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    if(r.name===myName)tr.className='me';
+    const medal=['🥇','🥈','🥉'][i]||(i+1);
+    const lv=LEVELS.find(l=>l.id===r.level);
+    tr.innerHTML=`<td>${medal}</td><td>${escapeHtml(r.name)}</td><td>${r.char||''}${lbFilter==='all'&&lv?' '+lv.emoji:''}</td><td>${fmtTime(r.timeSec)}</td><td>${r.score}</td>`;
+    body.appendChild(tr);
+  });
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+<script>
+'use strict';
+/* =====================================================
+   畫面切換 & 標題畫面 UI
+   ===================================================== */
+function switchScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function buildTitleUI(){
+  // 角色按鈕
+  const cr=$('charRow');
+  CHARS.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.className='char-btn'+(i===G.charIdx?' sel':'');
+    b.innerHTML=`<span class="ce">${c.emoji}</span>${c.name}`;
+    b.onclick=()=>{G.charIdx=i;document.querySelectorAll('.char-btn').forEach((x,j)=>x.classList.toggle('sel',j===i));updatePreview();};
+    cr.appendChild(b);
+  });
+  // 關卡按鈕
+  const lr=$('lvlRow');
+  LEVELS.forEach((l,i)=>{
+    const b=document.createElement('button');
+    b.className='lvl-btn'+(i===G.lvlIdx?' sel':''); b.style.background=l.css;
+    b.innerHTML=`<span class="le">${l.emoji}</span>${l.name}`;
+    b.onclick=()=>{G.lvlIdx=i;document.querySelectorAll('.lvl-btn').forEach((x,j)=>x.classList.toggle('sel',j===i));};
+    lr.appendChild(b);
+  });
+  // 視角按鈕
+  document.querySelectorAll('#viewRow .view-btn').forEach(b=>{
+    b.onclick=()=>{G.view=b.dataset.v;document.querySelectorAll('#viewRow .view-btn').forEach(x=>x.classList.toggle('sel',x===b));};
+  });
+  $('playerName').value=localStorage.getItem('maze3d_name')||'';
+  $('playerName').addEventListener('input',()=>localStorage.setItem('maze3d_name',$('playerName').value));
+}
+/* 角色 3D 預覽（旋轉展示台） */
+function initPreview(){
+  const cv=$('charPreview');
+  previewRenderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  previewRenderer.setSize(240,260,false);
+  previewScene=new THREE.Scene();
+  previewCam=new THREE.PerspectiveCamera(40,240/260,0.1,50);
+  previewCam.position.set(0,1.6,4); previewCam.lookAt(0,1,0);
+  previewScene.add(new THREE.AmbientLight(0xffffff,0.8));
+  const d=new THREE.DirectionalLight(0xffffff,0.7); d.position.set(2,4,3); previewScene.add(d);
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(1,1.1,0.2,24),new THREE.MeshLambertMaterial({color:0x90caf9}));
+  disc.position.y=-0.1; previewScene.add(disc);
+  updatePreview();
+  (function spin(){
+    requestAnimationFrame(spin);
+    if(!$('titleScreen').classList.contains('active'))return;
+    if(previewChar)previewChar.rotation.y+=0.02;
+    previewRenderer.render(previewScene,previewCam);
+  })();
+}
+function updatePreview(){
+  if(previewChar)previewScene.remove(previewChar);
+  previewChar=buildCharacter(CHARS[G.charIdx]);
+  previewScene.add(previewChar);
+  $('charDesc').innerHTML=`<b>${CHARS[G.charIdx].name}</b><br>${CHARS[G.charIdx].desc}`;
+}
+
+/* =====================================================
+   開始遊戲
+   ===================================================== */
+function startGame(){
+  AudioEng.init(); AudioEng.resume();
+  G.mazeW=G.mazeH=CFG.mazeSize;
+  const theme=LEVELS[G.lvlIdx];
+  if(!scene)scene=new THREE.Scene(); else while(scene.children.length)scene.remove(scene.children[0]);
+  wallMesh=null; floorMesh=null; exitGroup=null; envGroup=null; itemGroup=null;
+  // 起點 & 出口（對角）
+  genMaze(0,0);
+  G.exitCell={x:G.mazeW-1,y:G.mazeH-1};
+  const sp=cellToWorld(0,0);
+  G.px=sp.x; G.pz=sp.z; G.heading=Math.PI/4; G.camYaw=Math.PI*1.25; G.camPitch=0;
+  buildFloor(theme); buildWalls(theme); buildExit(); buildEnvironment(theme);
+  // 玩家
+  playerGroup=buildCharacter(CHARS[G.charIdx]);
+  playerGroup.position.set(G.px,0,G.pz);
+  scene.add(playerGroup);
+  // 3D 指南針箭頭
+  compass3D=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.7,8),new THREE.MeshBasicMaterial({color:0xffd54f}));
+  compass3D.rotation.x=Math.PI/2; compass3D.visible=false;
+  const cGroup=new THREE.Group(); cGroup.add(compass3D); compass3D.position.z=0.35;
+  scene.add(cGroup); compass3D=cGroup;
+  // 狀態重設
+  G.items=[]; G.effects={}; G.shovels=0; G.starBonus=0; G.timeOffset=0;
+  G.mapUntil=0; G.compassUntil=0; G.ghostUntil=0; G.solutionPath=null;
+  G.startTime=performance.now(); G.elapsed=0;
+  G.running=true; G.frozen=false; G.shifting=false;
+  spawnItems(); scheduleNextShift(); updateShovelBtn(); renderChips();
+  $('hudLvlName').textContent=theme.emoji+' '+theme.name;
+  $('compassHud').style.display='none';
+  switchScreen('gameScreen');
+  if(!G.muted)AudioEng.startMusic(theme.music);
+  updateSoundBtn();
+}
+
+/* =====================================================
+   主迴圈
+   ===================================================== */
+let lastT=0,mapAcc=0,chipAcc=0;
+function loop(tms){
+  requestAnimationFrame(loop);
+  if(!renderer)return;
+  const t=tms/1000, dt=Math.min(0.05,t-lastT||0.016); lastT=t;
+  if(!$('gameScreen').classList.contains('active'))return;
+  if(G.running&&!G.shifting){
+    G.elapsed=(performance.now()-G.startTime)/1000-G.timeOffset;
+    $('hudTime').textContent=fmtTime(G.elapsed);
+  }
+  updateShiftTimer();
+  updatePlayer(dt,t);
+  updateCamera(dt);
+  updateParticles(dt);
+  updateCompass();
+  // 效果到期檢查
+  chipAcc+=dt; if(chipAcc>0.5){chipAcc=0;renderChips();
+    if(G.ghostUntil&&performance.now()>G.ghostUntil){G.ghostUntil=0;setGhostLook(false);}
+  }
+  // 道具漂浮動畫
+  const bob=Math.sin(t*3)*0.15;
+  for(const it of G.items)if(!it.taken){it.sprite.position.y=1.2+bob;it.ring.rotation.z=t;}
+  if(exitGroup){exitGroup.userData.ring.rotation.z=t*1.5;exitGroup.rotation.y=t*0.5;}
+  if(envGroup)envGroup.userData.anim.forEach(f=>f(t));
+  // 小地圖（每 0.15 秒重畫）
+  mapAcc+=dt; if(mapAcc>0.15){mapAcc=0;drawMap($('minimap'),false);
+    if($('bigMapOverlay').style.display==='flex')drawMap($('bigMap'),true);}
+  renderer.render(scene,camera);
+}
+
+/* =====================================================
+   按鈕 & 後台設定
+   ===================================================== */
+function updateSoundBtn(){$('soundToggle').innerHTML=(G.muted?'🔇':'🔊')+'<span class="bl">音樂</span>';}
+function wireUI(){
+  $('startBtn').onclick=()=>{
+    AudioEng.init(); AudioEng.resume();
+    if(!localStorage.getItem('maze3d_orient')&&window.innerHeight>window.innerWidth&&'ontouchstart' in window){
+      $('orientTip').style.display='flex';
+      localStorage.setItem('maze3d_orient','1');
+    }else startGame();
+  };
+  $('orientOk').onclick=()=>{$('orientTip').style.display='none';startGame();};
+  $('againBtn').onclick=()=>startGame();
+  $('winHomeBtn').onclick=()=>{switchScreen('titleScreen');};
+  $('quitBtn').onclick=()=>{
+    if(confirm('要離開這一局回到選單嗎？')){
+      G.running=false;AudioEng.stopMusic();AudioEng.stopItemLoop();switchScreen('titleScreen');
+    }
+  };
+  $('viewToggle').onclick=()=>{
+    G.view=G.view==='tp'?'fp':(G.view==='fp'?'top':'tp');
+    showToast(G.view==='tp'?'🎥 第三人稱':(G.view==='fp'?'👀 第一人稱':'🗺️ 俯視視角'));
+  };
+  $('soundToggle').onclick=()=>{
+    G.muted=!G.muted; updateSoundBtn();
+    if(G.muted){AudioEng.stopMusic();AudioEng.stopItemLoop();}
+    else if(G.running)AudioEng.startMusic(LEVELS[G.lvlIdx].music);
+  };
+  $('shovelBtn').onclick=useShovel;
+  $('minimapWrap').onclick=()=>{$('bigMapOverlay').style.display='flex';sizeBigMap();drawMap($('bigMap'),true);};
+  $('bigMapClose').onclick=()=>$('bigMapOverlay').style.display='none';
+  $('bigMapOverlay').onclick=e=>{if(e.target===$('bigMapOverlay'))$('bigMapOverlay').style.display='none';};
+  // 分數牆
+  $('lbBtn').onclick=()=>{$('lbModal').style.display='flex';renderLeaderboard();};
+  $('winLbBtn').onclick=()=>{$('lbModal').style.display='flex';renderLeaderboard();};
+  $('lbClose').onclick=()=>$('lbModal').style.display='none';
+  // 說明
+  $('helpBtn').onclick=()=>$('helpModal').style.display='flex';
+  $('helpClose').onclick=()=>$('helpModal').style.display='none';
+  // 後台
+  $('admBtn').onclick=()=>{
+    $('cfgShiftMin').value=CFG.shiftMin; $('cfgItems').value=CFG.itemCount;
+    $('cfgSize').value=CFG.mazeSize; $('cfgMusic').value=CFG.musicOn?'1':'0';
+    $('cfgApi').value=CFG.apiUrl;
+    $('admModal').style.display='flex';
+  };
+  $('admSave').onclick=()=>{
+    CFG.shiftMin=Math.max(0.5,Math.min(10,parseFloat($('cfgShiftMin').value)||3));
+    CFG.itemCount=Math.max(3,Math.min(12,parseInt($('cfgItems').value)||6));
+    CFG.mazeSize=parseInt($('cfgSize').value)||13;
+    CFG.musicOn=$('cfgMusic').value==='1'?1:0;
+    CFG.apiUrl=$('cfgApi').value.trim();
+    saveCfg(); G.muted=!CFG.musicOn;
+    $('admModal').style.display='none'; 
+    alert('✅ 設定已儲存！下一場遊戲生效');
+  };
+}
+function sizeBigMap(){
+  const s=Math.min(window.innerWidth,window.innerHeight)-60;
+  $('bigMap').width=s;$('bigMap').height=s;
+  $('bigMap').style.width=s+'px';$('bigMap').style.height=s+'px';
+}
+
+/* ===== 啟動 ===== */
+buildTitleUI(); wireUI(); initRenderer(); initPreview(); setupTouch();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
