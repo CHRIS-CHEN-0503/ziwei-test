@@ -486,7 +486,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.6.1';
+const GAME_VERSION='1.6.2';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -1818,7 +1818,7 @@ function relocateExit(){
     const c=per[Math.floor(RNG()*per.length)];
     if(c[0]===G.exitCell.x&&c[1]===G.exitCell.y)continue;         // 不要原地不動
     if(MP.on&&MP.mode==='treasure'&&MP.treasure&&!MP.treasure.holder&&
-       c[0]===MP.treasure.cell.x&&c[1]===MP.treasure.cell.y)continue; // 不跟寶藏同格
+       Math.abs(c[0]-MP.treasure.cell.x)+Math.abs(c[1]-MP.treasure.cell.y)<(W+H)/4)continue; // 離地上的寶藏遠一點
     if(!MP.on){ // 單機：離玩家至少 1/3 張地圖，不然太好過
       const pc2=worldToCell(G.px,G.pz);
       if(Math.abs(c[0]-pc2.x)+Math.abs(c[1]-pc2.y)<(W+H)/3)continue;
@@ -2011,8 +2011,10 @@ function startGame(){
   wallMesh=null; floorMesh=null; exitGroup=null; envGroup=null; itemGroup=null;
   // 起點 & 出口（對角）
   genMaze(0,0);
+  MP.treasure=null; // 先清掉上一場的寶藏狀態，出口計算才不會參考到舊值
   const mid=G.mazeW>>1;
-  G.exitCell=MP.on?{x:mid,y:mid}:{x:G.mazeW-1,y:G.mazeH-1}; // 多人：終點在正中間，三個角落出發距離公平
+  G.exitCell=MP.on?{x:mid,y:mid}:{x:G.mazeW-1,y:G.mazeH-1}; // 競速：終點在正中間，三個角落出發距離公平
+  if(MP.on&&MP.mode==='treasure')relocateExit(); // 尋寶：出口一開始就在外圈（種子亂數，多人同步）
   let scell={x:0,y:0};
   if(MP.on){
     const corners=[[0,0],[G.mazeW-1,0],[0,G.mazeH-1]];
@@ -2046,7 +2048,7 @@ function startGame(){
     let tc=null;
     for(let t=0;t<200&&!tc;t++){
       const cx=2+Math.floor(RNG()*(G.mazeW-4)), cy=2+Math.floor(RNG()*(G.mazeH-4));
-      if(cx===G.exitCell.x&&cy===G.exitCell.y)continue;
+      if(Math.abs(cx-G.exitCell.x)+Math.abs(cy-G.exitCell.y)<(G.mazeW+G.mazeH)/3)continue; // 離出口夠遠，搶到還要跑一段
       const corners=[[0,0],[G.mazeW-1,0],[0,G.mazeH-1]];
       if(corners.some(c=>Math.abs(c[0]-cx)+Math.abs(c[1]-cy)<4))continue;
       tc={x:cx,y:cy};
