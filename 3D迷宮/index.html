@@ -21,11 +21,24 @@ button{font-family:var(--font);}
 
 /* ===== 標題畫面 ===== */
 #titleScreen{
-  background:linear-gradient(160deg,#2b2160 0%,#4a3a9c 50%,#7761d6 100%);
+  background:
+    radial-gradient(900px 480px at 85% -5%, rgba(255,213,79,.22), transparent 60%),
+    radial-gradient(700px 420px at 8% 108%, rgba(77,208,225,.25), transparent 60%),
+    linear-gradient(160deg,#241b52 0%,#4a3a9c 48%,#7a63d8 100%);
   flex-direction:column;align-items:center;justify-content:flex-start;
   overflow-y:auto;padding:14px;
 }
+#titleScreen .deco{position:fixed;inset:0;pointer-events:none;overflow:hidden;}
+#titleScreen .deco span{position:absolute;bottom:-70px;font-size:2.2rem;opacity:0;
+  animation:decoFloat linear infinite;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}
+@keyframes decoFloat{
+  0%{transform:translateY(0) rotate(-8deg);opacity:0;}
+  10%{opacity:.4;}
+  85%{opacity:.3;}
+  100%{transform:translateY(-115vh) rotate(30deg);opacity:0;}
+}
 .title-card{
+  position:relative;z-index:1;
   background:rgba(255,255,255,.95);border-radius:28px;border:6px solid #ffd54f;
   box-shadow:0 12px 30px rgba(0,0,0,.35);max-width:680px;width:100%;
   padding:18px 16px;text-align:center;margin:auto 0;
@@ -45,7 +58,7 @@ button{font-family:var(--font);}
 #charPreviewWrap{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px;}
 #charPreview{width:120px;height:130px;border-radius:18px;background:linear-gradient(180deg,#c5e8ff,#e8f9e8);border:3px solid #90caf9;}
 #charDesc{font-size:.9rem;color:#666;max-width:180px;text-align:left;}
-.lvl-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.lvl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
 @media(max-width:520px){.lvl-row{grid-template-columns:repeat(3,1fr);}}
 .lvl-btn{
   border:3px solid #ddd;border-radius:16px;padding:8px 2px;cursor:pointer;font-size:.78rem;
@@ -247,6 +260,14 @@ button{font-family:var(--font);}
 
 <!-- ============ 標題畫面 ============ -->
 <div id="titleScreen" class="screen active">
+  <div class="deco" aria-hidden="true">
+    <span style="left:6%;animation-duration:15s;">🌀</span>
+    <span style="left:20%;animation-duration:19s;animation-delay:3s;">⭐</span>
+    <span style="left:36%;animation-duration:17s;animation-delay:7s;">💎</span>
+    <span style="left:54%;animation-duration:21s;animation-delay:1s;">🧭</span>
+    <span style="left:70%;animation-duration:16s;animation-delay:9s;">🍎</span>
+    <span style="left:86%;animation-duration:20s;animation-delay:5s;">🗝️</span>
+  </div>
   <div class="title-card">
     <h1>🌀 3D移動迷宮</h1>
     <p class="sub">迷宮會變形！撿道具、找出口，比誰最快過關！</p>
@@ -261,21 +282,21 @@ button{font-family:var(--font);}
     <div class="sec-label">3️⃣ 選擇玩法</div>
     <div class="view-row" id="spModeRow">
       <button class="view-btn sel" data-m="classic">🚩 經典闖關</button>
-      <button class="view-btn" data-m="treasure">💎 尋寶對戰（跟電腦搶寶藏）</button>
+      <button class="view-btn" data-m="treasure">💎 尋寶對戰</button>
     </div>
-    <div class="sec-label">4️⃣ 選擇視角（遊戲中可隨時切換）</div>
+    <div class="sec-label">4️⃣ 選擇初始視角</div>
     <div class="view-row" id="viewRow">
       <button class="view-btn sel" data-v="tp">🎥 第三人稱</button>
       <button class="view-btn" data-v="fp">👀 第一人稱</button>
       <button class="view-btn" data-v="top">🗺️ 俯視</button>
     </div>
-    <div class="sec-label">5️⃣ 你的名字（會顯示在分數牆上）</div>
+    <div class="sec-label">5️⃣ 角色名稱</div>
     <input id="playerName" maxlength="10" placeholder="輸入名字">
     <button class="start-btn" id="startBtn">🚩 開始冒險！</button>
     <div class="title-foot">
       <button class="mini-btn" id="mpBtn" style="background:#e0f7fa;color:#00838f;">👥 多人連線</button>
       <button class="mini-btn" id="lbBtn">🏆 分數牆</button>
-      <button class="mini-btn" id="admBtn">⚙️ 後台設定</button>
+      <button class="mini-btn" id="admBtn">⚙️ 遊戲設定</button>
       <button class="mini-btn" id="helpBtn">❓ 玩法說明</button>
     </div>
     <div style="margin-top:8px;font-size:.72rem;color:#b3aecf;">3D移動迷宮 v<span id="verLabel"></span></div>
@@ -416,7 +437,7 @@ button{font-family:var(--font);}
 <!-- ============ 後台設定 ============ -->
 <div class="modal" id="admModal">
   <div class="m-card">
-    <h3>⚙️ 後台設定 <span id="admVer" style="font-size:.7rem;color:#aaa;font-weight:normal;"></span></h3>
+    <h3>⚙️ 遊戲設定 <span id="admVer" style="font-size:.7rem;color:#aaa;font-weight:normal;"></span></h3>
     <div class="adm-row"><label>🌀 迷宮每幾分鐘變換一次</label><input type="number" id="cfgShiftMin" min="0.5" max="10" step="0.5"></div>
     <div class="adm-row"><label>🎁 每次出現的道具數量</label><input type="number" id="cfgItems" min="3" max="12" step="1"></div>
     <div class="adm-row"><label>🍎 每次出現的食物數量</label><input type="number" id="cfgFood" min="2" max="10" step="1"></div>
@@ -486,7 +507,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.6.2';
+const GAME_VERSION='1.7.0';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -514,15 +535,23 @@ const CH=()=>CHARS[G.charIdx];
 /* ---------- 關卡環境 ---------- */
 const LEVELS=[
  {id:'indoor',name:'神祕城堡',emoji:'🏰',css:'linear-gradient(145deg,#a1887f,#6d4c41)',
-  sky:0x3e2723,fog:[0x3e2723,30,90],floor:0x8d6e63,wall:0xb0785a,amb:0xffe0b2,ambI:.55,dirI:.5,music:0},
+  sky:0x3e2723,fog:[0x3e2723,30,90],floor:0x8d6e63,wall:0xb0785a,amb:0xffe0b2,ambI:.55,dirI:.5,music:0,
+  wallTex:'brick',floorTex:'tile'},
  {id:'field',name:'陽光草原',emoji:'🌻',css:'linear-gradient(145deg,#81d4fa,#4caf50)',
-  sky:0x87ceeb,fog:[0x87ceeb,50,160],floor:0x7cb342,wall:0x66964f,amb:0xffffff,ambI:.75,dirI:.85,music:1},
+  sky:0x87ceeb,fog:[0x87ceeb,50,160],floor:0x7cb342,wall:0x66964f,amb:0xffffff,ambI:.75,dirI:.85,music:1,
+  wallTex:'hedge',floorTex:'grass'},
  {id:'cave',name:'幽暗山洞',emoji:'⛰️',css:'linear-gradient(145deg,#455a64,#1a1a2e)',
-  sky:0x14121f,fog:[0x14121f,16,70],floor:0x6b5d80,wall:0x82739c,amb:0xb0bce8,ambI:.8,dirI:.4,music:2},
+  sky:0x14121f,fog:[0x14121f,16,70],floor:0x6b5d80,wall:0x82739c,amb:0xb0bce8,ambI:.8,dirI:.4,music:2,
+  wallTex:'rock',floorTex:'rock'},
  {id:'forest',name:'綠色森林',emoji:'🌲',css:'linear-gradient(145deg,#66bb6a,#1b5e20)',
-  sky:0xa5d6a7,fog:[0x9ccc8f,25,110],floor:0x558b2f,wall:0x795548,amb:0xd7ffd9,ambI:.6,dirI:.6,music:3},
+  sky:0xa5d6a7,fog:[0x9ccc8f,25,110],floor:0x558b2f,wall:0x795548,amb:0xd7ffd9,ambI:.6,dirI:.6,music:3,
+  wallTex:'wood',floorTex:'grass'},
  {id:'mist',name:'迷霧沼澤',emoji:'🌫️',css:'linear-gradient(145deg,#b0bec5,#546e7a)',
-  sky:0x8b93a8,fog:[0x8b93a8,6,30],floor:0x607d8b,wall:0x78909c,amb:0xcfd8dc,ambI:.55,dirI:.3,music:4},
+  sky:0x8b93a8,fog:[0x8b93a8,6,30],floor:0x607d8b,wall:0x78909c,amb:0xcfd8dc,ambI:.55,dirI:.3,music:4,
+  wallTex:'rock',floorTex:'rock'},
+ {id:'volcano',name:'火山熔岩',emoji:'🌋',css:'linear-gradient(145deg,#ff8a65,#bf360c)',
+  sky:0x2a0f0a,fog:[0x3a140c,18,85],floor:0x5a2a1a,wall:0x7a3b28,amb:0xffab91,ambI:.6,dirI:.35,music:5,
+  wallTex:'rock',floorTex:'lava'},
 ];
 
 /* ---------- 道具資料 ---------- */
@@ -544,6 +573,7 @@ const ENV_ITEMS={
  cave:  {id:'envlight',emoji:'🔦', name:'超亮探照燈',   dur:20, msg:'🔦 探照燈打開！山洞亮起來 20 秒'},
  forest:{id:'envowl',  emoji:'🦉', name:'貓頭鷹視野',   dur:8,  msg:'🦉 貓頭鷹帶你升空俯瞰迷宮 8 秒！'},
  mist:  {id:'envfan',  emoji:'🌬️', name:'驅霧號角',     dur:15, msg:'🌬️ 號角響起！迷霧散開 15 秒'},
+ volcano:{id:'envquake',emoji:'💥', name:'火山震波',     dur:0,  msg:'💥 火山震波！震碎你身邊的牆！'},
 };
 
 /* ---------- 食物（迷宮變形時出現，補充飽足感） ---------- */
@@ -630,6 +660,10 @@ const AudioEng={
   {bpm:72,leadType:'sine',bassType:'sawtooth',leadVol:.2,bassVol:.07,leadLen:2.4,
    arp:[349,0,311,0,262,0,0,0,233,0,262,0,0,0,0,0],
    bassSeq:[87.3,0,77.8,0],bassEvery:8,kickEvery:0,hatEvery:0,slide:-30,pad:true},
+  // 5 🌋 火山熔岩：冒險快板（C小調、鋸齒波、沉重貝斯與密集鼓點）
+  {bpm:124,leadType:'sawtooth',bassType:'square',leadVol:.12,bassVol:.13,leadLen:.9,
+   arp:[262,262,311,262,349,311,262,233,262,262,311,349,392,349,311,233],
+   bassSeq:[65.4,65.4,58.3,49],bassEvery:2,kickEvery:4,hatEvery:2,hatOff:1},
  ],
  startMusic(songIdx){
    this.stopMusic(); if(!this.ctx) return;
@@ -798,7 +832,7 @@ function buildWalls(theme){
   add(oX,0,t,H*c+t,{boundary:true}); add(oX+W*c,0,t,H*c+t,{boundary:true});
 
   const geo=new THREE.BoxGeometry(1,h,1);
-  const mat=new THREE.MeshLambertMaterial({color:theme.wall,map:wallTexture()});
+  const mat=new THREE.MeshLambertMaterial({color:theme.wall,map:makeTex(theme.wallTex||'brick')});
   wallMesh=new THREE.InstancedMesh(geo,mat,mats.length);
   const m=new THREE.Matrix4(),s=new V3(),p=new V3(),q=new THREE.Quaternion();
   mats.forEach((w,i)=>{
@@ -849,9 +883,17 @@ function buildFloor(theme){
   if(floorMesh){scene.remove(floorMesh);floorMesh.geometry.dispose();floorMesh.material.dispose();}
   const size=Math.max(G.mazeW,G.mazeH)*G.cell*3;
   const geo=new THREE.PlaneGeometry(size,size,1,1);
-  const ft=floorTexture().clone(); ft.needsUpdate=true;
+  const baseKind=theme.floorTex==='lava'?'rock':(theme.floorTex||'tile');
+  const ft=makeTex(baseKind).clone(); ft.needsUpdate=true;
   ft.wrapS=ft.wrapT=THREE.RepeatWrapping; ft.repeat.set(size/8,size/8);
-  const mat=new THREE.MeshLambertMaterial({color:theme.floor,map:ft});
+  let mat;
+  if(theme.floorTex==='lava'){ // 火山地板：岩石＋會發光的岩漿裂縫
+    const em=makeTex('lavacrack').clone(); em.needsUpdate=true;
+    em.wrapS=em.wrapT=THREE.RepeatWrapping; em.repeat.set(size/10,size/10);
+    mat=new THREE.MeshLambertMaterial({color:theme.floor,map:ft,emissive:0xff5522,emissiveMap:em});
+  }else{
+    mat=new THREE.MeshLambertMaterial({color:theme.floor,map:ft});
+  }
   floorMesh=new THREE.Mesh(geo,mat); floorMesh.rotation.x=-Math.PI/2; floorMesh.position.y=0;
   scene.add(floorMesh);
 }
@@ -872,44 +914,60 @@ function buildExit(){
 }
 
 
-/* 程序化貼圖：石磚牆 + 方格地板（白底 × 材質色染色） */
-let _wallTex=null,_floorTex=null;
-function wallTexture(){
-  if(_wallTex)return _wallTex;
+/* 程序化貼圖：每個關卡有自己的牆面與地板紋理（白底 × 材質色染色） */
+const _texCache={};
+function makeTex(kind){
+  if(_texCache[kind])return _texCache[kind];
   const cv=document.createElement('canvas');cv.width=cv.height=128;
   const c=cv.getContext('2d');
   c.fillStyle='#ffffff';c.fillRect(0,0,128,128);
-  for(let i=0;i<420;i++){ // 細顆粒
-    const v=200+Math.floor(Math.random()*56);
-    c.fillStyle=`rgba(${v},${v},${v},0.5)`;
-    c.fillRect(Math.random()*128,Math.random()*128,2.2,2.2);
+  const speck=(n,vmin,vspan,size,alpha)=>{for(let i=0;i<n;i++){
+    const v=(vmin+Math.random()*vspan)|0;
+    c.fillStyle=`rgba(${v},${v},${v},${alpha})`;
+    c.fillRect(Math.random()*128,Math.random()*128,size,size);}};
+  if(kind==='brick'){ // 城堡石磚
+    speck(420,200,56,2.2,0.5);
+    c.strokeStyle='rgba(90,90,90,0.4)';c.lineWidth=3;
+    for(let r=0;r<4;r++){const y=r*32;c.beginPath();c.moveTo(0,y);c.lineTo(128,y);c.stroke();
+      const off=(r%2)*32;
+      for(let x=off;x<=128;x+=64){c.beginPath();c.moveTo(x,y);c.lineTo(x,y+32);c.stroke();}}
+  }else if(kind==='hedge'){ // 草原樹籬：密集葉點
+    speck(1000,140,110,3,0.55); speck(160,235,20,2,0.5);
+  }else if(kind==='rock'){ // 岩石：粗顆粒＋裂縫
+    speck(520,120,120,4,0.5);
+    c.strokeStyle='rgba(70,70,70,.45)';c.lineWidth=2;
+    for(let i=0;i<5;i++){let x=Math.random()*128,y=0;c.beginPath();c.moveTo(x,y);
+      for(let k=0;k<5;k++){x+=(Math.random()-0.5)*34;y+=26;c.lineTo(x,y);}c.stroke();}
+  }else if(kind==='wood'){ // 森林木板：板縫＋木紋
+    for(let r=0;r<4;r++){const y=r*32;
+      c.strokeStyle='rgba(80,80,80,.5)';c.lineWidth=3;
+      c.beginPath();c.moveTo(0,y);c.lineTo(128,y);c.stroke();
+      c.strokeStyle='rgba(150,150,150,.3)';c.lineWidth=1;
+      for(let g=0;g<4;g++){const yy=y+6+g*7;c.beginPath();c.moveTo(0,yy+Math.random()*2);
+        c.bezierCurveTo(40,yy-3,90,yy+3,128,yy);c.stroke();}}
+    speck(160,190,50,2,0.4);
+  }else if(kind==='grass'){ // 草地：碎點＋小草
+    speck(900,150,105,2.5,0.5);
+    c.strokeStyle='rgba(120,120,120,.35)';c.lineWidth=1;
+    for(let i=0;i<120;i++){const x=Math.random()*128,y=Math.random()*128;
+      c.beginPath();c.moveTo(x,y);c.lineTo(x+(Math.random()-0.5)*3,y-4-Math.random()*3);c.stroke();}
+  }else if(kind==='tile'){ // 方格地磚
+    for(let y=0;y<8;y++)for(let x=0;x<8;x++){const v=(x+y)%2?255:228;
+      c.fillStyle=`rgb(${v},${v},${v})`;c.fillRect(x*16,y*16,16,16);}
+    speck(300,205,50,2,0.4);
+  }else if(kind==='lavacrack'){ // 岩漿裂縫（發光貼圖：黑底＋亮橘）
+    c.fillStyle='#000';c.fillRect(0,0,128,128);
+    c.strokeStyle='rgba(255,120,30,0.9)';c.lineWidth=2.5;
+    for(let i=0;i<7;i++){let x=Math.random()*128,y=Math.random()*128;c.beginPath();c.moveTo(x,y);
+      for(let k=0;k<6;k++){x+=(Math.random()-0.5)*40;y+=(Math.random()-0.5)*40;c.lineTo(x,y);}c.stroke();}
+    c.strokeStyle='rgba(255,200,80,0.8)';c.lineWidth=1;
+    for(let i=0;i<7;i++){let x=Math.random()*128,y=Math.random()*128;c.beginPath();c.moveTo(x,y);
+      for(let k=0;k<5;k++){x+=(Math.random()-0.5)*36;y+=(Math.random()-0.5)*36;c.lineTo(x,y);}c.stroke();}
   }
-  c.strokeStyle='rgba(90,90,90,0.4)';c.lineWidth=3;
-  for(let r=0;r<4;r++){ // 石磚縫
-    const y=r*32;c.beginPath();c.moveTo(0,y);c.lineTo(128,y);c.stroke();
-    const off=(r%2)*32;
-    for(let x=off;x<=128;x+=64){c.beginPath();c.moveTo(x,y);c.lineTo(x,y+32);c.stroke();}
-  }
-  _wallTex=new THREE.CanvasTexture(cv);
-  _wallTex.wrapS=_wallTex.wrapT=THREE.RepeatWrapping;
-  return _wallTex;
-}
-function floorTexture(){
-  if(_floorTex)return _floorTex;
-  const cv=document.createElement('canvas');cv.width=cv.height=256;
-  const c=cv.getContext('2d');
-  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
-    const v=(x+y)%2?255:228;
-    c.fillStyle=`rgb(${v},${v},${v})`;c.fillRect(x*32,y*32,32,32);
-  }
-  for(let i=0;i<600;i++){
-    const v=205+Math.floor(Math.random()*50);
-    c.fillStyle=`rgba(${v},${v},${v},0.45)`;
-    c.fillRect(Math.random()*256,Math.random()*256,3,3);
-  }
-  _floorTex=new THREE.CanvasTexture(cv);
-  _floorTex.wrapS=_floorTex.wrapT=THREE.RepeatWrapping;
-  return _floorTex;
+  const tex=new THREE.CanvasTexture(cv);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  _texCache[kind]=tex;
+  return tex;
 }
 
 /* Emoji → Sprite 貼圖（道具、雲、月亮都用這招，超省效能） */
@@ -1072,6 +1130,42 @@ function buildEnvironment(theme){
     const bf=makeEmojiSprite('🦋',1.6); envGroup.add(bf);
     envGroup.userData.anim.push(t=>{bf.position.set(Math.cos(t*0.4)*span*0.3,3+Math.sin(t*2)*0.8,Math.sin(t*0.4)*span*0.3);});
   }
+  else if(theme.id==='volcano'){ /* 🌋 火山：遠處火山錐冒煙 + 上升火星 + 熔岩石柱 */
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(26,34,10),M(0x3a1f16));
+    cone.position.set(span*0.95,0,-span*0.95); envGroup.add(cone);
+    const crater=new THREE.Mesh(new THREE.ConeGeometry(7,6,10),new THREE.MeshBasicMaterial({color:0xff5722}));
+    crater.position.set(span*0.95,33,-span*0.95); envGroup.add(crater);
+    for(let i=0;i<4;i++){ // 火山口的煙往上飄
+      const sm=makeEmojiSprite('💨',7+i*2); sm.material.transparent=true; envGroup.add(sm);
+      envGroup.userData.anim.push(t=>{const k=(t*0.1+i*0.25)%1;
+        sm.position.set(span*0.95+Math.sin(t*0.5+i)*3,36+k*24,-span*0.95);
+        sm.material.opacity=0.65*(1-k);});
+    }
+    for(let i=0;i<10;i++){ // 迷宮上空的火星
+      const em=new THREE.Mesh(new THREE.SphereGeometry(0.13,6,6),new THREE.MeshBasicMaterial({color:0xffab40,transparent:true}));
+      const ex=(Math.random()-0.5)*span, ez=(Math.random()-0.5)*span, ph=Math.random()*9;
+      envGroup.add(em);
+      envGroup.userData.anim.push(t=>{const k=(t*0.22+ph)%1;
+        em.position.set(ex+Math.sin(t+ph)*1.5,k*10,ez); em.material.opacity=1-k;});
+    }
+    for(let i=0;i<6;i++){ // 外圈熔岩石柱＋火焰
+      const a=i/6*6.28;
+      const rock=new THREE.Mesh(new THREE.ConeGeometry(1.6,4+Math.random()*3,6),M(0x4a2418));
+      rock.position.set(Math.cos(a)*R,2,Math.sin(a)*R); envGroup.add(rock);
+      if(i%2===0){
+        const f=makeEmojiSprite('🔥',2.4); f.position.set(Math.cos(a)*R,5.4,Math.sin(a)*R); envGroup.add(f);
+        envGroup.userData.anim.push(t=>{const k2=2.4+Math.sin(t*6+i)*0.35;f.scale.set(k2,k2,1);});
+      }
+    }
+    for(let i=0;i<4;i++){ // 頭頂飄過的火山灰雲
+      const cl=makeEmojiSprite('☁️',9+Math.random()*5);
+      cl.material.color=new THREE.Color(0x8a4a38);
+      cl.position.set((Math.random()-0.5)*span*1.6,23+Math.random()*8,(Math.random()-0.5)*span*1.6);
+      envGroup.add(cl);
+      envGroup.userData.anim.push(t=>{cl.position.x+=0.02;if(cl.position.x>span)cl.position.x=-span;});
+    }
+    const glow=new THREE.PointLight(0xff5030,1.3,90); glow.position.set(0,10,0); envGroup.add(glow);
+  }
   else{ /* 🌫️ 迷霧沼澤：月亮 + 幽靈鬼火 + 枯樹 */
     const moon=makeEmojiSprite('🌕',9); moon.position.set(-span*0.4,30,-span*0.5); envGroup.add(moon);
     for(let i=0;i<5;i++){
@@ -1218,6 +1312,7 @@ function applyItem(it){
   else if(t.id==='envkite'){ G.kites++; updateKiteBtn(); }
   else if(t.id==='envlight'){ AudioEng.sfxUse(); G.visionUntil=performance.now()+dur*1000; addEffect('vision','🔦探照燈',dur); }
   else if(t.id==='envfan'){ AudioEng.sfxUse(); G.visionUntil=performance.now()+dur*1000; addEffect('vision','🌬️驅霧',dur); }
+  else if(t.id==='envquake'){ AudioEng.sfxBreak(); quakeWalls(); }
   else if(t.id==='envowl'){
     AudioEng.sfxUse();
     G.viewBefore=G.view; G.view='top';
@@ -1258,6 +1353,19 @@ function useKite(){
   G.px=cp.x; G.pz=cp.z;
   playerGroup.position.set(G.px,0,G.pz);
   showToast('🪁 咻～飛過牆了！');
+}
+/* 火山震波：震碎自己所在格子四周的牆（外圍牆除外） */
+function quakeWalls(){
+  const pc=worldToCell(G.px,G.pz); let n=0;
+  const hit=(type,gx,gy)=>{
+    const wb=G.wallBoxes.find(w=>w.type===type&&w.gx===gx&&w.gy===gy);
+    if(wb){removeWallBox(wb);burstParticles((wb.minX+wb.maxX)/2,(wb.minZ+wb.maxZ)/2);n++;}
+  };
+  if(pc.y>0)hit('h',pc.x,pc.y-1);
+  if(pc.y<G.mazeH-1)hit('h',pc.x,pc.y);
+  if(pc.x>0)hit('v',pc.x-1,pc.y);
+  if(pc.x<G.mazeW-1)hit('v',pc.x,pc.y);
+  showToast(n?('💥 震碎了 '+n+' 面牆！'):'💥 身邊都是外圍牆，震不碎');
 }
 function updateKiteBtn(){
   $('kiteBtn').style.display=G.kites>0?'block':'none';
@@ -2368,7 +2476,7 @@ function mpConnect(cb){
   $('mpStatus').textContent='連線中…';
   MP.net=new MiniMQTT(CFG.broker);
   MP.net.onready=()=>{ MP.net.subscribe(mpTopic()); $('mpStatus').textContent=''; cb&&cb(); };
-  MP.net.onfail=()=>{ $('mpStatus').textContent='⚠️ 連不上連線伺服器，請檢查網路，或到後台設定換一個伺服器'; };
+  MP.net.onfail=()=>{ $('mpStatus').textContent='⚠️ 連不上連線伺服器，請檢查網路，或到遊戲設定換一個伺服器'; };
   MP.net.onmsg=raw=>{ try{ const m=JSON.parse(raw); if(m&&m.t)mpHandle(m); }catch(e){} };
   MP.net.connect();
 }
