@@ -533,7 +533,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.8.3';
+const GAME_VERSION='1.8.4';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -544,17 +544,17 @@ function saveCfg(){localStorage.setItem('maze3d_cfg',JSON.stringify(CFG));}
 /* ---------- 角色資料 ---------- */
 const CHARS=[
  {id:'yong', name:'小勇', emoji:'👦', desc:'活力小男孩，藍色上衣', skin:0xffcc99, hair:0x4a3220, shirt:0x2196f3, pants:0x37474f, type:'human',
-  job:'疾風跑者', abilText:'天生跑得快：移動速度 +12%', speedBonus:1.12, weapon:'🗡️', wname:'小木劍'},
+  job:'疾風跑者', abilText:'天生跑得快：移動速度 +12%', speedBonus:1.12, weapon:'🗡️', wname:'小木劍', gender:'m'},
  {id:'hua',  name:'小花', emoji:'👧', desc:'愛笑女孩，粉紅洋裝＋雙馬尾', skin:0xffd9b3, hair:0x8d5524, shirt:0xf06292, pants:0xf8bbd0, type:'girl',
-  job:'美食家', abilText:'超會品嘗：吃食物回復的飽足感 ×1.5', foodMul:1.5, weapon:'🍳', wname:'平底鍋'},
+  job:'美食家', abilText:'超會品嘗：吃食物回復的飽足感 ×1.5', foodMul:1.5, weapon:'🍳', wname:'平底鍋', gender:'f'},
  {id:'dan',  name:'阿丹', emoji:'🧒', desc:'跑步高手，綠色運動服', skin:0x8d5524, hair:0x1a1a1a, shirt:0x43a047, pants:0x263238, type:'human',
-  job:'耐力王', abilText:'體力超好：肚子餓得比別人慢 35%', drainMul:0.65, weapon:'🥊', wname:'拳擊手套'},
+  job:'耐力王', abilText:'體力超好：肚子餓得比別人慢 35%', drainMul:0.65, weapon:'🥊', wname:'拳擊手套', gender:'m'},
  {id:'liya', name:'莉亞', emoji:'👩', desc:'聰明女孩，紫色洋裝', skin:0xc68642, hair:0x111111, shirt:0x7e57c2, pants:0xd1c4e9, type:'girl',
-  job:'小魔法師', abilText:'魔力加持：所有道具效果時間 ×1.5', itemDurMul:1.5, weapon:'✨', wname:'魔法棒'},
+  job:'小魔法師', abilText:'魔力加持：所有道具效果時間 ×1.5', itemDurMul:1.5, weapon:'✨', wname:'魔法棒', gender:'f'},
  {id:'robot',name:'鐵蛋', emoji:'🤖', desc:'迷宮探測機器人', skin:0x9e9e9e, hair:0x616161, shirt:0x78909c, pants:0x455a64, type:'robot',
-  job:'工程師', abilText:'工具專家：開局 1 把鐵鍬，用掉 45 秒後自動補充', startShovels:1, weapon:'🔧', wname:'大扳手'},
+  job:'工程師', abilText:'工具專家：開局 1 把鐵鍬，用掉 45 秒後自動補充', startShovels:1, weapon:'🔧', wname:'大扳手', gender:'m'},
  {id:'cat',  name:'喵喵', emoji:'🐱', desc:'橘色小貓咪，有尾巴喔', skin:0xffa040, hair:0xef6c00, shirt:0xffb74d, pants:0xef6c00, type:'cat',
-  job:'尋路貓', abilText:'貓的直覺：迷宮變形後自動看見出口路線 6 秒', pathOnShift:6, weapon:'🐾', wname:'貓爪'},
+  job:'尋路貓', abilText:'貓的直覺：迷宮變形後自動看見出口路線 6 秒', pathOnShift:6, weapon:'🐾', wname:'貓爪', gender:'f'},
 ];
 const CH=()=>CHARS[G.charIdx];
 
@@ -2680,7 +2680,7 @@ function mpHandle(m){
         G.roundEndsAt=performance.now()+MP.roundMs;
         if(MP.taggedId){ // 公告初始鬼並讓他定住 3 秒
           MP.tagImmuneUntil=performance.now()+3000;
-          setTimeout(()=>announceTag(mpName(MP.taggedId)),600);
+          setTimeout(()=>announceTag(mpName(MP.taggedId),genderOf(MP.taggedId)),600);
           if(MP.taggedId===MP.id)G.stunnedUntil=Math.max(G.stunnedUntil,performance.now()+3000);
           else if(MP.host&&MP.bots){const b=MP.bots.find(x=>x.id===MP.taggedId);if(b)b.stunnedUntil=performance.now()+3000;}
         }
@@ -2728,7 +2728,7 @@ function mpHandle(m){
         MP.hp[m.to]=hpMaxOf(m.to); // 新鬼滿血
         AudioEng.sfxAlarm();
         const pw=TAG_POWERS[MP.itPower];
-        announceTag(mpName(m.to)); // 大字公告 + 語音「換 xxx 當鬼，快跑啊！」
+        announceTag(mpName(m.to),genderOf(m.f)); // 抓到人的鬼是男生→男聲、女生→女聲
         showToast('👹 '+mpName(m.to)+' 變成鬼了！獲得能力：'+pw.label,3500);
         // 變成鬼會定住 3 秒（換裝戴面具），大家趁機快跑
         if(m.to===MP.id){
@@ -3020,22 +3020,43 @@ function botSim(dt,now){
   }
 }
 function getEmojiTex(emoji){ makeEmojiSprite(emoji,1); return spriteCache[emoji]; } // 只要貼圖
-/* 語音播報（跟隨音樂靜音設定） */
-function speak(text){
+/* 語音播報（跟隨音樂靜音設定），gender：'m'=男聲、'f'=女聲 */
+let _voices=[];
+function _loadVoices(){ try{_voices=speechSynthesis.getVoices()||[];}catch(e){} }
+if('speechSynthesis' in window){ _loadVoices(); try{speechSynthesis.onvoiceschanged=_loadVoices;}catch(e){} }
+const _maleRe=/男|male|云希|雲希|yunxi|yunjhe|kangkang|zhiyu|yunyang/i;
+const _femaleRe=/女|female|mei[-\s]?jia|xiaoxiao|hanhan|yating|tracy|hsiao/i;
+function voiceParamsFor(gender){
+  const zh=_voices.filter(v=>/^zh/i.test(v.lang));
+  const re=gender==='m'?_maleRe:_femaleRe;
+  const dedicated=zh.find(v=>re.test(v.name));
+  const voice=dedicated||zh.find(v=>/zh[-_](TW|HK)/i.test(v.lang))||zh[0]||null;
+  // 沒有專屬性別語音時，用音調模擬：男聲低沉、女聲高亢
+  const pitch=dedicated?(gender==='m'?1.0:1.1):(gender==='m'?0.6:1.4);
+  return {voice,pitch,rate:gender==='m'?0.98:1.06};
+}
+function speak(text,gender){
   if(G.muted)return;
   try{
     const u=new SpeechSynthesisUtterance(text);
-    u.lang='zh-TW'; u.rate=1.05; u.pitch=1.1;
+    u.lang='zh-TW';
+    const vp=voiceParamsFor(gender||'f');
+    if(vp.voice)u.voice=vp.voice;
+    u.pitch=vp.pitch; u.rate=vp.rate;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
   }catch(e){}
 }
-/* 換鬼公告：大字橫幅 + 語音 */
-function announceTag(name){
+/* 換鬼公告：大字橫幅 + 語音（男生鬼抓到人放男聲、女生鬼放女聲） */
+function announceTag(name,gender){
   const el=$('tagAnnounce');
   el.textContent='👹 換 '+name+' 當鬼，快跑啊！';
   el.style.display='block';
   clearTimeout(el._tm); el._tm=setTimeout(()=>el.style.display='none',2600);
-  speak('換'+name+'當鬼，快跑啊！');
+  speak('換'+name+'當鬼，快跑啊！',gender);
+}
+function genderOf(id){ // 該玩家角色的聲音性別
+  const r=MP.roster.find(x=>x.id===id);
+  return r?(CHARS[r.charIdx||0].gender||'f'):'f';
 }
 function mpUpdateTagVisuals(){
   const mask=MP.itPower?TAG_POWERS[MP.itPower].mask:'👹';
