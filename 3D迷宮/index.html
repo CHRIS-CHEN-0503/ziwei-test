@@ -168,6 +168,15 @@ button{font-family:var(--font);}
   font-size:2rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
 }
 #atkBtn:active{transform:scale(.9);}
+#robBtn{
+  position:absolute;right:calc(100px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));width:80px;height:80px;border-radius:50%;
+  border:4px solid #fff;background:linear-gradient(145deg,#bdbdbd,#757575);color:#fff;
+  font-size:2rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
+  transition:background .15s, transform .15s;
+}
+#robBtn.ready{background:linear-gradient(145deg,#ffb74d,#ef6c00);animation:robPulse .7s infinite;}
+#robBtn:active{transform:scale(.9);}
+@keyframes robPulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 10px rgba(255,152,0,.35),0 4px 14px rgba(0,0,0,.5);}}
 #skillBtn{
   position:absolute;right:calc(186px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));
   width:70px;height:70px;border-radius:50%;
@@ -369,6 +378,7 @@ button{font-family:var(--font);}
   <button id="kiteBtn">🪁<span class="cnt" id="kiteCnt">1</span></button>
   <button id="whistleBtn">📣<span class="cnt" id="whistleCnt">1</span></button>
   <button id="atkBtn">🐾</button>
+  <button id="robBtn">🤏</button>
   <button id="skillBtn">🫥</button>
   <div id="stunOverlay"></div>
   <div id="joyZone"><div id="joyBase"></div><div id="joyStick"></div></div>
@@ -530,7 +540,7 @@ button{font-family:var(--font);}
   <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
     <h3 style="text-align:center;">❓ 玩法說明</h3>
     <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。</div>
-    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）· <b>C</b> 隱身技能 · <b>G</b> 集合口哨 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
+    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）或搶奪商品（搶購）· <b>C</b> 隱身技能 · <b>G</b> 集合口哨 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
     <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
     <div>🎁 道具（每次變形會重新出現）：</div>
@@ -555,7 +565,10 @@ button{font-family:var(--font);}
     </div>
     <div>💎 <b>尋寶模式</b>：小地圖會顯示寶藏位置，撿到寶藏後帶到出口 🚩 就贏！別人拿寶藏時你會出現<b>攻擊鍵</b>（每個職業武器不同），打中就把人暈眩 3 秒；打中持有者還能搶走寶藏（拿寶藏的人不能攻擊）。持有者位置每 3 秒在小地圖上更新。單機可以跟電腦對戰！</div>
     <div>🌀 迷宮變形時<b>出口也會搬家</b>（外圈的角落或邊線上），記得看小地圖。</div>
-    <div>🛒 <b>搶購模式</b>（單機跟兩個電腦玩，或多人連線）：場景變成<b>大賣場</b>，走道兩旁是<b>矮貨架</b>，所以看得到遠方的商品和其他人，但走法還是迷宮！地上到處是商品：🍬糖果 $10、🍞麵包 $20、🥛牛奶 $30、🧃果汁 $35、🍫巧克力 $45、🧀起司 $60、🍖大肉排 $80、🦞龍蝦 $120，撿到就進購物車。<b>這個模式沒有任何技能</b>（不能攻擊、不能隱身、職業能力也不算），道具只有 ⚡加速藥水 和 😜調皮鬼。商品被搶走後過幾秒會在別的地方<b>重新上架</b>，時間到<b>誰的購物車金額最多誰就贏</b>！</div>
+    <div>🛒 <b>搶購模式</b>（單機跟兩個電腦玩，或多人連線）：場景變成<b>大賣場</b>——低天花板、輕鋼架、日光燈盤、會轉的吊扇、擺滿商品的<b>矮貨架</b>、靠牆的收銀台。因為貨架很矮，所以看得到遠方的商品和其他人，但走法還是迷宮！地上到處是商品：🍬糖果 $10、🍞麵包 $20、🥛牛奶 $30、🧃果汁 $35、🍫巧克力 $45、🧀起司 $60、🍖大肉排 $80、🦞龍蝦 $120，撿到就進購物車。<b>這個模式沒有任何技能</b>（不能攻擊、不能隱身、職業能力也不算），道具只有 ⚡加速藥水 和 😜調皮鬼；<b>大家的速度都一樣，而且比平常快 1.2 倍</b>。商品被搶走後過幾秒會在別的地方<b>重新上架</b>，時間到<b>誰的購物車金額最多誰就贏</b>！</div>
+    <div style="padding-left:14px;">
+      🤏 <b>搶奪</b>：從對手身邊經過時按右下角的<b>搶奪鈕</b>（電腦按 <b>X</b>），會<b>隨機搶走對方購物車裡的一件商品</b>。有對手在旁邊時按鈕會變成橘色閃爍，離太遠會「搶空了」。搶到會顯示<b>搶到什麼</b>，被搶的人也會看到<b>被搶走什麼</b>。冷卻 1.5 秒；電腦也會搶你的東西（開場 8 秒後才開始，之後每 8 秒一次）。
+    </div>
     <div>👥 <b>多人連線</b>（2～5 人，房主可選人數上限，視角可自由切換）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了；💎 尋寶：搶寶藏帶出口；🛒 搶購：比誰的購物車金額多（大地圖人數不足電腦會補位（最多補到房間上限））。</div>
     <div>🗺️ 點右上角小地圖可以放大成全螢幕；小地圖左上角的 ⤢ 鈕可以切換 1.2 倍大小（特大地圖好用）。</div>
     <button class="m-close" id="helpClose" style="display:block;margin:10px auto 0;">知道了！</button>
@@ -571,7 +584,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.12.0';
+const GAME_VERSION='1.13.0';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',roomMax:3,goodsCount:16,shopMin:2.5,views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -636,8 +649,8 @@ const ITEM_TYPES=[
 
 /* ---------- 🛒 搶購模式：大賣場主題與商品 ---------- */
 const SHOP_THEME={id:'shop',name:'大賣場',emoji:'🛒',
-  sky:0xdff0fb,fog:[0xeef3f8,90,400],floor:0xf5f5f5,wall:0xbcd6e6,
-  amb:0xffffff,ambI:1.0,dirI:.5,music:1,wallTex:'tile',floorTex:'tile'};
+  sky:0xdff0fb,fog:[0xeef3f8,90,400],floor:0xf5f5f5,wall:0xbcd6e6,wall3d:0xfdfdfd,
+  amb:0xffffff,ambI:1.0,dirI:.45,music:1,wallTex:'shelf',floorTex:'tile'};
 const GOODS=[
  {emoji:'🍬',name:'糖果',   price:10, weight:22},
  {emoji:'🍞',name:'麵包',   price:20, weight:20},
@@ -649,8 +662,12 @@ const GOODS=[
  {emoji:'🦞',name:'龍蝦',   price:120,weight:3},
 ];
 const SHOP_RESTOCK_MS=6000; // 商品被搶走後幾秒重新上架
+const SHOP_SPEED_MUL=1.2;   // 搶購模式：所有人（含電腦）速度都 ×1.2
+const SHOP_ROB_RANGE=2.4;   // 搶奪商品的距離（公尺）
+const SHOP_ROB_CD=1500;     // 搶奪冷卻
 function isShop(){ return MP.on&&MP.mode==='shop'; }
 function skillsAllowed(){ return !isShop(); } // 搶購模式沒有任何技能
+function shopSpeed(){ return isShop()?SHOP_SPEED_MUL:1; }
 function jobPerk(key){ return isShop()?undefined:CH()[key]; } // 搶購模式大家能力一樣
 /* 把第 i 個商品放到某格（補貨也共用；房主決定位置後廣播，大家畫面一致） */
 function placeGood(i,gi,cx,cy){
@@ -940,7 +957,7 @@ function buildWalls(theme){
   add(oX,0,t,H*c+t,{boundary:true}); add(oX+W*c,0,t,H*c+t,{boundary:true});
 
   const geo=new THREE.BoxGeometry(1,h,1);
-  const mat=new THREE.MeshLambertMaterial({color:theme.wall,map:makeTex(theme.wallTex||'brick')});
+  const mat=new THREE.MeshLambertMaterial({color:theme.wall3d||theme.wall,map:makeTex(theme.wallTex||'brick')});
   wallMesh=new THREE.InstancedMesh(geo,mat,mats.length);
   const m=new THREE.Matrix4(),s=new V3(),p=new V3(),q=new THREE.Quaternion();
   mats.forEach((w,i)=>{
@@ -1105,6 +1122,22 @@ function makeTex(kind){
     c.strokeStyle='rgba(120,120,120,.35)';c.lineWidth=1;
     for(let i=0;i<120;i++){const x=Math.random()*128,y=Math.random()*128;
       c.beginPath();c.moveTo(x,y);c.lineTo(x+(Math.random()-0.5)*3,y-4-Math.random()*3);c.stroke();}
+  }else if(kind==='shelf'){ // 賣場貨架：三層層板，每層擺滿彩色商品
+    c.fillStyle='#eef2f5';c.fillRect(0,0,128,128);
+    const cols=['#ef9a9a','#ffcc80','#fff59d','#a5d6a7','#90caf9','#ce93d8','#ffab91','#80deea'];
+    for(let r=0;r<3;r++){
+      const base=r*42+38;
+      for(let x=3,k=0;x<125;x+=12,k++){       // 一排排的商品盒
+        const bh=14+((k+r)%3)*6;
+        c.fillStyle=cols[(k+r*3)%cols.length];
+        c.fillRect(x,base-bh,9,bh);
+        c.fillStyle='rgba(255,255,255,.5)';c.fillRect(x,base-bh,9,3);
+        c.fillStyle='rgba(0,0,0,.10)';c.fillRect(x+9,base-bh,2,bh);
+      }
+      c.fillStyle='#b8c4cc';c.fillRect(0,base,128,5);   // 層板
+      c.fillStyle='rgba(0,0,0,.14)';c.fillRect(0,base+5,128,3);
+    }
+    c.strokeStyle='rgba(0,0,0,.16)';c.lineWidth=2;c.strokeRect(1,1,126,126);
   }else if(kind==='tile'){ // 方格地磚
     for(let y=0;y<8;y++)for(let x=0;x<8;x++){const v=(x+y)%2?255:228;
       c.fillStyle=`rgb(${v},${v},${v})`;c.fillRect(x*16,y*16,16,16);}
@@ -1284,34 +1317,84 @@ function buildEnvironment(theme){
     const bf=makeEmojiSprite('🦋',1.6); envGroup.add(bf);
     envGroup.userData.anim.push(t=>{bf.position.set(Math.cos(t*0.4)*span*0.3,3+Math.sin(t*2)*0.8,Math.sin(t*0.4)*span*0.3);});
   }
-  else if(theme.id==='shop'){ /* 🛒 大賣場：矮貨架看得到遠方，四周是店牆＋天花板日光燈 */
-    const CH_=4.2;                                   // 賣場淨高（貨架只有 1.25，所以看得很遠）
+  else if(theme.id==='shop'){ /* 🛒 大賣場：低天花板、輕鋼架、日光燈盤、吊扇、收銀台 */
+    const CH_=3.2;                                   // 賣場淨高（比其他關卡低，才像室內賣場）
     const halfX=(G.mazeW/2+0.6)*G.cell, halfZ=(G.mazeH/2+0.6)*G.cell;
-    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(halfX*2,halfZ*2),new THREE.MeshBasicMaterial({color:0xf3f7fa}));
+    // 輕鋼架天花板（方格天花板貼圖）
+    const ct=makeTex('tile').clone(); ct.needsUpdate=true;
+    ct.wrapS=ct.wrapT=THREE.RepeatWrapping; ct.repeat.set(halfX/5,halfZ/5);
+    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(halfX*2,halfZ*2),
+      new THREE.MeshBasicMaterial({color:0xf7fafc,map:ct}));
     ceil.rotation.x=Math.PI/2; ceil.position.y=CH_; envGroup.add(ceil);
-    // 四面店牆：把外面的天空擋起來，才像在室內賣場
+    // 四面店牆（擋住外面的天空）＋牆上的分區大字
     const wm=new THREE.MeshBasicMaterial({color:0xe3ecf3});
     [[0,-halfZ,halfX*2,0.4],[0,halfZ,halfX*2,0.4],[-halfX,0,0.4,halfZ*2],[halfX,0,0.4,halfZ*2]]
       .forEach(([x,z,w,d])=>{
         const wall=new THREE.Mesh(new THREE.BoxGeometry(w,CH_,d),wm);
         wall.position.set(x,CH_/2,z); envGroup.add(wall);
       });
-    for(let i=0;i<8;i++){ // 天花板日光燈條
-      const lamp=new THREE.Mesh(new THREE.BoxGeometry(halfX*1.7,0.16,0.55),new THREE.MeshBasicMaterial({color:0xffffff}));
-      lamp.position.set(0,CH_-0.25,-halfZ*0.85+i*(halfZ*1.7/7)); envGroup.add(lamp);
+    // 天花板日光燈盤（燈管＋燈盤外框）
+    const tube=new THREE.MeshBasicMaterial({color:0xffffff});
+    const frame=new THREE.MeshBasicMaterial({color:0xcfd8dc});
+    for(let r=0;r<3;r++)for(let k=0;k<3;k++){
+      const lx=(k-1)*halfX*0.62, lz=(r-1)*halfZ*0.62;
+      const pan=new THREE.Mesh(new THREE.BoxGeometry(5.2,0.1,1.5),frame);
+      pan.position.set(lx,CH_-0.06,lz); envGroup.add(pan);
+      for(const off of [-0.35,0.35]){
+        const lamp=new THREE.Mesh(new THREE.BoxGeometry(4.9,0.1,0.42),tube);
+        lamp.position.set(lx,CH_-0.14,lz+off); envGroup.add(lamp);
+      }
     }
+    // 吊扇（會轉）
+    for(let i=0;i<4;i++){
+      const fx=(i%2?1:-1)*halfX*0.42, fz=(i<2?-1:1)*halfZ*0.42;
+      const fan=new THREE.Group(); fan.position.set(fx,CH_-0.42,fz);
+      const fmB=new THREE.MeshBasicMaterial({color:0xeceff1}), fmD=new THREE.MeshBasicMaterial({color:0xb0bec5});
+      const rod=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.42),fmD);
+      rod.position.y=0.21; fan.add(rod);
+      const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.16,12),fmD);
+      fan.add(hub);
+      const blades=new THREE.Group(); fan.add(blades);
+      for(let bl=0;bl<4;bl++){
+        const blade=new THREE.Mesh(new THREE.BoxGeometry(2.1,0.05,0.42),fmB);
+        blade.position.set(1.05,0,0); blade.rotation.y=0;
+        const arm=new THREE.Group(); arm.rotation.y=bl*Math.PI/2; arm.add(blade); blades.add(arm);
+      }
+      envGroup.add(fan);
+      envGroup.userData.anim.push(t=>{blades.rotation.y=t*2.4+i;});
+    }
+    // 吊掛分區招牌
     const signs=['🥦','🍖','🥛','🍞','🧃','🧻'];
-    for(let i=0;i<signs.length;i++){ // 吊在半空中的分區招牌
-      const sg=makeEmojiSprite(signs[i],2.2);
-      sg.position.set((i%3-1)*halfX*0.6,CH_-1.1,(Math.floor(i/3)-0.5)*halfZ*0.9);
+    for(let i=0;i<signs.length;i++){
+      const sg=makeEmojiSprite(signs[i],1.7);
+      sg.position.set((i%3-1)*halfX*0.6,CH_-0.85,(Math.floor(i/3)-0.5)*halfZ*0.92);
       envGroup.add(sg);
     }
-    for(let i=0;i<6;i++){ // 靠牆邊的推車
-      const a=i/6*6.28;
-      const cart=makeEmojiSprite('🛒',2.2);
-      cart.position.set(Math.cos(a)*halfX*0.93,1.1,Math.sin(a)*halfZ*0.93); envGroup.add(cart);
+    // 靠牆的收銀台（櫃檯＋輸送帶＋收銀機）
+    for(let i=0;i<4;i++){
+      const cxp=(i-1.5)*halfX*0.42;
+      const desk=new THREE.Mesh(new THREE.BoxGeometry(3.0,0.95,1.3),M(0xd7e3ec));
+      desk.position.set(cxp,0.47,-halfZ+1.1); envGroup.add(desk);
+      const belt=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.08,0.7),M(0x546e7a));
+      belt.position.set(cxp,0.98,-halfZ+1.1); envGroup.add(belt);
+      const reg=makeEmojiSprite('💳',1.1); reg.position.set(cxp+1.1,1.5,-halfZ+1.1); envGroup.add(reg);
+      const num=makeTextSprite('收銀 '+(i+1)); num.scale.set(2.2,0.55,1);
+      num.position.set(cxp,2.1,-halfZ+1.1); envGroup.add(num);
     }
-    const pl=new THREE.PointLight(0xffffff,0.45,160); pl.position.set(0,CH_-0.6,0); envGroup.add(pl);
+    // 入口與角落的推車
+    for(let i=0;i<6;i++){
+      const a=i/6*6.28;
+      const cart=makeEmojiSprite('🛒',1.9);
+      cart.position.set(Math.cos(a)*halfX*0.93,1.0,Math.sin(a)*halfZ*0.93); envGroup.add(cart);
+    }
+    // 特價汽球（一點點就好，效能友善）
+    for(let i=0;i<4;i++){
+      const ba=makeEmojiSprite(['🎈','🎈','🏷️','🏷️'][i],1.5);
+      const bx=(i%2?1:-1)*halfX*0.72, bz=(i<2?-1:1)*halfZ*0.72;
+      envGroup.add(ba);
+      envGroup.userData.anim.push(t=>{ba.position.set(bx,2.1+Math.sin(t*1.2+i)*0.12,bz);});
+    }
+    const pl=new THREE.PointLight(0xffffff,0.4,160); pl.position.set(0,CH_-0.5,0); envGroup.add(pl);
   }
   else if(theme.id==='volcano'){ /* 🌋 火山：遠處火山錐冒煙 + 上升火星 + 熔岩石柱 */
     const cone=new THREE.Mesh(new THREE.ConeGeometry(26,34,10),M(0x3a1f16));
@@ -1394,6 +1477,8 @@ function spawnItems(){
   const pc=worldToCell(G.px,G.pz);
   const used=MP.on?new Set([G.exitCell.x+','+G.exitCell.y])
                   :new Set([pc.x+','+pc.y, G.exitCell.x+','+G.exitCell.y]);
+  // 搶購：出發點不放商品，才不會有人一開場就白撿一件
+  if(isShop()&&G.startCells)for(const c of G.startCells)used.add(c.x+','+c.y);
   let tries=0;
   while(G.items.length<CFG.itemCount&&tries<300){
     tries++;
@@ -1836,7 +1921,7 @@ function updatePlayer(dt,t){
       tagBoost=1.15; // 鬼＝一般玩家的 1.15 倍速
       if(MP.itPower==='speed')tagBoost*=1.12; // 鬼能力：疾風
     }
-    const sp=G.baseSpeed*(jobPerk('speedBonus')||1)*G.hungerMul*G.speedMul*tagBoost*mag;
+    const sp=G.baseSpeed*(jobPerk('speedBonus')||1)*G.hungerMul*G.speedMul*tagBoost*shopSpeed()*mag;
     // 相對於相機方向移動（俯視時相機固定朝北）
     const base=(G.view==='top')?Math.PI:G.camYaw+Math.PI;
     const ang=base+Math.atan2(-ix,-iy);
@@ -1880,11 +1965,11 @@ function updatePlayer(dt,t){
       if(gd.taken)continue;
       if((gd.x-G.px)**2+(gd.z-G.pz)**2<1.4){
         gd.taken=true; gd.backAt=performance.now()+SHOP_RESTOCK_MS; gd.sprite.visible=false; gd.tag.visible=false;
-        MP.carts[MP.id]=(MP.carts[MP.id]||0)+gd.g.price;
+        cartAdd(MP.id,gd.gi);
         AudioEng.sfxCoin();
         showToast(gd.g.emoji+' '+gd.g.name+' +$'+gd.g.price,1200);
         updateShopHud();
-        mpSend({t:'take',kind:'good',i:gi,round:MP.round,v:gd.g.price});
+        mpSend({t:'take',kind:'good',i:gi,round:MP.round,gi:gd.gi,v:gd.g.price});
       }
     }
   }
@@ -2011,7 +2096,8 @@ function updateCamera(dt){
     // 平視跟隨：像另一個人跟在主角後面（相機比牆矮，看不到隔壁走道）
     const dist=4.6,hh=2.35;
     const dx=Math.sin(G.camYaw), dz=Math.cos(G.camYaw);
-    const d=cameraClearDist(dx,dz,dist); // 後面有牆就拉近，不穿牆
+    // 後面有牆就拉近，不穿牆；賣場的貨架比鏡頭矮，鏡頭直接從上面掠過就好
+    const d=(G.wallH<hh-0.3)?dist:cameraClearDist(dx,dz,dist);
     const tx=G.px+dx*d, tz=G.pz+dz*d;
     camera.position.lerp(new V3(tx,hh,tz),Math.min(1,dt*10));
     camera.lookAt(G.px,1.5,G.pz);
@@ -2088,7 +2174,7 @@ function setupTouch(){
     if(c==='KeyQ')G.camYaw+=0.15; if(c==='KeyE')G.camYaw-=0.15;
     if(c==='Space'){e.preventDefault();useShovel();}
     if(c==='KeyF')useKite();
-    if(c==='KeyX')doAttack();
+    if(c==='KeyX'){ if(isShop())doRob(); else doAttack(); }
     if(c==='KeyC')useSkill();
     if(c==='KeyG')useWhistle();
     if(c==='KeyV')$('viewToggle').click();
@@ -2205,6 +2291,56 @@ function updateTopMask(){
   el.style.background=`radial-gradient(circle at ${cx.toFixed(0)}px ${cy.toFixed(0)}px, rgba(0,0,0,0) ${r0.toFixed(0)}px, ${col} ${r1.toFixed(0)}px)`;
 }
 
+/* 🛒 購物車：記錄每個人買到哪些商品（搶奪要知道搶走的是什麼） */
+function cartAdd(id,gi){
+  const g=GOODS[gi]||GOODS[0];
+  (MP.cartList[id]=MP.cartList[id]||[]).push(gi);
+  MP.carts[id]=(MP.carts[id]||0)+g.price;
+}
+function fromMyBot(id){ return !!(MP.host&&MP.bots&&MP.bots.some(b=>b.id===id)); }
+/* 🤏 搶奪：靠近對手時按按鈕（電腦按 X），隨機搶走對方購物車裡的一件商品 */
+function robTarget(){
+  if(!isShop()||!MP.started||MP.ended||G.frozen)return null;
+  const now=performance.now(); let best=null,bd=SHOP_ROB_RANGE*SHOP_ROB_RANGE;
+  for(const id in MP.players){
+    const pl=MP.players[id];
+    if(!pl.mesh||now-pl.lastSeen>6000)continue;
+    const d=(pl.mesh.position.x-G.px)**2+(pl.mesh.position.z-G.pz)**2;
+    if(d<bd){bd=d;best=id;}
+  }
+  return best;
+}
+function updateRobBtn(){
+  const btn=$('robBtn');
+  if(!isShop()||!MP.started||MP.ended){btn.style.display='none';return;}
+  btn.style.display='block';
+  const ready=performance.now()>=MP.robCoolUntil&&!!robTarget();
+  btn.classList.toggle('ready',ready);
+}
+function doRob(){
+  const now=performance.now();
+  if(!isShop()||!MP.started||MP.ended||G.frozen)return;
+  if(now<MP.robCoolUntil)return;
+  MP.robCoolUntil=now+SHOP_ROB_CD;
+  const to=robTarget();
+  if(!to){ showToast('💨 搶空了！要靠近對手才搶得到',1200); return; }
+  const lst=MP.cartList[to]||[];
+  if(!lst.length){ showToast('🤷 '+mpName(to)+' 的購物車是空的！',1400); return; }
+  const idx=Math.floor(Math.random()*lst.length);
+  mpSend({t:'rob',to,idx,gi:lst[idx]});
+  swingRob();
+}
+function swingRob(){ // 搶奪動作：手往前抓一下
+  const sp=makeEmojiSprite('🤏',1.6);
+  sp.position.set(G.px+Math.sin(G.heading)*0.9,1.3,G.pz+Math.cos(G.heading)*0.9);
+  scene.add(sp);
+  const t0=performance.now();
+  const tick=()=>{const k=(performance.now()-t0)/280;
+    if(k>=1){scene.remove(sp);return;}
+    sp.material.opacity=1-k; sp.material.transparent=true;
+    sp.scale.setScalar(1.6+k*0.8); requestAnimationFrame(tick);};
+  requestAnimationFrame(tick);
+}
 /* 🛒 搶購模式 HUD：自己的金額、名次、剩餘商品 */
 function updateShopHud(){
   const on=isShop()&&MP.started&&!MP.ended;
@@ -2704,6 +2840,7 @@ function loop(tms){
   }
   if(MP.on&&MP.started)mpFrame(dt);
   updateShiftTimer();
+  updateRobBtn();
   updatePlayer(dt,t);
   updateCamera(dt);
   updateParticles(dt);
@@ -2801,6 +2938,7 @@ function wireUI(){
   $('kiteBtn').onclick=useKite;
   $('whistleBtn').onclick=useWhistle;
   $('atkBtn').onclick=doAttack;
+  $('robBtn').onclick=doRob;
   $('skillBtn').onclick=useSkill;
   const zoomBy=d=>{G.topZoom=Math.max(10,Math.min(48,G.topZoom+d));};
   $('zoomInBtn').onclick=()=>zoomBy(-5);
@@ -2973,7 +3111,7 @@ const MP={
   taggedId:null, tagImmuneUntil:0, raceEndAt:0, finishers:[],
   meFinished:false, meOut:false,
   treasure:null, bots:null, stunSec:3, pingSec:3, twinSent:false,
-  itPower:null, hp:{}, itRegenAt:0, whistleHolder:null, carts:{}, shopEndSent:false,
+  itPower:null, hp:{}, itRegenAt:0, whistleHolder:null, carts:{}, cartList:{}, shopEndSent:false, robCoolUntil:0,
   net:null, posTimer:null, helloTimer:null,
 };
 function mpTopic(){return 'ziwei-maze3d/'+MP.room;}
@@ -3075,7 +3213,7 @@ function mpHandle(m){
       MP.bots=null;
       if(MP.host&&(m.mode==='treasure'||m.mode==='tag'||m.mode==='shop')){
         MP.bots=m.players.filter(pl=>pl.bot).map(pl=>
-          ({id:pl.id,charIdx:pl.charIdx,x:0,z:0,cell:{x:0,y:0},h:0,path:null,pathI:0,goalKey:'',repathAt:0,stunnedUntil:0,atkAt:0}));
+          ({id:pl.id,charIdx:pl.charIdx,x:0,z:0,cell:{x:0,y:0},h:0,path:null,pathI:0,goalKey:'',repathAt:0,stunnedUntil:0,atkAt:0,robAt:0}));
       }
       MP.finishers=[]; MP.outs={}; MP.raceEndAt=0; MP.meFinished=false; MP.meOut=false;
       G.lvlIdx=m.lvl;
@@ -3087,7 +3225,9 @@ function mpHandle(m){
         const wp=cellToWorld(b.cell.x,b.cell.y); b.x=wp.x; b.z=wp.z;
       }
       if(MP.mode==='shop'){
-        MP.carts={}; G.roundEndsAt=performance.now()+MP.roundMs; MP.shopEndSent=false;
+        MP.carts={}; MP.cartList={}; MP.robCoolUntil=0;
+        G.roundEndsAt=performance.now()+MP.roundMs; MP.shopEndSent=false;
+        if(MP.bots)for(const b of MP.bots)b.robAt=performance.now()+8000; // 開場先讓大家好好買
         updateShopHud();
       }
       if(MP.mode==='tag'){
@@ -3114,7 +3254,10 @@ function mpHandle(m){
       if(m.kind==='good'){
         const gd=G.goods&&G.goods[m.i];
         if(gd&&!gd.taken){gd.taken=true;gd.backAt=now+SHOP_RESTOCK_MS;gd.sprite.visible=false;gd.tag.visible=false;}
-        MP.carts[m.f]=(MP.carts[m.f]||0)+(m.v||0);
+        if(!fromMyBot(m.f)){                   // 房主端電腦撿到時已經算過，別再加一次
+          const gi=(typeof m.gi==='number')?m.gi:Math.max(0,GOODS.findIndex(g=>g.price===m.v));
+          cartAdd(m.f,gi);
+        }
         updateShopHud();
         break;
       }
@@ -3213,6 +3356,24 @@ function mpHandle(m){
       if(!MP.started||MP.ended)break;
       applyPrank(m.list||[],m.f);
       break;
+    case 'rob':{
+      if(!MP.started||MP.mode!=='shop'||MP.ended)break;
+      const lst=MP.cartList[m.to]||[];
+      let k=(lst[m.idx]===m.gi)?m.idx:lst.indexOf(m.gi);
+      if(k<0)break;                       // 已經被別人搶走了，忽略
+      lst.splice(k,1);
+      const g=GOODS[m.gi]||GOODS[0];
+      MP.carts[m.to]=Math.max(0,(MP.carts[m.to]||0)-g.price);
+      cartAdd(m.f,m.gi);
+      if(m.f===MP.id){
+        AudioEng.sfxSteal();
+        showToast('🤏 搶到了！'+g.emoji+' '+g.name+' $'+g.price+'（從 '+mpName(m.to)+' 的購物車）',2200);
+      }else if(m.to===MP.id){
+        AudioEng.sfxLose();
+        showToast('😱 被 '+mpName(m.f)+' 搶走了 '+g.emoji+' '+g.name+' $'+g.price+'！',2200);
+      }
+      updateShopHud();
+      break;}
     case 'restock':{
       if(!MP.started||MP.mode!=='shop'||MP.ended||m.round!==MP.round)break;
       if(!G.goods||!G.goods[m.i])break;
@@ -3417,6 +3578,21 @@ function botPosOf(id){ // 房主端查任何人的位置
   const pl=MP.players[id];
   return pl&&pl.mesh?{x:pl.mesh.position.x,z:pl.mesh.position.z}:null;
 }
+/* 電腦的搶奪：冷卻比真人長很多（8 秒），才不會一直被欺負 */
+function botTryRob(b,now){
+  if(now<(b.robAt||0))return;
+  for(const r of MP.roster){
+    if(r.id===b.id)continue;
+    const q=botPosOf(r.id); if(!q)continue;
+    if((q.x-b.x)**2+(q.z-b.z)**2>SHOP_ROB_RANGE*SHOP_ROB_RANGE)continue;
+    const lst=MP.cartList[r.id]||[];
+    if(!lst.length)continue;
+    b.robAt=now+8000;
+    const idx=Math.floor(Math.random()*lst.length);
+    mpSend({t:'rob',f:b.id,to:r.id,idx,gi:lst[idx]});
+    return;
+  }
+}
 /* 🛒 補貨：被搶走的商品過幾秒會在別的地方重新上架（房主決定位置後廣播） */
 function shopRestock(now){
   if(!G.goods)return;
@@ -3438,24 +3614,25 @@ function shopRestock(now){
     mpSend({t:'restock',i,gi:GOODS.indexOf(pickGood(Math.random)),cx,cy,round:MP.round});
   }
 }
-/* 🛒 搶購 AI：走去最近還沒被撿的商品 */
+/* 🛒 搶購 AI：走去最近還沒被撿的商品；經過別人身邊偶爾也會搶一件 */
 function botSimShop(dt,now){
   for(const b of MP.bots){
     if(now<(b.stunnedUntil||0))continue;
+    botTryRob(b,now);
     let best=null,bd=1e9,bi=-1;
     (G.goods||[]).forEach((gd,i)=>{
-      if(gd.taken)return;
+      if(!gd||gd.taken)return;
       const d=(gd.x-b.x)**2+(gd.z-b.z)**2;
       if(d<bd){bd=d;best=gd;bi=i;}
     });
     if(!best)continue;
     const c=worldToCell(best.x,best.z);
-    botWalk(b,c,'g'+bi,dt,now,0.92);
+    botWalk(b,c,'g'+bi,dt,now,SHOP_SPEED_MUL);
     if(bd<1.4){ // 撿到（裝進購物車要花點時間，才不會把貨架掃光）
       best.taken=true; best.backAt=now+SHOP_RESTOCK_MS; best.sprite.visible=false; best.tag.visible=false;
-      MP.carts[b.id]=(MP.carts[b.id]||0)+best.g.price;
+      cartAdd(b.id,best.gi);
       b.stunnedUntil=now+1400; b.path=null;
-      mpSend({t:'take',f:b.id,kind:'good',i:bi,round:MP.round,v:best.g.price});
+      mpSend({t:'take',f:b.id,kind:'good',i:bi,round:MP.round,gi:best.gi,v:best.g.price});
       updateShopHud();
     }
   }
@@ -3657,7 +3834,7 @@ function mpLeave(){
   MP.players={}; MP.roster=[]; MP.on=false; MP.started=false; MP.ended=false; MP.endSent=false;
   MP.taggedId=null; MP.finishers=[]; MP.outs={}; MP.meFinished=false; MP.meOut=false; MP.raceEndAt=0;
   MP.treasure=null; MP.bots=null; MP.twinSent=false;
-  MP.itPower=null; MP.hp={}; MP.itRegenAt=0; MP.whistleHolder=null; MP.carts={}; MP.shopEndSent=false;
+  MP.itPower=null; MP.hp={}; MP.itRegenAt=0; MP.whistleHolder=null; MP.carts={}; MP.cartList={}; MP.shopEndSent=false; MP.robCoolUntil=0;
   $('cartWrap').style.display='none';
   G.invisUntil=0; G.skillCoolUntil=0; G.radarPings=null;
   G.smellMarks=null; G.smellTarget=null; G.smellPath=null; $('smellHud').style.display='none';
@@ -3665,7 +3842,7 @@ function mpLeave(){
   G.whistles=0; $('whistleBtn').style.display='none';
   G.stunnedUntil=0; G.treasureMesh=null; G.myGem=null;
   $('stunOverlay').style.display='none'; $('treasureBanner').style.display='none';
-  $('atkBtn').style.display='none';
+  $('atkBtn').style.display='none'; $('robBtn').style.display='none';
   $('tagBanner').style.display='none';
   $('mpModal').style.display='none'; $('mpResult').style.display='none';
   $('mpSetup').style.display='block'; $('mpLobby').style.display='none';
