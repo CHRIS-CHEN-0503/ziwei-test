@@ -72,8 +72,15 @@
 
 ## 操作
 
-- **平板 / 手機**：左半邊拖曳＝虛擬搖桿移動；右半邊拖曳＝轉視角；點小地圖放大。
-- **電腦**：WASD / 方向鍵移動，Q / E 或滑鼠拖曳轉視角，空白鍵用鐵鍬。
+- **平板 / 手機**：左半邊拖曳＝虛擬搖桿移動；右半邊拖曳＝轉視角；點小地圖放大；俯視時雙指開合（或＋－按鈕）拉近拉遠。
+- **電腦**：
+  - `WASD` / 方向鍵：移動
+  - 滑鼠按住畫面右半邊拖曳，或 `Q` / `E`：轉視角
+  - `空白鍵`：用鐵鍬敲牆
+  - `F`：用風箏飛牆
+  - `M`：開／關大地圖
+  - `V`：切換視角
+  - 俯視時滾輪或 `+` / `-`：拉近拉遠
 
 ## 後台設定（標題畫面 ⚙️）
 
@@ -83,7 +90,7 @@
 - 飽足感可以撐幾分鐘（1 ～ 10，預設 3，歸零＝闖關失敗）
 - 開放的視角（勾選第一人稱／第三人稱／俯視，單機模式生效；多人固定第一人稱）
 - 多人連線伺服器網址（MQTT over WebSocket）
-- 迷宮大小（11 / 13 / 15）
+- 迷宮大小（11 / 13 / 15 / 特大 19 / 超大 25）
 - 預設音樂開關
 - 雲端分數牆 API 網址（見下方）
 
@@ -95,7 +102,22 @@
 
 ## 🏆 雲端分數牆（讓所有玩家互相看到紀錄）
 
-預設分數只存在各自裝置的 localStorage。想讓大家共用一面分數牆，最簡單免費的做法是 **Google Apps Script**：
+預設分數只存在各自裝置的 localStorage。想共用一面分數牆有兩種免費做法：
+
+### 方法一（推薦）：部署到 Cloudflare Pages，內建分數 API 直接生效
+
+這個 repo 已附好 `functions/api/scores.js`（Cloudflare Pages Function），**不需要另外寫任何 API**：
+
+1. 到 [Cloudflare Pages](https://pages.cloudflare.com) → Create a project → 連接這個 GitHub repo。
+   Build 設定全部留空（純靜態網站），Deploy。
+2. Cloudflare dashboard → Workers & Pages → KV → Create namespace（名字隨意，例如 `maze-scores`）。
+3. 回到 Pages 專案 → Settings → Bindings → Add → KV namespace，
+   **Variable name 填 `SCORES`**，選剛剛建立的 namespace，Save 後重新部署一次。
+4. 完成！遊戲會自動偵測同網域的 `/api/scores`，分數牆立刻變成所有玩家共享，後台的 API 網址欄位保持空白即可。
+
+（沒綁 KV 也能正常部署，只是分數牆維持各裝置本機模式。多人連線與 Cloudflare 無關，走的是 MQTT 伺服器。）
+
+### 方法二：放在 GitHub Pages 等其他靜態空間，用 Google Apps Script
 
 1. 到 [script.google.com](https://script.google.com) 建立新專案，貼上：
 
@@ -133,5 +155,5 @@ function doPost(e) {
 
 - Three.js（`lib/three.min.js`，本地載入不依賴 CDN）。
 - 牆壁用 InstancedMesh 一次繪製，貼圖為程序化 Canvas 貼圖，行動裝置效能友善。
-- 音樂與音效全部用 WebAudio 即時合成（每個關卡不同調性的電子琶音），之後要換自己的音樂，改 `AudioEng.startMusic` / `SONGS` 即可。
+- 音樂與音效全部用 WebAudio 即時合成，五個關卡五種曲風：城堡＝鐘樓圓舞曲、草原＝大調快板、山洞＝回音慢板＋水滴聲、森林＝木笛五聲音階＋鳥鳴、迷霧＝小調幽靈慢板。要換自己的音樂改 `AudioEng.SONGS` / `startMusic` 即可。
 - 迷宮：遞迴回溯完美迷宮 + 8% 打通率做環路；變形時從玩家所在格子重新生長。
