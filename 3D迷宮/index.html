@@ -168,6 +168,7 @@ button{font-family:var(--font);}
   font-size:2rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
 }
 #atkBtn:active{transform:scale(.9);}
+.pressing{transform:scale(.88)!important;filter:brightness(1.15);}
 #robBtn{
   position:absolute;right:calc(100px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));width:80px;height:80px;border-radius:50%;
   border:4px solid #fff;background:linear-gradient(145deg,#bdbdbd,#757575);color:#fff;
@@ -554,7 +555,7 @@ button{font-family:var(--font);}
 <div class="modal" id="helpModal">
   <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
     <h3 style="text-align:center;">❓ 玩法說明</h3>
-    <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。</div>
+    <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。<b>一邊拖搖桿一邊按右下角的按鈕（攻擊／搶奪／結帳／鐵鍬…）都可以，不用停下來。</b></div>
     <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）或搶奪商品（搶購）· <b>B</b> 結帳（搶購）· <b>C</b> 隱身技能 · <b>G</b> 集合口哨 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
     <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
@@ -602,7 +603,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.15.0';
+const GAME_VERSION='1.15.1';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',roomMax:3,goodsCount:16,shopMin:2.5,cartFull:400,views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -2188,6 +2189,23 @@ function updateCamera(dt){
 /* =====================================================
    觸控：左搖桿 + 右視角拖曳 + 小地圖
    ===================================================== */
+/* 遊戲中的動作鈕：手機上一邊拖搖桿一邊按時，瀏覽器不一定會送出 click，
+   所以直接綁 touchstart，並用時間戳避免同一下被 click 再觸發一次。 */
+function bindActionBtn(el,fn){
+  let lastTouch=0;
+  el.addEventListener('touchstart',e=>{
+    e.preventDefault(); e.stopPropagation();
+    lastTouch=performance.now();
+    el.classList.add('pressing'); setTimeout(()=>el.classList.remove('pressing'),120);
+    try{navigator.vibrate&&navigator.vibrate(12);}catch(err){}
+    fn();
+  },{passive:false});
+  el.addEventListener('touchend',e=>{e.preventDefault();},{passive:false});
+  el.addEventListener('click',()=>{
+    if(performance.now()-lastTouch<700)return;   // 剛剛已經由觸控觸發過了
+    fn();
+  });
+}
 function setupTouch(){
   const zone=$('joyZone'), base=$('joyBase'), stick=$('joyStick');
   const setStick=(bx,by,sx,sy)=>{
@@ -3161,27 +3179,27 @@ function wireUI(){
       G.running=false;AudioEng.stopMusic();AudioEng.stopItemLoop();switchScreen('titleScreen');
     }
   };
-  $('viewToggle').onclick=()=>{
+  bindActionBtn($('viewToggle'),()=>{
     const order=allowedViews();
     if(order.length<2)return;
     G.view=order[(order.indexOf(G.view)+1)%order.length];
     showToast(G.view==='tp'?'🎥 第三人稱':(G.view==='fp'?'👀 第一人稱':'🗺️ 俯視視角'));
-  };
-  $('soundToggle').onclick=()=>{
+  });
+  bindActionBtn($('soundToggle'),()=>{
     G.muted=!G.muted; updateSoundBtn();
     if(G.muted){AudioEng.stopMusic();AudioEng.stopItemLoop();}
-    else if(G.running)AudioEng.startMusic(LEVELS[G.lvlIdx].music);
-  };
-  $('shovelBtn').onclick=useShovel;
-  $('kiteBtn').onclick=useKite;
-  $('whistleBtn').onclick=useWhistle;
-  $('atkBtn').onclick=doAttack;
-  $('robBtn').onclick=doRob;
-  $('coBtn').onclick=startCheckout;
-  $('skillBtn').onclick=useSkill;
+    else if(G.running)AudioEng.startMusic(isShop()?SHOP_THEME.music:LEVELS[G.lvlIdx].music);
+  });
+  bindActionBtn($('shovelBtn'),useShovel);
+  bindActionBtn($('kiteBtn'),useKite);
+  bindActionBtn($('whistleBtn'),useWhistle);
+  bindActionBtn($('atkBtn'),doAttack);
+  bindActionBtn($('robBtn'),doRob);
+  bindActionBtn($('coBtn'),startCheckout);
+  bindActionBtn($('skillBtn'),useSkill);
   const zoomBy=d=>{G.topZoom=Math.max(10,Math.min(48,G.topZoom+d));};
-  $('zoomInBtn').onclick=()=>zoomBy(-5);
-  $('zoomOutBtn').onclick=()=>zoomBy(5);
+  bindActionBtn($('zoomInBtn'),()=>zoomBy(-5));
+  bindActionBtn($('zoomOutBtn'),()=>zoomBy(5));
   window.addEventListener('wheel',e=>{
     if(G.view==='top'&&$('gameScreen').classList.contains('active'))zoomBy(e.deltaY*0.02);
   },{passive:true});
@@ -3189,6 +3207,7 @@ function wireUI(){
   let pinchDist=0;
   $('gameScreen').addEventListener('touchmove',e=>{
     if(G.view!=='top'||e.touches.length<2)return;
+    for(const t of e.touches)if(t.target&&t.target.closest&&t.target.closest('button'))return; // 手指在按鈕上不算縮放
     const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
     if(pinchDist)zoomBy((pinchDist-d)*0.08);
     pinchDist=d;
