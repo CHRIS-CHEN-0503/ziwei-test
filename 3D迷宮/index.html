@@ -176,6 +176,19 @@ button{font-family:var(--font);}
 }
 #robBtn.ready{background:linear-gradient(145deg,#ffb74d,#ef6c00);animation:robPulse .7s infinite;}
 #robBtn:active{transform:scale(.9);}
+#coBtn{
+  position:absolute;right:calc(196px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));
+  width:80px;height:80px;border-radius:50%;
+  border:4px solid #fff;background:linear-gradient(145deg,#4dd0e1,#00838f);color:#fff;
+  font-size:2rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
+}
+#coBtn .cnt{
+  position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+  background:#fff;color:#00838f;border-radius:10px;padding:0 6px;font-size:.75rem;font-weight:bold;white-space:nowrap;
+}
+#coBtn.ready{animation:robPulse .7s infinite;}
+#coBtn.busy{background:linear-gradient(145deg,#ffd54f,#ef6c00);}
+#coBtn:active{transform:scale(.9);}
 @keyframes robPulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 10px rgba(255,152,0,.35),0 4px 14px rgba(0,0,0,.5);}}
 #skillBtn{
   position:absolute;right:calc(186px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));
@@ -379,6 +392,7 @@ button{font-family:var(--font);}
   <button id="whistleBtn">📣<span class="cnt" id="whistleCnt">1</span></button>
   <button id="atkBtn">🐾</button>
   <button id="robBtn">🤏</button>
+  <button id="coBtn">💳<span class="cnt" id="coCnt"></span></button>
   <button id="skillBtn">🫥</button>
   <div id="stunOverlay"></div>
   <div id="joyZone"><div id="joyBase"></div><div id="joyStick"></div></div>
@@ -508,6 +522,7 @@ button{font-family:var(--font);}
     <div class="adm-row"><label>👃 鬼抓人：鬼的嗅覺範圍（格）</label><input type="number" id="cfgSmell" min="1" max="8" step="1"></div>
     <div class="adm-row"><label>🛒 搶購模式：架上商品數量</label><input type="number" id="cfgGoods" min="6" max="60" step="1"></div>
     <div class="adm-row"><label>🛒 搶購模式：一場幾分鐘</label><input type="number" id="cfgShopMin" min="1" max="10" step="0.5"></div>
+    <div class="adm-row"><label>🛒 搶購模式：購物車裝滿（100% 重量）是多少 $</label><input type="number" id="cfgCartFull" min="100" max="2000" step="50"></div>
     <div class="adm-row" style="flex-direction:column;align-items:stretch;">
       <label>👁️ 開放的視角（單機與多人都適用）</label>
       <div style="display:flex;gap:12px;justify-content:center;margin-top:4px;">
@@ -540,7 +555,7 @@ button{font-family:var(--font);}
   <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
     <h3 style="text-align:center;">❓ 玩法說明</h3>
     <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。</div>
-    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）或搶奪商品（搶購）· <b>C</b> 隱身技能 · <b>G</b> 集合口哨 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
+    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）或搶奪商品（搶購）· <b>B</b> 結帳（搶購）· <b>C</b> 隱身技能 · <b>G</b> 集合口哨 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
     <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
     <div>🎁 道具（每次變形會重新出現）：</div>
@@ -568,6 +583,8 @@ button{font-family:var(--font);}
     <div>🛒 <b>搶購模式</b>（單機跟兩個電腦玩，或多人連線）：場景變成<b>大賣場</b>——低天花板、輕鋼架、日光燈盤、會轉的吊扇、擺滿商品的<b>矮貨架</b>、靠牆的收銀台。因為貨架很矮，所以看得到遠方的商品和其他人，但走法還是迷宮！地上到處是商品：🍬糖果 $10、🍞麵包 $20、🥛牛奶 $30、🧃果汁 $35、🍫巧克力 $45、🧀起司 $60、🍖大肉排 $80、🦞龍蝦 $120，撿到就進購物車。<b>這個模式沒有任何技能</b>（不能攻擊、不能隱身、職業能力也不算），道具只有 ⚡加速藥水 和 😜調皮鬼；<b>大家的速度都一樣，而且比平常快 1.2 倍</b>。商品被搶走後過幾秒會在別的地方<b>重新上架</b>，時間到<b>誰的購物車金額最多誰就贏</b>！</div>
     <div style="padding-left:14px;">
       🛒 <b>每個人身前都推著一台購物車</b>：一開始是空的，買越多車上堆得越滿（最多 8 格，顏色就是你買到的東西），被搶走東西車上也會跟著變少——遠遠看就知道誰買得最多。<br>
+      🐢 <b>車越重跑越慢</b>：車上金額到 50% 速度從 1.2 掉到 1.1、75% 剩 1.0、裝滿只剩 0.9（裝滿是多少 $ 可以在遊戲設定調，預設 $400）。<br>
+      💳 <b>結帳檯</b>：場上有<b>兩台收銀機</b>（雙人局只有一台），位置在小地圖上會標出來，有藍色光柱和「結帳」招牌，<b>迷宮變換時也會換位置</b>。走到旁邊會出現<b>結帳鈕</b>（電腦按 <b>B</b>），按下去站著等 <b>5 秒</b>就結帳完成：車上的錢變成<b>已結帳</b>（安全入帳）、購物車清空、速度恢復。<b>結帳中不會被搶</b>，但也不能移動；迷宮變換會中斷結帳。最後計分是<b>已結帳 ＋ 車上</b>的總和。<br>
       🤏 <b>搶奪</b>：從對手身邊經過時按右下角的<b>搶奪鈕</b>（電腦按 <b>X</b>），會<b>隨機搶走對方購物車裡的一件商品</b>。有對手在旁邊時按鈕會變成橘色閃爍，離太遠會「搶空了」。搶到會顯示<b>搶到什麼</b>，被搶的人也會看到<b>被搶走什麼</b>。冷卻 1.5 秒；電腦也會搶你的東西（開場 8 秒後才開始，之後每 8 秒一次）。
     </div>
     <div>👥 <b>多人連線</b>（2～5 人，房主可選人數上限，視角可自由切換）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了；💎 尋寶：搶寶藏帶出口；🛒 搶購：比誰的購物車金額多（大地圖人數不足電腦會補位（最多補到房間上限））。</div>
@@ -585,10 +602,10 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.14.0';
+const GAME_VERSION='1.15.0';
 
 /* ---------- 設定（後台可調） ---------- */
-const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',roomMax:3,goodsCount:16,shopMin:2.5,views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
+const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',roomMax:3,goodsCount:16,shopMin:2.5,cartFull:400,views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
 let CFG={...DEFAULT_CFG};
 try{const s=JSON.parse(localStorage.getItem('maze3d_cfg')||'{}');CFG={...DEFAULT_CFG,...s};}catch(e){}
 function saveCfg(){localStorage.setItem('maze3d_cfg',JSON.stringify(CFG));}
@@ -662,6 +679,8 @@ const GOODS=[
  {emoji:'🍖',name:'大肉排', price:80, weight:5,  color:0xef9a9a},
  {emoji:'🦞',name:'龍蝦',   price:120,weight:3,  color:0xff7043},
 ];
+const CHECKOUT_MS=5000;      // 結帳要站著等幾秒
+const CHECKOUT_RANGE=2.6;    // 走多近才會出現結帳鈕
 const CART_SLOTS=8;          // 購物車最多堆幾格（兩層 × 每層 4 格）
 const CART_PER_SLOT=60;      // 每多 $60 就多堆一格
 const SHOP_RESTOCK_MS=6000; // 商品被搶走後幾秒重新上架
@@ -670,7 +689,19 @@ const SHOP_ROB_RANGE=2.4;   // 搶奪商品的距離（公尺）
 const SHOP_ROB_CD=1500;     // 搶奪冷卻
 function isShop(){ return MP.on&&MP.mode==='shop'; }
 function skillsAllowed(){ return !isShop(); } // 搶購模式沒有任何技能
-function shopSpeed(){ return isShop()?SHOP_SPEED_MUL:1; }
+/* 購物車有多重（0～1）：用車上「還沒結帳」的金額算 */
+function cartLoad(id){
+  const full=Math.max(50,CFG.cartFull||400);
+  return Math.min(1,(MP.carts[id!==undefined?id:MP.id]||0)/full);
+}
+/* 越重跑越慢：<50% 是 1.2 倍，50% 掉到 1.1、75% 剩 1.0、裝滿只剩 0.9 */
+function loadSpeed(load){
+  if(load>=1)return 0.9;
+  if(load>=0.75)return 1.0;
+  if(load>=0.5)return 1.1;
+  return SHOP_SPEED_MUL;
+}
+function shopSpeed(){ return isShop()?loadSpeed(cartLoad(MP.id)):1; }
 function jobPerk(key){ return isShop()?undefined:CH()[key]; } // 搶購模式大家能力一樣
 /* 把第 i 個商品放到某格（補貨也共用；房主決定位置後廣播，大家畫面一致） */
 function placeGood(i,gi,cx,cy){
@@ -724,7 +755,7 @@ const G={
  satiety:100, drainPerSec:100/180, hungerMul:1, hungerOn:true, hungerLethal:true, starvedNoted:false,
  kites:0, whistles:0, visionUntil:0, owlUntil:0, viewBefore:null, topZoom:22,
  smellMarks:null, smellTarget:null, smellPath:null, smellPathAt:0,
- stunnedUntil:0, atkCoolUntil:0, spMode:'classic',
+ stunnedUntil:0, atkCoolUntil:0, spMode:'classic', coUntil:0, registers:[],
  visited:null, solutionPath:null, mapUntil:0, compassUntil:0, ghostUntil:0,
  muted:!CFG.musicOn,
 };
@@ -1514,6 +1545,21 @@ function spawnItems(){
       placed=true;
     }
   }
+  // 🛒 搶購模式：收銀機（雙人一台、其他兩台；每次迷宮變換都會換位置）
+  G.registers=[];
+  if(isShop()){
+    const want=(MP.roster&&MP.roster.length<=2)?1:2;
+    const far=Math.max(3,Math.floor(Math.min(G.mazeW,G.mazeH)/2));
+    let rt=0;
+    while(G.registers.length<want&&rt<400){
+      rt++;
+      const cx=Math.floor(RNG()*G.mazeW), cy=Math.floor(RNG()*G.mazeH);
+      const key=cx+','+cy; if(used.has(key))continue;
+      if(G.registers.some(r=>Math.abs(r.cx-cx)+Math.abs(r.cy-cy)<far))continue; // 兩台要離得夠遠
+      used.add(key);
+      G.registers.push(makeRegister(G.registers.length+1,cx,cy));
+    }
+  }
   // 🛒 搶購模式：路徑上的商品
   G.goods=[];
   if(isShop()){
@@ -1917,6 +1963,7 @@ function collideMove(nx,nz){
 let stepAcc=0;
 function updatePlayer(dt,t){
   if(G.frozen||performance.now()<G.stunnedUntil)return;
+  if(isCheckingOut(MP.id)){ if(G.myCart)G.myCart.position.z=Math.max(0.24,Math.min(0.62,frontClear(1.05)-0.36)); return; } // 結帳中站在收銀機前
   // 讀輸入：搖桿 or 鍵盤
   let ix=joy.dx, iy=joy.dy;
   if(!joy.active){
@@ -2189,6 +2236,7 @@ function setupTouch(){
     if(c==='Space'){e.preventDefault();useShovel();}
     if(c==='KeyF')useKite();
     if(c==='KeyX'){ if(isShop())doRob(); else doAttack(); }
+    if(c==='KeyB'&&isShop())startCheckout();
     if(c==='KeyC')useSkill();
     if(c==='KeyG')useWhistle();
     if(c==='KeyV')$('viewToggle').click();
@@ -2234,16 +2282,36 @@ function drawMap(cv,big){
       ctx.fillText(it.type.emoji,gx(c.x)+cw/2,gy(c.y)+ch*0.8);
     }
   }
-  // 出口
-  ctx.font=(big?26:12)+'px sans-serif'; ctx.textAlign='center';
-  ctx.fillText('🚩',gx(G.exitCell.x)+cw/2,gy(G.exitCell.y)+ch*0.85);
-  // 🛒 搶購模式：商品位置（大賣場本來就看得到，地圖同步標示）
-  if(isShop()&&G.goods){
-    ctx.font=(big?16:9)+'px sans-serif'; ctx.textAlign='center';
-    for(const gd of G.goods){
-      if(gd.taken)continue;
-      const c=worldToCell(gd.x,gd.z);
-      ctx.fillText(gd.g.emoji,gx(c.x)+cw/2,gy(c.y)+ch*0.8);
+  // 重要地標（出口 / 收銀機 / 寶藏）：小地圖也要看得清楚，不用特地打開大地圖
+  const mf=big?26:Math.max(16,cw*1.35);           // 小地圖用格子大小算字級，才不會小到看不見
+  const mark=(emoji,cx,cy)=>{
+    const px=gx(cx)+cw/2, py=gy(cy)+ch/2;
+    ctx.beginPath(); ctx.arc(px,py,mf*0.52,0,6.28);
+    ctx.fillStyle='rgba(12,10,34,.82)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=big?2:1.5; ctx.stroke();
+    ctx.font=mf+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(emoji,px,py+mf*0.06);
+    ctx.textBaseline='alphabetic';
+  };
+  // 出口（搶購模式沒有出口就不畫）
+  if(!isShop())mark('🚩',G.exitCell.x,G.exitCell.y);
+  // 🛒 搶購模式：收銀機 + 商品位置
+  if(isShop()){
+    for(const r of (G.registers||[]))mark('💳',r.cx,r.cy);
+    if(G.goods){
+      for(const gd of G.goods){
+        if(gd.taken)continue;
+        const c=worldToCell(gd.x,gd.z);
+        const px=gx(c.x)+cw/2, py=gy(c.y)+ch/2;
+        if(big){
+          ctx.font='16px sans-serif'; ctx.textAlign='center';
+          ctx.fillText(gd.g.emoji,px,py+5);
+        }else{                                    // 小地圖畫成商品顏色的點，才看得出來
+          ctx.beginPath(); ctx.arc(px,py,Math.max(2.5,cw*0.24),0,6.28);
+          ctx.fillStyle='#'+gd.g.color.toString(16).padStart(6,'0'); ctx.fill();
+          ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=1; ctx.stroke();
+        }
+      }
     }
   }
   // 鬼抓人雷達：顯示大家的位置（喵喵能力 / 鬼的雷達能力）
@@ -2260,7 +2328,7 @@ function drawMap(cv,big){
   if(MP.on&&MP.mode==='treasure'&&MP.treasure){
     ctx.font=(big?24:12)+'px sans-serif';
     if(!MP.treasure.holder){
-      ctx.fillText('💎',gx(MP.treasure.cell.x)+cw/2,gy(MP.treasure.cell.y)+ch*0.8);
+      mark('💎',MP.treasure.cell.x,MP.treasure.cell.y);
     }else if(MP.treasure.lastPing){
       const mx=pad+(MP.treasure.lastPing.x/G.cell+(W-1)/2)*cw+cw*0.5;
       const my=pad+(MP.treasure.lastPing.z/G.cell+(H-1)/2)*ch+ch*0.5;
@@ -2305,6 +2373,28 @@ function updateTopMask(){
   el.style.background=`radial-gradient(circle at ${cx.toFixed(0)}px ${cy.toFixed(0)}px, rgba(0,0,0,0) ${r0.toFixed(0)}px, ${col} ${r1.toFixed(0)}px)`;
 }
 
+/* 🛒 收銀機：櫃檯＋輸送帶＋高高的招牌（貨架很矮，遠遠就看得到） */
+function makeRegister(no,cx,cy){
+  const p=cellToWorld(cx,cy);
+  const g=new THREE.Group(); g.position.set(p.x,0,p.z);
+  const M=c=>new THREE.MeshLambertMaterial({color:c});
+  const put=(w,h,d,x,y,z,c)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);g.add(m);return m;};
+  put(1.9,0.9,0.9, 0,0.45,0, 0xd7e3ec);          // 櫃檯
+  put(1.6,0.08,0.5, 0,0.93,0, 0x546e7a);         // 輸送帶
+  put(0.5,0.34,0.4, 0.62,1.12,0, 0x455a64);      // 收銀機台
+  const card=makeEmojiSprite('💳',0.7); card.position.set(0.62,1.45,0); g.add(card);
+  put(0.09,2.3,0.09, -0.8,1.15,0, 0x90a4ae);     // 招牌柱
+  const sign=makeTextSprite('💳 結帳 '+no); sign.scale.set(3.0,0.76,1); sign.position.set(-0.8,2.75,0); g.add(sign);
+  // 直達天花板的光柱：貨架擋不住，全場都看得到收銀機在哪
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.45,3.1,10,1,true),
+    new THREE.MeshBasicMaterial({color:0x4dd0e1,transparent:true,opacity:0.38,side:THREE.DoubleSide,depthWrite:false}));
+  beam.position.y=1.55; g.add(beam);
+  const glow=new THREE.Mesh(new THREE.TorusGeometry(1.25,0.09,8,24),
+    new THREE.MeshBasicMaterial({color:0x4dd0e1,transparent:true,opacity:0.85}));
+  glow.rotation.x=Math.PI/2; glow.position.y=0.12; g.add(glow);
+  itemGroup.add(g);
+  return {cx,cy,x:p.x,z:p.z,group:g,glow,sign,beam};
+}
 /* 🛒 每個人身前的購物車：一開始空空的，買越多堆得越滿 */
 function buildCart(){
   const g=new THREE.Group();
@@ -2369,6 +2459,71 @@ function cartAdd(id,gi){
   MP.carts[id]=(MP.carts[id]||0)+g.price;
 }
 function fromMyBot(id){ return !!(MP.host&&MP.bots&&MP.bots.some(b=>b.id===id)); }
+function shopTotal(id){ return (MP.banked[id]||0)+(MP.carts[id]||0); }   // 已結帳＋還在車上
+function isCheckingOut(id){ return performance.now()<(id===MP.id?G.coUntil:(MP.coUntil[id]||0)); }
+/* 離最近的收銀機多遠 */
+function nearRegister(x,z){
+  let best=null,bd=1e9;
+  for(const r of (G.registers||[])){
+    const d=(r.x-x)**2+(r.z-z)**2;
+    if(d<bd){bd=d;best=r;}
+  }
+  return best?{reg:best,dist:Math.sqrt(bd)}:null;
+}
+/* 💳 結帳：站在收銀機旁邊按鈕，等 5 秒把車上的東西結掉（結帳中不會被搶） */
+function updateCheckoutBtn(){
+  const btn=$('coBtn');
+  const on=isShop()&&MP.started&&!MP.ended;
+  if(!on){btn.style.display='none';return;}
+  if(isCheckingOut(MP.id)){
+    const left=Math.ceil((G.coUntil-performance.now())/1000);
+    btn.style.display='block'; btn.classList.add('busy'); btn.classList.remove('ready');
+    btn.innerHTML='💳<span class="cnt">'+left+'</span>';
+    return;
+  }
+  btn.classList.remove('busy');
+  const near=nearRegister(G.px,G.pz);
+  const can=near&&near.dist<CHECKOUT_RANGE&&(MP.carts[MP.id]||0)>0;
+  btn.style.display=can?'block':'none';
+  btn.classList.toggle('ready',!!can);
+  btn.innerHTML='💳<span class="cnt">$'+(MP.carts[MP.id]||0)+'</span>';
+}
+function startCheckout(){
+  if(!isShop()||!MP.started||MP.ended||G.frozen)return;
+  if(isCheckingOut(MP.id))return;
+  const near=nearRegister(G.px,G.pz);
+  if(!near||near.dist>=CHECKOUT_RANGE){showToast('💳 要走到收銀機旁邊才能結帳',1400);return;}
+  if(!(MP.carts[MP.id]||0)){showToast('🤷 購物車是空的，沒東西可以結',1400);return;}
+  G.coUntil=performance.now()+CHECKOUT_MS;
+  G.coCancelRound=MP.round;
+  mpSend({t:'costart',ms:CHECKOUT_MS});
+  AudioEng.sfxUse();
+  showToast('💳 結帳中…請稍等 5 秒（結帳時不會被搶）',2400);
+}
+function finishCheckout(){
+  const v=MP.carts[MP.id]||0;
+  G.coUntil=0;
+  if(!v)return;
+  mpSend({t:'codone',v});
+  AudioEng.sfxCoin();
+}
+function cancelCheckout(msg){
+  if(!isCheckingOut(MP.id))return;
+  G.coUntil=0; mpSend({t:'coend'});
+  if(msg)showToast(msg,1800);
+}
+/* 收銀機的招牌會轉、光圈會呼吸，遠遠就看得到 */
+function animRegisters(t){
+  for(const r of (G.registers||[])){
+    r.glow.rotation.z=t*1.2;
+    r.glow.material.opacity=0.55+Math.sin(t*3)*0.3;
+    // 走近時光柱與招牌淡出，才不會擋住結帳的畫面
+    const d=Math.hypot(r.x-G.px,r.z-G.pz);
+    const k=Math.max(0,Math.min(1,(d-2.4)/4));
+    r.beam.visible=k>0.03; r.beam.material.opacity=0.38*k;
+    r.sign.material.opacity=Math.max(0.25,k);
+  }
+}
 /* 🤏 搶奪：靠近對手時按按鈕（電腦按 X），隨機搶走對方購物車裡的一件商品 */
 function robTarget(){
   if(!isShop()||!MP.started||MP.ended||G.frozen)return null;
@@ -2395,6 +2550,7 @@ function doRob(){
   MP.robCoolUntil=now+SHOP_ROB_CD;
   const to=robTarget();
   if(!to){ showToast('💨 搶空了！要靠近對手才搶得到',1200); return; }
+  if(isCheckingOut(to)){ showToast('💳 '+mpName(to)+' 正在結帳，搶不到！',1600); return; }
   const lst=MP.cartList[to]||[];
   if(!lst.length){ showToast('🤷 '+mpName(to)+' 的購物車是空的！',1400); return; }
   const idx=Math.floor(Math.random()*lst.length);
@@ -2418,13 +2574,16 @@ function updateShopHud(){
   refreshCarts();
   $('cartWrap').style.display=on?'':'none';
   if(!on)return;
-  const mine=MP.carts[MP.id]||0;
+  const cart=MP.carts[MP.id]||0, bank=MP.banked[MP.id]||0, mine=bank+cart;
   $('cartAmt').textContent='$'+mine;
-  const sorted=MP.roster.map(r=>({id:r.id,v:MP.carts[r.id]||0})).sort((a,b)=>b.v-a.v);
+  const sorted=MP.roster.map(r=>({id:r.id,v:shopTotal(r.id)})).sort((a,b)=>b.v-a.v);
   const rank=sorted.findIndex(x=>x.id===MP.id)+1;
   const left=(G.goods||[]).filter(g=>!g.taken).length;
   const top=sorted[0];
-  $('cartRank').textContent='第'+rank+'名'+((top&&top.id!==MP.id)?('｜領先 $'+top.v):'')+'｜剩 '+left+' 件';
+  const load=Math.round(cartLoad(MP.id)*100);
+  const wt=load>=100?'🐢滿了':(load>=75?'🐌重':(load>=50?'😮‍💨有點重':''));
+  $('cartRank').textContent='第'+rank+'名'+((top&&top.id!==MP.id)?('｜領先 $'+top.v):'')
+    +'｜車上 $'+cart+'（'+load+'%'+(wt?' '+wt:'')+'）｜剩 '+left+' 件';
 }
 
 /* =====================================================
@@ -2545,6 +2704,7 @@ function updateShiftTimer(){
   }
 }
 function doShift(){
+  if(isShop())cancelCheckout('🌀 迷宮變換，結帳中斷了！收銀機也換位置囉');
   G.shifting=true; G.frozen=true;
   $('shiftWarn').style.display='flex';
   AudioEng.sfxAlarm(); setTimeout(()=>AudioEng.sfxAlarm(),700);
@@ -2831,7 +2991,7 @@ function startGame(){
   const cGroup=new THREE.Group(); cGroup.add(compass3D); compass3D.position.z=0.35;
   scene.add(cGroup); compass3D=cGroup;
   // 狀態重設
-  G.items=[]; G.foods=[]; G.goods=[]; G.effects={}; G.shovels=jobPerk('startShovels')||0; G.starBonus=0; G.timeOffset=0;
+  G.items=[]; G.foods=[]; G.goods=[]; G.registers=[]; G.coUntil=0; G.effects={}; G.shovels=jobPerk('startShovels')||0; G.starBonus=0; G.timeOffset=0;
   G.satiety=100; G.hungerMul=1;
   G.hungerOn=!(MP.on&&(MP.mode==='treasure'||MP.mode==='shop')); // 尋寶／搶購不用擔心肚子餓
   G.hungerLethal=!(MP.on&&MP.mode==='tag');        // 鬼抓人：肚子餓只會變慢，不會失敗
@@ -2914,7 +3074,11 @@ function loop(tms){
   }
   if(MP.on&&MP.started)mpFrame(dt);
   updateShiftTimer();
-  updateRobBtn();
+  updateRobBtn(); updateCheckoutBtn();
+  if(isShop()){
+    animRegisters(t);
+    if(G.coUntil&&performance.now()>=G.coUntil)finishCheckout();
+  }
   updatePlayer(dt,t);
   updateCamera(dt);
   updateParticles(dt);
@@ -3013,6 +3177,7 @@ function wireUI(){
   $('whistleBtn').onclick=useWhistle;
   $('atkBtn').onclick=doAttack;
   $('robBtn').onclick=doRob;
+  $('coBtn').onclick=startCheckout;
   $('skillBtn').onclick=useSkill;
   const zoomBy=d=>{G.topZoom=Math.max(10,Math.min(48,G.topZoom+d));};
   $('zoomInBtn').onclick=()=>zoomBy(-5);
@@ -3045,7 +3210,7 @@ function wireUI(){
     $('cfgShiftMin').value=CFG.shiftMin; $('cfgItems').value=CFG.itemCount;
     $('cfgFood').value=CFG.foodCount; $('cfgHunger').value=CFG.hungerMin;
     $('cfgStun').value=CFG.stunSec; $('cfgPing').value=CFG.pingSec; $('cfgSmell').value=CFG.smellCells;
-    $('cfgGoods').value=CFG.goodsCount; $('cfgShopMin').value=CFG.shopMin;
+    $('cfgGoods').value=CFG.goodsCount; $('cfgShopMin').value=CFG.shopMin; $('cfgCartFull').value=CFG.cartFull;
     $('cfgVtp').checked=!!CFG.views.tp; $('cfgVfp').checked=!!CFG.views.fp; $('cfgVtop').checked=!!CFG.views.top;
     $('cfgSize').value=CFG.mazeSize; $('cfgMusic').value=CFG.musicOn?'1':'0';
     $('cfgApi').value=CFG.apiUrl; $('cfgBroker').value=CFG.broker;
@@ -3061,6 +3226,7 @@ function wireUI(){
     CFG.smellCells=Math.max(1,Math.min(8,parseInt($('cfgSmell').value)||3));
     CFG.goodsCount=Math.max(6,Math.min(60,parseInt($('cfgGoods').value)||16));
     CFG.shopMin=Math.max(1,Math.min(10,parseFloat($('cfgShopMin').value)||2.5));
+    CFG.cartFull=Math.max(100,Math.min(2000,parseInt($('cfgCartFull').value)||400));
     CFG.views={tp:$('cfgVtp').checked?1:0,fp:$('cfgVfp').checked?1:0,top:$('cfgVtop').checked?1:0};
     if(!CFG.views.tp&&!CFG.views.fp&&!CFG.views.top)CFG.views={fp:1,tp:1,top:1}; // 全關＝視同全開
     applyViewConfig();
@@ -3185,7 +3351,8 @@ const MP={
   taggedId:null, tagImmuneUntil:0, raceEndAt:0, finishers:[],
   meFinished:false, meOut:false,
   treasure:null, bots:null, stunSec:3, pingSec:3, twinSent:false,
-  itPower:null, hp:{}, itRegenAt:0, whistleHolder:null, carts:{}, cartList:{}, shopEndSent:false, robCoolUntil:0,
+  itPower:null, hp:{}, itRegenAt:0, whistleHolder:null, carts:{}, cartList:{}, banked:{}, coUntil:{},
+  shopEndSent:false, robCoolUntil:0,
   net:null, posTimer:null, helloTimer:null,
 };
 function mpTopic(){return 'ziwei-maze3d/'+MP.room;}
@@ -3287,7 +3454,7 @@ function mpHandle(m){
       MP.bots=null;
       if(MP.host&&(m.mode==='treasure'||m.mode==='tag'||m.mode==='shop')){
         MP.bots=m.players.filter(pl=>pl.bot).map(pl=>
-          ({id:pl.id,charIdx:pl.charIdx,x:0,z:0,cell:{x:0,y:0},h:0,path:null,pathI:0,goalKey:'',repathAt:0,stunnedUntil:0,atkAt:0,robAt:0}));
+          ({id:pl.id,charIdx:pl.charIdx,x:0,z:0,cell:{x:0,y:0},h:0,path:null,pathI:0,goalKey:'',repathAt:0,stunnedUntil:0,atkAt:0,robAt:0,coUntil:0,coPending:false}));
       }
       MP.finishers=[]; MP.outs={}; MP.raceEndAt=0; MP.meFinished=false; MP.meOut=false;
       G.lvlIdx=m.lvl;
@@ -3299,7 +3466,7 @@ function mpHandle(m){
         const wp=cellToWorld(b.cell.x,b.cell.y); b.x=wp.x; b.z=wp.z;
       }
       if(MP.mode==='shop'){
-        MP.carts={}; MP.cartList={}; MP.robCoolUntil=0;
+        MP.carts={}; MP.cartList={}; MP.banked={}; MP.coUntil={}; MP.robCoolUntil=0; G.coUntil=0;
         G.roundEndsAt=performance.now()+MP.roundMs; MP.shopEndSent=false;
         if(MP.bots)for(const b of MP.bots)b.robAt=performance.now()+8000; // 開場先讓大家好好買
         updateShopHud();
@@ -3448,6 +3615,24 @@ function mpHandle(m){
       }
       updateShopHud();
       break;}
+    case 'costart':
+      if(!MP.started||MP.mode!=='shop'||MP.ended)break;
+      MP.coUntil[m.f]=now+(m.ms||CHECKOUT_MS);
+      if(m.f!==MP.id)showToast('💳 '+mpName(m.f)+' 正在結帳…',1400);
+      break;
+    case 'coend':
+      MP.coUntil[m.f]=0;
+      break;
+    case 'codone':{
+      if(!MP.started||MP.mode!=='shop'||MP.ended)break;
+      MP.coUntil[m.f]=0;
+      const v=Math.max(0,Math.min(m.v||0,MP.carts[m.f]||0));
+      MP.banked[m.f]=(MP.banked[m.f]||0)+v;
+      MP.carts[m.f]=0; MP.cartList[m.f]=[];
+      if(m.f===MP.id)showToast('✅ 結帳完成！$'+v+' 已經入帳，購物車清空了',2400);
+      else showToast('💳 '+mpName(m.f)+' 結完帳了（$'+v+'）',1600);
+      updateShopHud();
+      break;}
     case 'restock':{
       if(!MP.started||MP.mode!=='shop'||MP.ended||m.round!==MP.round)break;
       if(!G.goods||!G.goods[m.i])break;
@@ -3459,13 +3644,16 @@ function mpHandle(m){
       MP.ended=true; G.frozen=true;
       AudioEng.stopMusic(); AudioEng.stopItemLoop();
       if(m.carts)MP.carts=m.carts;
-      const rows=MP.roster.map(r=>({name:r.name,id:r.id,v:MP.carts[r.id]||0})).sort((a,b)=>b.v-a.v);
+      if(m.banked)MP.banked=m.banked;
+      const rows=MP.roster.map(r=>({name:r.name,id:r.id,v:shopTotal(r.id),b:MP.banked[r.id]||0})).sort((a,b)=>b.v-a.v);
       const win=rows[0];
       if(win&&win.id===MP.id)AudioEng.sfxWin(); else AudioEng.sfxLose();
       const medals=['🥇','🥈','🥉'];
       let html='';
       rows.forEach((r,i)=>{
-        html+=`<div>${medals[i]||'🎖️'} ${escapeHtml(r.name)} — <b>$${r.v}</b>${r.id===MP.id?'（你）':''}</div>`;
+        html+=`<div>${medals[i]||'🎖️'} ${escapeHtml(r.name)} — <b>$${r.v}</b>`
+          +`<span style="font-size:.8rem;color:#8be9fd;">（已結帳 $${r.b}）</span>`
+          +`${r.id===MP.id?'（你）':''}</div>`;
       });
       $('cartWrap').style.display='none';
       showMPResults('🛒 搶購結果',html);
@@ -3620,7 +3808,7 @@ function mpFrame(dt){
     if(MP.host&&!G.frozen)shopRestock(now); // 補貨：架上永遠有東西可以搶
     if(MP.host&&!MP.shopEndSent&&left<=0){
       MP.shopEndSent=true;
-      mpSend({t:'shopend',carts:MP.carts});
+      mpSend({t:'shopend',carts:MP.carts,banked:MP.banked});
     }
   }
   // 鬼抓人：電腦 AI（房主端模擬）
@@ -3661,6 +3849,7 @@ function botTryRob(b,now){
     if(r.id===b.id)continue;
     const q=botPosOf(r.id); if(!q)continue;
     if((q.x-b.x)**2+(q.z-b.z)**2>SHOP_ROB_RANGE*SHOP_ROB_RANGE)continue;
+    if(isCheckingOut(r.id))continue;             // 人家在結帳，不能搶
     const lst=MP.cartList[r.id]||[];
     if(!lst.length)continue;
     b.robAt=now+8000;
@@ -3694,6 +3883,25 @@ function shopRestock(now){
 function botSimShop(dt,now){
   for(const b of MP.bots){
     if(now<(b.stunnedUntil||0))continue;
+    if(b.coPending&&now>=(b.coUntil||0)){      // 結帳時間到
+      b.coPending=false;
+      mpSend({t:'codone',f:b.id,v:MP.carts[b.id]||0});
+      continue;
+    }
+    if(now<(b.coUntil||0))continue;            // 結帳中站著不動
+    const spd=loadSpeed(cartLoad(b.id));
+    // 車太重就先去結帳，結完再繼續買
+    if(!b.coPending&&cartLoad(b.id)>=0.6&&(G.registers||[]).length){
+      let best=null,bd=1e9;
+      for(const r of G.registers){const d=(r.x-b.x)**2+(r.z-b.z)**2;if(d<bd){bd=d;best=r;}}
+      if(best){
+        if(bd<CHECKOUT_RANGE*CHECKOUT_RANGE){
+          b.coPending=true; b.coUntil=now+CHECKOUT_MS; b.path=null;
+          mpSend({t:'costart',f:b.id,ms:CHECKOUT_MS});
+        }else botWalk(b,{x:best.cx,y:best.cy},'reg'+best.cx+','+best.cy,dt,now,spd);
+        continue;
+      }
+    }
     botTryRob(b,now);
     let best=null,bd=1e9,bi=-1;
     (G.goods||[]).forEach((gd,i)=>{
@@ -3703,7 +3911,7 @@ function botSimShop(dt,now){
     });
     if(!best)continue;
     const c=worldToCell(best.x,best.z);
-    botWalk(b,c,'g'+bi,dt,now,SHOP_SPEED_MUL);
+    botWalk(b,c,'g'+bi,dt,now,spd);
     if(bd<1.4){ // 撿到（裝進購物車要花點時間，才不會把貨架掃光）
       best.taken=true; best.backAt=now+SHOP_RESTOCK_MS; best.sprite.visible=false; best.tag.visible=false;
       cartAdd(b.id,best.gi);
@@ -3910,7 +4118,8 @@ function mpLeave(){
   MP.players={}; MP.roster=[]; MP.on=false; MP.started=false; MP.ended=false; MP.endSent=false;
   MP.taggedId=null; MP.finishers=[]; MP.outs={}; MP.meFinished=false; MP.meOut=false; MP.raceEndAt=0;
   MP.treasure=null; MP.bots=null; MP.twinSent=false;
-  MP.itPower=null; MP.hp={}; MP.itRegenAt=0; MP.whistleHolder=null; MP.carts={}; MP.cartList={}; MP.shopEndSent=false; MP.robCoolUntil=0;
+  MP.itPower=null; MP.hp={}; MP.itRegenAt=0; MP.whistleHolder=null; MP.carts={}; MP.cartList={};
+  MP.banked={}; MP.coUntil={}; MP.shopEndSent=false; MP.robCoolUntil=0;
   $('cartWrap').style.display='none';
   G.invisUntil=0; G.skillCoolUntil=0; G.radarPings=null;
   G.smellMarks=null; G.smellTarget=null; G.smellPath=null; $('smellHud').style.display='none';
@@ -3918,7 +4127,7 @@ function mpLeave(){
   G.whistles=0; $('whistleBtn').style.display='none';
   G.stunnedUntil=0; G.treasureMesh=null; G.myGem=null;
   $('stunOverlay').style.display='none'; $('treasureBanner').style.display='none';
-  $('atkBtn').style.display='none'; $('robBtn').style.display='none';
+  $('atkBtn').style.display='none'; $('robBtn').style.display='none'; $('coBtn').style.display='none';
   $('tagBanner').style.display='none';
   $('mpModal').style.display='none'; $('mpResult').style.display='none';
   $('mpSetup').style.display='block'; $('mpLobby').style.display='none';
