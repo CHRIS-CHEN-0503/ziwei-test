@@ -75,6 +75,7 @@ button{font-family:var(--font);}
 /* ===== 遊戲 HUD ===== */
 #gameScreen{background:#000;}
 #c3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none;}
+#topMask{position:absolute;inset:0;z-index:2;pointer-events:none;display:none;}
 .hud{position:absolute;pointer-events:none;z-index:5;}
 #hudTop{
   top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:8px;
@@ -264,6 +265,7 @@ button{font-family:var(--font);}
 <!-- ============ 遊戲畫面 ============ -->
 <div id="gameScreen" class="screen">
   <canvas id="c3d"></canvas>
+  <div id="topMask"></div>
   <div class="hud" id="hudTop">
     <div id="hudInfo">
       <span>⏱ <b id="hudTime">0:00</b></span>
@@ -327,7 +329,7 @@ button{font-family:var(--font);}
         <button class="lb-tab" id="mpModeTag">👹 鬼抓人</button>
       </div>
       <div style="font-size:.85rem;color:#666;margin:6px 0;" id="mpModeDesc">大家從不同角落出發，看誰最快搶到中間的傳送門！</div>
-      <div style="font-size:.8rem;color:#999;margin-bottom:8px;">多人模式固定第一人稱視角。先在標題畫面選好你的角色！</div>
+      <div style="font-size:.8rem;color:#999;margin-bottom:8px;">先在標題畫面選好角色和視角，遊戲中也能自由切換（視角已設計成公平的，看不到牆後面）。</div>
       <button class="start-btn" id="mpCreate" style="margin:8px auto;">🏠 建立房間（我當房主）</button>
       <div style="margin:8px 0;color:#666;">─ 或加入朋友的房間 ─</div>
       <input id="mpCodeInput" maxlength="4" inputmode="numeric" placeholder="輸入4位數房號"
@@ -395,7 +397,7 @@ button{font-family:var(--font);}
     <div class="adm-row"><label>🍎 每次出現的食物數量</label><input type="number" id="cfgFood" min="2" max="10" step="1"></div>
     <div class="adm-row"><label>🍗 飽足感可以撐幾分鐘（歸零＝失敗）</label><input type="number" id="cfgHunger" min="1" max="10" step="0.5"></div>
     <div class="adm-row" style="flex-direction:column;align-items:stretch;">
-      <label>👁️ 開放的視角（單機模式；多人固定第一人稱）</label>
+      <label>👁️ 開放的視角（單機與多人都適用）</label>
       <div style="display:flex;gap:12px;justify-content:center;margin-top:4px;">
         <label style="flex:none;"><input type="checkbox" id="cfgVtp"> 🎥 第三人稱</label>
         <label style="flex:none;"><input type="checkbox" id="cfgVfp"> 👀 第一人稱</label>
@@ -438,8 +440,9 @@ button{font-family:var(--font);}
     <div>🍗 <b>飽足感</b>會隨時間減少，歸零就闖關失敗！低於 50% 速度變慢（×0.8），低於 25% 更慢（×0.75）。</div>
     <div>🍎 迷宮變形時會出現<b>食物</b>：🍬糖果+10%、🍪餅乾+15%、🍎蘋果+20%、🍙飯糰+30%、🍜拉麵+40%、🍗雞腿+50%、🍱超級便當+80%。</div>
     <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
-    <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空俯瞰8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
-    <div>👥 <b>多人連線</b>（2~3人，固定第一人稱）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了。</div>
+    <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空看到整個迷宮8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
+    <div>👁️ 視角是公平的：第三人稱是跟在你身後的平視視角、俯視只看得到腳邊一圈，都不會看到牆壁後面的東西（只有🦉貓頭鷹道具例外）。</div>
+    <div>👥 <b>多人連線</b>（2~3人，視角可自由切換）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了。</div>
     <div>🗺️ 點右上角小地圖可以放大。</div>
     <button class="m-close" id="helpClose" style="display:block;margin:10px auto 0;">知道了！</button>
   </div>
@@ -1169,13 +1172,8 @@ function applyItem(it){
   else if(t.id==='envfan'){ AudioEng.sfxUse(); G.visionUntil=performance.now()+dur*1000; addEffect('vision','🌬️驅霧',dur); }
   else if(t.id==='envowl'){
     AudioEng.sfxUse();
-    if(MP.on){ // 多人固定第一人稱 → 改成顯示出口路線
-      const pc=worldToCell(G.px,G.pz); G.solutionPath=solveMaze(pc.x,pc.y);
-      G.mapUntil=performance.now()+dur*1000; addEffect('owl','🦉路線',dur);
-    }else{
-      G.viewBefore=G.view; G.view='top';
-      G.owlUntil=performance.now()+dur*1000; addEffect('owl','🦉俯瞰',dur);
-    }
+    G.viewBefore=G.view; G.view='top';
+    G.owlUntil=performance.now()+dur*1000; addEffect('owl','🦉俯瞰',dur);
   }
 }
 /* 城堡魔法鑰匙：傳送到通往出口路線的中間點（鬼抓人模式＝隨機逃脫傳送） */
@@ -1297,6 +1295,18 @@ function unstuckPlayer(){
   playerGroup.position.set(G.px,0,G.pz);
   showToast('👻 斗篷失效！把你彈回走道上');
 }
+/* 從玩家往指定方向走，回傳撞到牆之前的最遠距離（第三人稱相機用） */
+function cameraClearDist(dx,dz,maxD){
+  const m=0.35;
+  for(let st=0.5;st<=maxD;st+=0.25){
+    const x=G.px+dx*st, z=G.pz+dz*st;
+    for(const wb of G.wallBoxes){
+      if(x+m>wb.minX&&x-m<wb.maxX&&z+m>wb.minZ&&z-m<wb.maxZ)
+        return Math.max(1.1,st-0.35);
+    }
+  }
+  return maxD;
+}
 function collideMove(nx,nz){
   const r=0.42;
   const ghost=performance.now()<G.ghostUntil;
@@ -1389,13 +1399,13 @@ function updateCamera(dt){
     const lx=G.px+Math.sin(G.camYaw+Math.PI), lz=G.pz+Math.cos(G.camYaw+Math.PI);
     camera.lookAt(lx,1.6+G.camPitch*3.2,lz);
   }else if(G.view==='tp'){
-    const dist=6.5,hh=6.4;
-    let tx=G.px+Math.sin(G.camYaw)*dist, tz=G.pz+Math.cos(G.camYaw)*dist;
-    // 相機不跑出外牆（免得角色被外牆擋住）
-    const cbx=(G.mazeW/2)*G.cell-1.3, cbz=(G.mazeH/2)*G.cell-1.3;
-    tx=Math.max(-cbx,Math.min(cbx,tx)); tz=Math.max(-cbz,Math.min(cbz,tz));
-    camera.position.lerp(new V3(tx,hh,tz),Math.min(1,dt*5));
-    camera.lookAt(G.px,1.4,G.pz);
+    // 平視跟隨：像另一個人跟在主角後面（相機比牆矮，看不到隔壁走道）
+    const dist=4.6,hh=2.35;
+    const dx=Math.sin(G.camYaw), dz=Math.cos(G.camYaw);
+    const d=cameraClearDist(dx,dz,dist); // 後面有牆就拉近，不穿牆
+    const tx=G.px+dx*d, tz=G.pz+dz*d;
+    camera.position.lerp(new V3(tx,hh,tz),Math.min(1,dt*10));
+    camera.lookAt(G.px,1.5,G.pz);
   }else{ // top（滾輪 / 雙指 / ＋－按鈕可拉近拉遠）
     const owl=performance.now()<G.owlUntil;
     const h=owl?58:G.topZoom;
@@ -1414,6 +1424,7 @@ function updateCamera(dt){
     scene.fog.near=boost?th.fog[1]*2+14:th.fog[1];
     scene.fog.far=boost?Math.max(130,th.fog[2]*2):th.fog[2];
   }
+  updateTopMask(); // 俯視公平化：只看得到玩家腳邊一圈
 }
 </script>
 <script>
@@ -1522,6 +1533,30 @@ function drawMap(cv,big){
   ctx.fillStyle='#ff5252';
   ctx.beginPath(); ctx.moveTo(0,(big?14:7)); ctx.lineTo((big?-9:-4.5),(big?-10:-5)); ctx.lineTo((big?9:4.5),(big?-10:-5)); ctx.closePath(); ctx.fill();
   ctx.restore();
+}
+
+/* =====================================================
+   俯視視野遮罩：只露出玩家腳邊一圈（半徑約6，貓頭鷹道具例外）
+   Three.js 線性霧是用相機平面深度算的，俯視時整片地面深度一樣，
+   所以改用螢幕空間的圓形漸層遮罩來做。
+   ===================================================== */
+const _projV=new THREE.Vector3();
+function updateTopMask(){
+  const el=$('topMask');
+  const owl=performance.now()<G.owlUntil;
+  if(G.view!=='top'||owl||!G.running){ el.style.display='none'; return; }
+  el.style.display='block';
+  // 玩家位置投影到螢幕
+  _projV.set(G.px,0.5,G.pz).project(camera);
+  const cx=(_projV.x*0.5+0.5)*window.innerWidth;
+  const cy=(-_projV.y*0.5+0.5)*window.innerHeight;
+  // 世界半徑 → 螢幕像素（fov 70°）
+  const h=Math.max(3,camera.position.y);
+  const pxPerWorld=(window.innerHeight/2)/(Math.tan(35*Math.PI/180)*h);
+  const r0=5.2*pxPerWorld, r1=7.2*pxPerWorld;
+  const th=LEVELS[G.lvlIdx];
+  const col='#'+th.fog[0].toString(16).padStart(6,'0');
+  el.style.background=`radial-gradient(circle at ${cx.toFixed(0)}px ${cy.toFixed(0)}px, rgba(0,0,0,0) ${r0.toFixed(0)}px, ${col} ${r1.toFixed(0)}px)`;
 }
 
 /* =====================================================
@@ -1828,9 +1863,8 @@ function startGame(){
   G.startTime=performance.now(); G.elapsed=0;
   G.running=true; G.frozen=false; G.shifting=false;
   spawnItems(); scheduleNextShift(); updateShovelBtn(); renderChips();
-  if(MP.on){G.view='fp';}
-  else if(!allowedViews().includes(G.view))G.view=allowedViews()[0];
-  $('viewToggle').style.display=(MP.on||allowedViews().length<2)?'none':'';
+  if(!allowedViews().includes(G.view))G.view=allowedViews()[0];
+  $('viewToggle').style.display=allowedViews().length<2?'none':'';
   $('hudLvlName').textContent=theme.emoji+' '+theme.name;
   $('compassHud').style.display='none';
   switchScreen('gameScreen');
@@ -1866,7 +1900,8 @@ function loop(tms){
   // 效果到期檢查
   chipAcc+=dt; if(chipAcc>0.5){chipAcc=0;renderChips();
     if(G.ghostUntil&&performance.now()>G.ghostUntil){G.ghostUntil=0;setGhostLook(false);unstuckPlayer();}
-    if(G.owlUntil&&performance.now()>G.owlUntil){G.owlUntil=0;G.view=MP.on?'fp':(G.viewBefore||allowedViews()[0]);}
+    if(G.owlUntil&&performance.now()>G.owlUntil){G.owlUntil=0;
+      G.view=(G.viewBefore&&allowedViews().includes(G.viewBefore))?G.viewBefore:allowedViews()[0];}
     const isTop=G.view==='top';
     $('zoomInBtn').style.display=isTop?'':'none';
     $('zoomOutBtn').style.display=isTop?'':'none';
@@ -1921,7 +1956,6 @@ function wireUI(){
     }
   };
   $('viewToggle').onclick=()=>{
-    if(MP.on)return; // 多人固定第一人稱
     const order=allowedViews();
     if(order.length<2)return;
     G.view=order[(order.indexOf(G.view)+1)%order.length];
