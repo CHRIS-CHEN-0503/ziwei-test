@@ -520,7 +520,7 @@ button{font-family:var(--font);}
     <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
     <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空看到整個迷宮8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
     <div>👁️ 視角是公平的：第三人稱是跟在你身後的平視視角、俯視只看得到腳邊一圈，都不會看到牆壁後面的東西（只有🦉貓頭鷹道具例外）。</div>
-    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速為一般玩家 1.15 倍），<b>鬼要用攻擊鍵打中別人才算抓到</b>（碰到沒有用）；時間到還是鬼的人就輸了。剛變成鬼會定住 3 秒（全場公告＋語音），大家快跑！鬼的攻擊冷卻比一般人快一倍。此模式不用擔心肚子餓。</div>
+    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速為一般玩家 1.15 倍），<b>鬼要用攻擊鍵打中別人才算抓到</b>（碰到沒有用）；時間到還是鬼的人就輸了。剛變成鬼會定住 3 秒（全場公告＋語音），大家快跑！鬼的攻擊冷卻比一般人快一倍。<b>肚子也會餓</b>，但餓到 0% 不會失敗，只是跑得很慢，記得撿食物補充。</div>
     <div style="padding-left:14px;">
       ⚔️ 大家可以<b>互相攻擊</b>（攻擊鍵／X）。體力歸零就暈眩，暈完恢復。一般人 1 格體力不會自己回復；<b>鬼每 15 秒回 1 格</b>。<br>
       👃 <b>鬼的敏銳鼻子</b>：附近（預設 3 格內，遊戲設定可調）有人時會聞到味道，地上浮現 👣 腳印路標沿著通道指引你追過去，畫面上方也會顯示方向和距離；目標跑遠或<b>隱身</b>（氣味被遮住）路標就消失。<br>
@@ -544,7 +544,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.9.0';
+const GAME_VERSION='1.9.1';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -635,7 +635,7 @@ const G={
  exitCell:{x:0,y:0}, startTime:0, elapsed:0, timeOffset:0,
  nextShiftAt:0, shifting:false, preWarned:false,
  items:[], foods:[], effects:{}, shovels:0, starBonus:0,
- satiety:100, drainPerSec:100/180, hungerMul:1, hungerOn:true,
+ satiety:100, drainPerSec:100/180, hungerMul:1, hungerOn:true, hungerLethal:true, starvedNoted:false,
  kites:0, visionUntil:0, owlUntil:0, viewBefore:null, topZoom:22,
  smellMarks:null, smellTarget:null, smellPath:null, smellPathAt:0,
  stunnedUntil:0, atkCoolUntil:0, spMode:'classic',
@@ -2328,7 +2328,9 @@ function startGame(){
   // 狀態重設
   G.items=[]; G.foods=[]; G.effects={}; G.shovels=CH().startShovels||0; G.starBonus=0; G.timeOffset=0;
   G.satiety=100; G.hungerMul=1;
-  G.hungerOn=!(MP.on&&(MP.mode==='tag'||MP.mode==='treasure')); // 鬼抓人 / 尋寶不用擔心肚子餓
+  G.hungerOn=!(MP.on&&MP.mode==='treasure');       // 尋寶不用擔心肚子餓
+  G.hungerLethal=!(MP.on&&MP.mode==='tag');        // 鬼抓人：肚子餓只會變慢，不會失敗
+  G.starvedNoted=false;
   G.drainPerSec=100/((MP.on?MP.hungerMin:CFG.hungerMin)*60); updateSatietyBar();
   $('satietyPct').parentElement.style.display=G.hungerOn?'':'none';
   G.kites=0; G.visionUntil=0; G.owlUntil=0; G.viewBefore=null; updateKiteBtn();
@@ -2396,7 +2398,13 @@ function loop(tms){
   if(G.running&&!G.frozen&&G.hungerOn){
     G.satiety=Math.max(0,G.satiety-G.drainPerSec*(CH().drainMul||1)*dt); // 耐力王餓得慢
     updateSatietyBar();
-    if(G.satiety<=0){ if(MP.on)mpStarve(); else loseGame(); }
+    if(G.satiety<=0){
+      if(G.hungerLethal){ if(MP.on)mpStarve(); else loseGame(); }
+      else if(!G.starvedNoted){ // 鬼抓人：不會失敗，只是餓到跑不動
+        G.starvedNoted=true;
+        showToast('😵‍💫 肚子好餓，跑不動了！快找食物補充',2600);
+      }
+    }else if(G.satiety>10)G.starvedNoted=false;
   }
   if(MP.on&&MP.started)mpFrame(dt);
   updateShiftTimer();
