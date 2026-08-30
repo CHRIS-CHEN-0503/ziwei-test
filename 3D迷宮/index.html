@@ -419,6 +419,9 @@ button{font-family:var(--font);}
 <div id="treasureBanner" style="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:8;display:none;
   background:rgba(255,179,0,.94);color:#5d4037;font-weight:bold;border-radius:16px;padding:6px 18px;font-size:1.05rem;
   box-shadow:0 3px 10px rgba(0,0,0,.4);">💎 你拿到寶藏了！快帶去出口 🚩</div>
+<div id="tagAnnounce" style="position:fixed;top:34%;left:50%;transform:translateX(-50%);z-index:22;display:none;
+  background:rgba(120,20,40,.92);color:#fff;font-weight:bold;border-radius:22px;padding:14px 28px;font-size:1.5rem;
+  border:4px solid #ff5252;box-shadow:0 6px 18px rgba(0,0,0,.5);text-align:center;white-space:nowrap;">👹</div>
 <div id="tagBanner" style="position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:8;display:none;
   background:rgba(211,47,47,.92);color:#fff;font-weight:bold;border-radius:16px;padding:6px 18px;font-size:1.05rem;
   box-shadow:0 3px 10px rgba(0,0,0,.4);">👹 你是鬼！快去抓人！</div>
@@ -507,7 +510,7 @@ button{font-family:var(--font);}
     <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
     <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空看到整個迷宮8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
     <div>👁️ 視角是公平的：第三人稱是跟在你身後的平視視角、俯視只看得到腳邊一圈，都不會看到牆壁後面的東西（只有🦉貓頭鷹道具例外）。</div>
-    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速+15%），碰到別人就換對方當鬼；時間到還是鬼的人就輸了。此模式不用擔心肚子餓。</div>
+    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速+15%），<b>鬼要用攻擊鍵打中別人才算抓到</b>（碰到沒有用）；時間到還是鬼的人就輸了。剛變成鬼會定住 3 秒（全場公告＋語音），大家快跑！鬼的攻擊冷卻比一般人快一倍。此模式不用擔心肚子餓。</div>
     <div style="padding-left:14px;">
       ⚔️ 大家可以<b>互相攻擊</b>（攻擊鍵／X）。體力歸零就暈眩，暈完恢復。一般人 1 格體力不會自己回復；<b>鬼每 15 秒回 1 格</b>。<br>
       👺 <b>當鬼會戴上面具並隨機獲得一種鬼能力</b>（面具樣子跟能力對應）：⚡疾風、🫥隱身、❤️體力+1、✨道具時間、⛏️鐵鍬工具箱、📡雷達。跟自己職業一樣就<b>疊加</b>！<br>
@@ -530,7 +533,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.8.0';
+const GAME_VERSION='1.8.1';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -1639,7 +1642,8 @@ function doAttack(){
   if(MP.mode!=='treasure'&&MP.mode!=='tag')return;
   if(now<G.atkCoolUntil||now<G.stunnedUntil)return;
   if(MP.mode==='treasure'&&(!MP.treasure||!MP.treasure.holder||MP.treasure.holder===MP.id))return; // 拿寶藏的人不能攻擊
-  G.atkCoolUntil=now+1500;
+  const meIt=MP.mode==='tag'&&MP.taggedId===MP.id;
+  G.atkCoolUntil=now+(meIt?750:1500); // 鬼的攻擊恢復比一般玩家快一倍
   swingWeapon();
   // 找最近的目標（隱身的也打得中，只是看不到）
   let best=null,bd=1.9*1.9;
@@ -1649,7 +1653,10 @@ function doAttack(){
     const d=(pl.mesh.position.x-G.px)**2+(pl.mesh.position.z-G.pz)**2;
     if(d<bd){bd=d;best=id;}
   }
-  if(best)mpSend({t:'hit',to:best,steal:MP.mode==='treasure'&&MP.treasure.holder===best});
+  if(best){
+    if(meIt)mpSend({t:'tag',to:best,pw:randPower()}); // 鬼打中人＝抓到！
+    else mpSend({t:'hit',to:best,steal:MP.mode==='treasure'&&MP.treasure.holder===best});
+  }
   else showToast('💨 揮空了！要靠近一點再攻擊');
 }
 /* 技能鍵：隱身（小花的鬼抓人能力；當鬼抽到隱身能力也可用） */
@@ -2669,7 +2676,15 @@ function mpHandle(m){
       $('mpModal').style.display='none';
       startGame();
       if(MP.bots)for(const b of MP.bots){const wp=cellToWorld(b.cell.x,b.cell.y);b.x=wp.x;b.z=wp.z;}
-      if(MP.mode==='tag')G.roundEndsAt=performance.now()+MP.roundMs;
+      if(MP.mode==='tag'){
+        G.roundEndsAt=performance.now()+MP.roundMs;
+        if(MP.taggedId){ // 公告初始鬼並讓他定住 3 秒
+          MP.tagImmuneUntil=performance.now()+3000;
+          setTimeout(()=>announceTag(mpName(MP.taggedId)),600);
+          if(MP.taggedId===MP.id)G.stunnedUntil=Math.max(G.stunnedUntil,performance.now()+3000);
+          else if(MP.host&&MP.bots){const b=MP.bots.find(x=>x.id===MP.taggedId);if(b)b.stunnedUntil=performance.now()+3000;}
+        }
+      }
       mpUpdateTagVisuals();
       break;
     case 'pos':{
@@ -2706,13 +2721,23 @@ function mpHandle(m){
       if(MP.mode!=='tag'||MP.ended)break;
       {
         const prevIt=MP.taggedId;
+        MP.prevIt=prevIt; MP.prevItUntil=now+6000; // 剛卸任的人 6 秒內電腦鬼不會再抓（防止兩隻電腦互抓乒乓）
         MP.taggedId=m.to; MP.itPower=m.pw||randPower(); MP.tagImmuneUntil=now+3000;
         MP.itRegenAt=now+15000;
         if(prevIt)MP.hp[prevIt]=Math.min(hpOf(prevIt),hpMaxOf(prevIt)); // 卸下鬼身份後上限可能變小
         MP.hp[m.to]=hpMaxOf(m.to); // 新鬼滿血
         AudioEng.sfxAlarm();
         const pw=TAG_POWERS[MP.itPower];
-        showToast('👹 '+mpName(m.to)+' 變成鬼了！獲得能力：'+pw.label);
+        announceTag(mpName(m.to)); // 大字公告 + 語音「換 xxx 當鬼，快跑啊！」
+        showToast('👹 '+mpName(m.to)+' 變成鬼了！獲得能力：'+pw.label,3500);
+        // 變成鬼會定住 3 秒（換裝戴面具），大家趁機快跑
+        if(m.to===MP.id){
+          G.stunnedUntil=Math.max(G.stunnedUntil,now+3000);
+          showToast('👹 你變成鬼了！定住 3 秒後開始抓人（用攻擊鍵抓）',3500);
+        }else{
+          const pl=MP.players[m.to]; if(pl)pl.stunnedUntil=now+3000;
+          if(MP.host&&MP.bots){const b=MP.bots.find(x=>x.id===m.to);if(b)b.stunnedUntil=now+3000;}
+        }
         mpUpdateTagVisuals(); updateHpHud(); updateAtkBtn(); updateSkillBtn(); updateShovelBtn();
       }
       break;
@@ -2854,18 +2879,7 @@ function mpFrame(dt){
     }
     if(MP.host&&MP.bots&&!G.frozen)botSim(dt,now);
   }
-  // 鬼抓人：我是鬼 → 距離夠近就抓到
-  if(MP.mode==='tag'&&MP.taggedId===MP.id&&now>MP.tagImmuneUntil&&!G.frozen){
-    for(const id in MP.players){
-      const p=MP.players[id];
-      if(!p.mesh||!p.mesh.visible||MP.outs[id])continue;
-      if((p.mesh.position.x-G.px)**2+(p.mesh.position.z-G.pz)**2<1.44){
-        MP.tagImmuneUntil=now+3000;
-        mpSend({t:'tag',to:id,pw:randPower()});
-        break;
-      }
-    }
-  }
+  // （鬼抓人改為「攻擊」才能抓人，觸碰不再換鬼）
   // 隱身：別人看不到（位置照常同步）
   for(const id in MP.players){
     const p=MP.players[id];
@@ -2932,17 +2946,38 @@ function botSimTag(dt,now){
   for(const b of MP.bots){
     if(now<(b.stunnedUntil||0))continue; // 暈眩中不能動
     if(MP.taggedId===b.id){
-      let best=null,bd=1e9,bpos=null;
-      for(const r of MP.roster){
-        if(r.id===b.id)continue;
-        const p2=botPosOf(r.id); if(!p2)continue;
-        const d=(p2.x-b.x)**2+(p2.z-b.z)**2;
-        if(d<bd){bd=d;best=r.id;bpos=p2;}
+      const valid=id=>{
+        if(id===b.id)return false;
+        if(id===MP.prevIt&&now<(MP.prevItUntil||0)&&MP.roster.length>2)return false; // 防乒乓
+        return true;
+      };
+      // 鎖定一個目標追 5 秒（每一幀換目標會在兩人之間搖擺，永遠追不到）
+      if(!b.chaseId||!valid(b.chaseId)||now>(b.chaseUntil||0)){
+        let best=null,bd=1e9;
+        for(const r of MP.roster){
+          if(!valid(r.id))continue;
+          const p2=botPosOf(r.id); if(!p2)continue;
+          const d=(p2.x-b.x)**2+(p2.z-b.z)**2;
+          if(d<bd){bd=d;best=r.id;}
+        }
+        b.chaseId=best; b.chaseUntil=now+5000;
       }
+      const bpos=b.chaseId?botPosOf(b.chaseId):null;
       if(bpos){
         const c=worldToCell(bpos.x,bpos.z);
         botWalk(b,c,'c'+c.x+','+c.y,dt,now,MP.itPower==='speed'?1.29:1.15); // 鬼跑快 15%（疾風能力再加成）
-        if(bd<1.44&&now>MP.tagImmuneUntil){MP.tagImmuneUntil=now+3000;mpSend({t:'tag',to:best,pw:randPower()});}
+      }
+      // 攻擊抓人：範圍內任何有效目標
+      if(now>MP.tagImmuneUntil&&now>(b.atkAt||0)){
+        for(const r of MP.roster){
+          if(!valid(r.id))continue;
+          const p2=botPosOf(r.id); if(!p2)continue;
+          if((p2.x-b.x)**2+(p2.z-b.z)**2<1.9*1.9){
+            b.atkAt=now+750; MP.tagImmuneUntil=now+3000;
+            mpSend({t:'tag',to:r.id,pw:randPower()});
+            break;
+          }
+        }
       }
     }else{
       const ip=botPosOf(MP.taggedId); if(!ip)continue;
@@ -2985,6 +3020,23 @@ function botSim(dt,now){
   }
 }
 function getEmojiTex(emoji){ makeEmojiSprite(emoji,1); return spriteCache[emoji]; } // 只要貼圖
+/* 語音播報（跟隨音樂靜音設定） */
+function speak(text){
+  if(G.muted)return;
+  try{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-TW'; u.rate=1.05; u.pitch=1.1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+/* 換鬼公告：大字橫幅 + 語音 */
+function announceTag(name){
+  const el=$('tagAnnounce');
+  el.textContent='👹 換 '+name+' 當鬼，快跑啊！';
+  el.style.display='block';
+  clearTimeout(el._tm); el._tm=setTimeout(()=>el.style.display='none',2600);
+  speak('換'+name+'當鬼，快跑啊！');
+}
 function mpUpdateTagVisuals(){
   const mask=MP.itPower?TAG_POWERS[MP.itPower].mask:'👹';
   for(const id in MP.players){
