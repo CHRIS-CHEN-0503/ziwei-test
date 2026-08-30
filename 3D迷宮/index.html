@@ -259,6 +259,7 @@ button{font-family:var(--font);}
       <button class="mini-btn" id="admBtn">⚙️ 後台設定</button>
       <button class="mini-btn" id="helpBtn">❓ 玩法說明</button>
     </div>
+    <div style="margin-top:8px;font-size:.72rem;color:#b3aecf;">3D移動迷宮 v<span id="verLabel"></span></div>
   </div>
 </div>
 
@@ -391,7 +392,7 @@ button{font-family:var(--font);}
 <!-- ============ 後台設定 ============ -->
 <div class="modal" id="admModal">
   <div class="m-card">
-    <h3>⚙️ 後台設定</h3>
+    <h3>⚙️ 後台設定 <span id="admVer" style="font-size:.7rem;color:#aaa;font-weight:normal;"></span></h3>
     <div class="adm-row"><label>🌀 迷宮每幾分鐘變換一次</label><input type="number" id="cfgShiftMin" min="0.5" max="10" step="0.5"></div>
     <div class="adm-row"><label>🎁 每次出現的道具數量</label><input type="number" id="cfgItems" min="3" max="12" step="1"></div>
     <div class="adm-row"><label>🍎 每次出現的食物數量</label><input type="number" id="cfgFood" min="2" max="10" step="1"></div>
@@ -457,6 +458,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
+const GAME_VERSION='1.5.0';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -1277,8 +1279,19 @@ function updateParticles(dt){
    玩家移動 + 牆壁碰撞（分軸滑行）
    ===================================================== */
 const keys={};
-window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
-window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+/* Mac 開著注音等輸入法時 e.key 會變成 'ㄊ'/'Process'，所以一律用實體按鍵碼 e.code */
+function typingInField(){
+  const a=document.activeElement;
+  return !!a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA');
+}
+window.addEventListener('keydown',e=>{
+  if(typingInField())return;
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)&&
+     $('gameScreen').classList.contains('active'))e.preventDefault();
+});
+window.addEventListener('keyup',e=>{keys[e.code]=false;});
+window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;}); // 切視窗時清掉卡住的按鍵
 const joy={active:false,dx:0,dy:0,id:null};
 
 /* 穿牆時間到若剛好在牆壁裡 → 推回最近的格子中央（格子中央永遠是空的） */
@@ -1335,8 +1348,8 @@ function updatePlayer(dt,t){
   // 讀輸入：搖桿 or 鍵盤
   let ix=joy.dx, iy=joy.dy;
   if(!joy.active){
-    ix=(keys['d']||keys['arrowright']?1:0)-(keys['a']||keys['arrowleft']?1:0);
-    iy=(keys['s']||keys['arrowdown']?1:0)-(keys['w']||keys['arrowup']?1:0);
+    ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+    iy=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
   }
   const mag=Math.min(1,Math.hypot(ix,iy));
   if(mag>0.12){
@@ -1474,18 +1487,18 @@ function setupTouch(){
   });
   // 電腦鍵盤 Q/E 轉視角
   window.addEventListener('keydown',e=>{
-    if(!$('gameScreen').classList.contains('active'))return;
-    const k=e.key.toLowerCase();
-    if(k==='q')G.camYaw+=0.15; if(k==='e')G.camYaw-=0.15;
-    if(k===' '){e.preventDefault();useShovel();}
-    if(k==='f')useKite();
-    if(k==='v')$('viewToggle').click();
-    if(k==='m'){
+    if(!$('gameScreen').classList.contains('active')||typingInField())return;
+    const c=e.code; // 實體按鍵碼：輸入法開著也照樣有效
+    if(c==='KeyQ')G.camYaw+=0.15; if(c==='KeyE')G.camYaw-=0.15;
+    if(c==='Space'){e.preventDefault();useShovel();}
+    if(c==='KeyF')useKite();
+    if(c==='KeyV')$('viewToggle').click();
+    if(c==='KeyM'){
       if($('bigMapOverlay').style.display==='flex')$('bigMapOverlay').style.display='none';
       else{$('bigMapOverlay').style.display='flex';sizeBigMap();drawMap($('bigMap'),true);}
     }
-    if((k==='+'||k==='=')&&G.view==='top')G.topZoom=Math.max(10,G.topZoom-4);
-    if(k==='-'&&G.view==='top')G.topZoom=Math.min(48,G.topZoom+4);
+    if((c==='Equal'||c==='NumpadAdd')&&G.view==='top')G.topZoom=Math.max(10,G.topZoom-4);
+    if((c==='Minus'||c==='NumpadSubtract')&&G.view==='top')G.topZoom=Math.min(48,G.topZoom+4);
   });
 }
 
@@ -1788,6 +1801,9 @@ function buildTitleUI(){
     b.onclick=()=>{G.view=b.dataset.v;document.querySelectorAll('#viewRow .view-btn').forEach(x=>x.classList.toggle('sel',x===b));};
   });
   applyViewConfig();
+  $('verLabel').textContent=GAME_VERSION;
+  $('admVer').textContent='v'+GAME_VERSION;
+  console.log('3D移動迷宮 v'+GAME_VERSION);
   $('playerName').value=localStorage.getItem('maze3d_name')||'';
   $('playerName').addEventListener('input',()=>localStorage.setItem('maze3d_name',$('playerName').value));
 }
@@ -1824,6 +1840,7 @@ function updatePreview(){
    ===================================================== */
 function startGame(){
   AudioEng.init(); AudioEng.resume();
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
   setSeed(MP.on?MP.seed:null);
   G.mazeW=G.mazeH=MP.on?MP.size:CFG.mazeSize;
   const theme=LEVELS[G.lvlIdx];
