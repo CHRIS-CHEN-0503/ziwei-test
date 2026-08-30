@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>🌀 3D移動迷宮</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
 <style>
@@ -78,7 +78,8 @@ button{font-family:var(--font);}
 #topMask{position:absolute;inset:0;z-index:2;pointer-events:none;display:none;}
 .hud{position:absolute;pointer-events:none;z-index:5;}
 #hudTop{
-  top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:8px;
+  top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
+  padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 8px calc(8px + env(safe-area-inset-left));
 }
 #hudInfo{
   background:rgba(20,16,50,.72);color:#fff;border-radius:16px;padding:7px 12px;font-size:.95rem;
@@ -93,7 +94,8 @@ button{font-family:var(--font);}
 }
 #minimapHint{position:absolute;bottom:2px;right:6px;font-size:.6rem;color:#fff;opacity:.8;}
 #hudRightBtns{
-  position:absolute;top:150px;right:8px;display:flex;flex-direction:column;gap:10px;pointer-events:auto;z-index:6;
+  position:absolute;top:150px;right:calc(8px + env(safe-area-inset-right));
+  display:flex;flex-direction:column;gap:10px;pointer-events:auto;z-index:6;
 }
 .round-btn{
   width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.8);cursor:pointer;
@@ -102,7 +104,7 @@ button{font-family:var(--font);}
 .round-btn:active{transform:scale(.92);}
 .round-btn .bl{display:block;font-size:.5rem;margin-top:-3px;}
 #effectChips{
-  position:absolute;top:60px;left:8px;display:flex;flex-direction:column;gap:6px;z-index:6;pointer-events:none;
+  position:absolute;top:calc(60px + env(safe-area-inset-top));left:calc(8px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:6px;z-index:6;pointer-events:none;
 }
 .chip{
   background:rgba(255,255,255,.9);border-radius:20px;padding:4px 12px;font-size:.85rem;font-weight:bold;
@@ -122,7 +124,7 @@ button{font-family:var(--font);}
 }
 #lookZone{position:absolute;right:0;bottom:0;width:55%;height:55%;z-index:5;touch-action:none;}
 #shovelBtn{
-  position:absolute;right:14px;bottom:96px;width:74px;height:74px;border-radius:50%;
+  position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));width:74px;height:74px;border-radius:50%;
   border:4px solid #fff;background:linear-gradient(145deg,#ff8a65,#f4511e);color:#fff;
   font-size:1.7rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);
 }
@@ -132,7 +134,7 @@ button{font-family:var(--font);}
   width:26px;height:26px;font-size:.9rem;font-weight:bold;line-height:26px;
 }
 #kiteBtn{
-  position:absolute;right:14px;bottom:184px;width:74px;height:74px;border-radius:50%;
+  position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(184px + env(safe-area-inset-bottom));width:74px;height:74px;border-radius:50%;
   border:4px solid #fff;background:linear-gradient(145deg,#4fc3f7,#0288d1);color:#fff;
   font-size:1.7rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);
 }
@@ -142,7 +144,7 @@ button{font-family:var(--font);}
   width:26px;height:26px;font-size:.9rem;font-weight:bold;line-height:26px;
 }
 #atkBtn{
-  position:absolute;right:100px;bottom:96px;width:80px;height:80px;border-radius:50%;
+  position:absolute;right:calc(100px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));width:80px;height:80px;border-radius:50%;
   border:4px solid #fff;background:linear-gradient(145deg,#ef5350,#c62828);color:#fff;
   font-size:2rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
 }
@@ -484,7 +486,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.6.0';
+const GAME_VERSION='1.6.1';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -700,17 +702,31 @@ let renderer,scene,camera,wallMesh,floorMesh,exitGroup,playerGroup,envGroup,item
 let previewRenderer,previewScene,previewCam,previewChar;
 const V3=THREE.Vector3;
 
+let _vpW=0,_vpH=0;
+function viewportSize(){
+  // 手機轉向時 innerWidth/innerHeight 常常是舊值，visualViewport 比較可靠
+  const vv=window.visualViewport;
+  return {w:Math.round(vv?vv.width:window.innerWidth),h:Math.round(vv?vv.height:window.innerHeight)};
+}
+function fitRenderer(){
+  if(!renderer)return;
+  const {w,h}=viewportSize();
+  if(w===_vpW&&h===_vpH)return;
+  _vpW=w; _vpH=h;
+  renderer.setSize(w,h,false); // false＝不寫 inline style，CSS 100% 永遠撐滿螢幕不會被切
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+}
 function initRenderer(){
   const canvas=$('c3d');
   renderer=new THREE.WebGLRenderer({canvas,antialias:true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.setSize(window.innerWidth,window.innerHeight);
-  camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,300);
-  window.addEventListener('resize',()=>{
-    renderer.setSize(window.innerWidth,window.innerHeight);
-    camera.aspect=window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-  });
+  camera=new THREE.PerspectiveCamera(70,1,0.1,300);
+  fitRenderer();
+  window.addEventListener('resize',fitRenderer);
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',fitRenderer);
+  // iOS 轉向後尺寸會晚一點才正確，多補幾次
+  window.addEventListener('orientationchange',()=>{fitRenderer();setTimeout(fitRenderer,300);setTimeout(fitRenderer,900);});
 }
 
 /* 可播種亂數：單機用 Math.random；多人連線用同一顆種子讓大家的迷宮一模一樣 */
@@ -1676,11 +1692,13 @@ function updateTopMask(){
   el.style.display='block';
   // 玩家位置投影到螢幕
   _projV.set(G.px,0.5,G.pz).project(camera);
-  const cx=(_projV.x*0.5+0.5)*window.innerWidth;
-  const cy=(-_projV.y*0.5+0.5)*window.innerHeight;
+  const cw=renderer.domElement.clientWidth||window.innerWidth;
+  const chh=renderer.domElement.clientHeight||window.innerHeight;
+  const cx=(_projV.x*0.5+0.5)*cw;
+  const cy=(-_projV.y*0.5+0.5)*chh;
   // 世界半徑 → 螢幕像素（fov 70°）
   const h=Math.max(3,camera.position.y);
-  const pxPerWorld=(window.innerHeight/2)/(Math.tan(35*Math.PI/180)*h);
+  const pxPerWorld=(chh/2)/(Math.tan(35*Math.PI/180)*h);
   const r0=5.2*pxPerWorld, r1=7.2*pxPerWorld;
   const th=LEVELS[G.lvlIdx];
   const col='#'+th.fog[0].toString(16).padStart(6,'0');
@@ -2093,6 +2111,7 @@ function loop(tms){
     const isTop=G.view==='top';
     $('zoomInBtn').style.display=isTop?'':'none';
     $('zoomOutBtn').style.display=isTop?'':'none';
+    fitRenderer(); // 轉向/尺寸自我修復
   }
   // 道具漂浮動畫
   const bob=Math.sin(t*3)*0.15;
