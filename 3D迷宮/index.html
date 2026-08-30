@@ -189,6 +189,17 @@ button{font-family:var(--font);}
 }
 #smellArrow{display:inline-block;font-size:1.1rem;margin-right:6px;}
 @keyframes smellPulse{0%,100%{opacity:.85;}50%{opacity:1;transform:translateX(-50%) scale(1.05);}}
+#whistleBtn{
+  position:absolute;right:calc(100px + env(safe-area-inset-right));bottom:calc(184px + env(safe-area-inset-bottom));
+  width:70px;height:70px;border-radius:50%;
+  border:4px solid #fff;background:linear-gradient(145deg,#ffd54f,#f9a825);color:#fff;
+  font-size:1.6rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);
+}
+#whistleBtn:active{transform:scale(.92);}
+#whistleBtn .cnt{
+  position:absolute;top:-6px;right:-6px;background:#ffd54f;color:#5d4037;border-radius:50%;
+  width:26px;height:26px;font-size:.9rem;font-weight:bold;line-height:26px;
+}
 #compassHud{
   position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:6;display:none;
   background:rgba(20,16,50,.7);border-radius:50%;width:56px;height:56px;border:2px solid #ffd54f;
@@ -354,6 +365,7 @@ button{font-family:var(--font);}
   <div id="smellHud"><span id="smellArrow">🔺</span><span id="smellTxt">👃 聞到味道！</span></div>
   <button id="shovelBtn">⛏️<span class="cnt" id="shovelCnt">1</span></button>
   <button id="kiteBtn">🪁<span class="cnt" id="kiteCnt">1</span></button>
+  <button id="whistleBtn">📣<span class="cnt" id="whistleCnt">1</span></button>
   <button id="atkBtn">🐾</button>
   <button id="skillBtn">🫥</button>
   <div id="stunOverlay"></div>
@@ -506,14 +518,16 @@ button{font-family:var(--font);}
   <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
     <h3 style="text-align:center;">❓ 玩法說明</h3>
     <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。</div>
-    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）· <b>C</b> 隱身技能 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
+    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）· <b>C</b> 隱身技能 · <b>G</b> 集合口哨 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
     <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
     <div>🎁 道具（每次變形會重新出現）：</div>
     <div style="padding-left:14px;">
       ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕；最多帶 1 把，工程師用掉 45 秒後自動補充，特大以上地圖 35 秒）<br>
       🗺️ 魔法地圖：顯示通往出口的路線<br>🧭 指南針：箭頭指向出口<br>👻 穿牆斗篷：可以穿過牆壁<br>
-      ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100
+      ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100<br>
+      😜 調皮鬼：吃到就把<b>所有人</b>隨機傳送到別的地方（自己也會被傳走！）<br>
+      📣 集合口哨（鬼抓人／尋寶限定）：存起來，按按鈕把<b>所有人叫到你身邊</b>
     </div>
     <div>🍗 <b>飽足感</b>會隨時間減少，歸零就闖關失敗！低於 50% 速度變慢（×0.8），低於 25% 更慢（×0.75）。</div>
     <div>🍎 迷宮變形時會出現<b>食物</b>：🍬糖果+10%、🍪餅乾+15%、🍎蘋果+20%、🍙飯糰+30%、🍜拉麵+40%、🍗雞腿+50%、🍱超級便當+80%。</div>
@@ -544,7 +558,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.9.3';
+const GAME_VERSION='1.10.0';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -601,6 +615,9 @@ const ITEM_TYPES=[
  {id:'ghost', emoji:'👻', name:'穿牆斗篷',  weight:8,  dur:5,  msg:'👻 穿牆 5 秒！快穿過去！'},
  {id:'timegem',emoji:'⏱️',name:'時間寶石', weight:10, dur:0,  msg:'⏱️ 時間倒退 15 秒！'},
  {id:'star',  emoji:'⭐', name:'幸運星',    weight:12, dur:0,  msg:'⭐ 分數 +100！'},
+ {id:'prank', emoji:'😜', name:'調皮鬼',    weight:9,  dur:0,  msg:'😜 調皮鬼！大家的位置被打亂了！'},
+ {id:'whistle',emoji:'📣',name:'集合口哨',  weight:9,  dur:0,  msg:'📣 拿到集合口哨！按按鈕把大家叫過來',
+  modes:['tag','treasure']}, // 只在鬼抓人／尋寶出現
 ];
 
 /* ---------- 環境專屬道具（每個關卡限定，每次變形保證出現 1 個） ---------- */
@@ -636,7 +653,7 @@ const G={
  nextShiftAt:0, shifting:false, preWarned:false,
  items:[], foods:[], effects:{}, shovels:0, starBonus:0,
  satiety:100, drainPerSec:100/180, hungerMul:1, hungerOn:true, hungerLethal:true, starvedNoted:false,
- kites:0, visionUntil:0, owlUntil:0, viewBefore:null, topZoom:22,
+ kites:0, whistles:0, visionUntil:0, owlUntil:0, viewBefore:null, topZoom:22,
  smellMarks:null, smellTarget:null, smellPath:null, smellPathAt:0,
  stunnedUntil:0, atkCoolUntil:0, spMode:'classic',
  visited:null, solutionPath:null, mapUntil:0, compassUntil:0, ghostUntil:0,
@@ -758,6 +775,8 @@ const AudioEng={
  sfxAlarm(){ this.tone(880,0.28,'square',this.fxGain,0.3); setTimeout(()=>this.tone(660,0.28,'square',this.fxGain,0.3),300); },
  sfxTick(){ this.tone(1200,0.06,'square',this.fxGain,0.25); },
  sfxWin(){ [523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,0.3,'triangle',this.fxGain,0.5),i*130)); },
+ sfxWhistle(){ [1568,1760,1976].forEach((f,i)=>setTimeout(()=>this.tone(f,0.22,'square',this.fxGain,0.35),i*110));
+   setTimeout(()=>this.tone(2093,0.3,'triangle',this.fxGain,0.3),340); },
  sfxSniff(){ this.noise(0.16,0.35,420); setTimeout(()=>this.noise(0.12,0.3,520),170); },
  sfxHit(){ this.noise(0.12,0.65,600); this.tone(160,0.18,'square',this.fxGain,0.4,-60); },
  sfxSteal(){ [784,659,523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,0.12,'triangle',this.fxGain,0.4),i*70)); },
@@ -1230,10 +1249,12 @@ function buildEnvironment(theme){
    道具系統
    ===================================================== */
 function pickItemType(){
-  const tot=ITEM_TYPES.reduce((a,b)=>a+b.weight,0);
+  const mode=MP.on?MP.mode:'classic';
+  const pool=ITEM_TYPES.filter(it=>!it.modes||it.modes.includes(mode));
+  const tot=pool.reduce((a,b)=>a+b.weight,0);
   let r=RNG()*tot;
-  for(const it of ITEM_TYPES){ if((r-=it.weight)<0) return it; }
-  return ITEM_TYPES[0];
+  for(const it of pool){ if((r-=it.weight)<0) return it; }
+  return pool[0];
 }
 function spawnItems(){
   if(itemGroup){scene.remove(itemGroup);}
@@ -1353,6 +1374,8 @@ function applyItem(it){
   else if(t.id==='ghost'){ AudioEng.sfxUse(); G.ghostUntil=performance.now()+dur*1000; setGhostLook(true); addEffect('ghost','👻穿牆',dur); }
   else if(t.id==='timegem'){ AudioEng.sfxUse(); G.timeOffset+=15; }
   else if(t.id==='star'){ G.starBonus+=100; }
+  else if(t.id==='prank'){ doPrank(); }
+  else if(t.id==='whistle'){ G.whistles=Math.min(2,G.whistles+1); updateWhistleBtn(); }
   else if(t.id==='envkey'){ AudioEng.sfxUse(); useMagicKey(); }
   else if(t.id==='envkite'){ G.kites++; updateKiteBtn(); }
   else if(t.id==='envlight'){ AudioEng.sfxUse(); G.visionUntil=performance.now()+dur*1000; addEffect('vision','🔦探照燈',dur); }
@@ -1411,6 +1434,70 @@ function quakeWalls(){
   if(pc.x>0)hit('v',pc.x-1,pc.y);
   if(pc.x<G.mazeW-1)hit('v',pc.x,pc.y);
   showToast(n?('💥 震碎了 '+n+' 面牆！'):'💥 身邊都是外圍牆，震不碎');
+}
+/* ===== 傳送 helper（調皮鬼 / 集合口哨共用） ===== */
+function teleportSelfTo(x,z){
+  burstParticles(G.px,G.pz);
+  G.px=x; G.pz=z; playerGroup.position.set(x,0,z);
+  G.smellPathAt=0; burstParticles(x,z);
+}
+function teleportOtherTo(id,x,z){
+  const p=MP.players[id];
+  if(p){ p.tx=x; p.tz=z; if(p.mesh)p.mesh.position.set(x,0,z); p.lastSeen=performance.now(); }
+  if(MP.host&&MP.bots){ const b=MP.bots.find(v=>v.id===id); if(b){ b.x=x; b.z=z; b.path=null; b.chaseUntil=0; } }
+}
+function participantIds(){
+  return MP.on?MP.roster.map(r=>r.id):[MP.id];
+}
+/* 😜 調皮鬼：所有人隨機換位置 */
+function doPrank(){
+  const avoid=new Set([G.exitCell.x+','+G.exitCell.y]);
+  if(MP.treasure&&!MP.treasure.holder)avoid.add(MP.treasure.cell.x+','+MP.treasure.cell.y);
+  const list=[];
+  for(const id of participantIds()){
+    let c=null;
+    for(let t=0;t<80&&!c;t++){
+      const cx=Math.floor(Math.random()*G.mazeW), cy=Math.floor(Math.random()*G.mazeH);
+      if(avoid.has(cx+','+cy))continue;
+      avoid.add(cx+','+cy); c={x:cx,y:cy};
+    }
+    if(!c)c={x:Math.floor(Math.random()*G.mazeW),y:Math.floor(Math.random()*G.mazeH)};
+    const wp=cellToWorld(c.x,c.y);
+    list.push({id,x:+wp.x.toFixed(2),z:+wp.z.toFixed(2)});
+  }
+  if(MP.on)mpSend({t:'prank',list});
+  else applyPrank(list,MP.id);
+}
+function applyPrank(list,fromId){
+  for(const e of list){
+    if(e.id===MP.id)teleportSelfTo(e.x,e.z);
+    else teleportOtherTo(e.id,e.x,e.z);
+  }
+  AudioEng.sfxUse();
+  showToast('😜 調皮鬼搗蛋！大家的位置都被打亂了',2800);
+}
+/* 📣 集合口哨：把所有人叫到自己身邊 */
+function useWhistle(){
+  if(G.whistles<=0||G.frozen||performance.now()<G.stunnedUntil)return;
+  if(!(MP.on&&(MP.mode==='tag'||MP.mode==='treasure')))return;
+  G.whistles--; updateWhistleBtn();
+  mpSend({t:'gather',x:+G.px.toFixed(2),z:+G.pz.toFixed(2)});
+}
+function applyGather(x,z,fromId){
+  const spread=[[0,0],[1.1,0],[-1.1,0],[0,1.1],[0,-1.1],[0.8,0.8],[-0.8,-0.8]];
+  const ids=participantIds();
+  ids.forEach((id,i)=>{
+    const o=spread[i%spread.length];
+    const tx=x+o[0], tz=z+o[1];
+    if(id===MP.id){ if(id!==fromId)teleportSelfTo(tx,tz); }
+    else teleportOtherTo(id,tx,tz);
+  });
+  AudioEng.sfxWhistle();
+  showToast('📣 '+(fromId===MP.id?'你':mpName(fromId))+'吹了集合口哨！大家都被叫過來了',2800);
+}
+function updateWhistleBtn(){
+  $('whistleBtn').style.display=G.whistles>0?'block':'none';
+  $('whistleCnt').textContent=G.whistles;
 }
 function updateKiteBtn(){
   $('kiteBtn').style.display=G.kites>0?'block':'none';
@@ -1836,6 +1923,7 @@ function setupTouch(){
     if(c==='KeyF')useKite();
     if(c==='KeyX')doAttack();
     if(c==='KeyC')useSkill();
+    if(c==='KeyG')useWhistle();
     if(c==='KeyV')$('viewToggle').click();
     if(c==='KeyM'){
       if($('bigMapOverlay').style.display==='flex')$('bigMapOverlay').style.display='none';
@@ -2347,7 +2435,7 @@ function startGame(){
   G.starvedNoted=false;
   G.drainPerSec=100/((MP.on?MP.hungerMin:CFG.hungerMin)*60); updateSatietyBar();
   $('satietyPct').parentElement.style.display=G.hungerOn?'':'none';
-  G.kites=0; G.visionUntil=0; G.owlUntil=0; G.viewBefore=null; updateKiteBtn();
+  G.kites=0; G.whistles=0; G.visionUntil=0; G.owlUntil=0; G.viewBefore=null; updateKiteBtn(); updateWhistleBtn();
   G.stunnedUntil=0; G.atkCoolUntil=0; MP.twinSent=false;
   G.shovelRechargeAt=0; G.skillCoolUntil=0; G.invisUntil=0; G.radarNextAt=0; G.radarPings=null;
   G.smellMarks=null; G.smellTarget=null; G.smellPath=null; G.smellPathAt=0; $('smellHud').style.display='none';
@@ -2508,6 +2596,7 @@ function wireUI(){
   };
   $('shovelBtn').onclick=useShovel;
   $('kiteBtn').onclick=useKite;
+  $('whistleBtn').onclick=useWhistle;
   $('atkBtn').onclick=doAttack;
   $('skillBtn').onclick=useSkill;
   const zoomBy=d=>{G.topZoom=Math.max(10,Math.min(48,G.topZoom+d));};
@@ -2895,6 +2984,14 @@ function mpHandle(m){
         }
       }
       break;}
+    case 'prank':
+      if(!MP.started||MP.ended)break;
+      applyPrank(m.list||[],m.f);
+      break;
+    case 'gather':
+      if(!MP.started||MP.ended)break;
+      applyGather(m.x,m.z,m.f);
+      break;
     case 'inv':{ // 隱身（別人看不到，但位置照常同步、仍會被打中）
       const pl=MP.players[m.f];
       if(pl){pl.invisUntil=now+(m.ms||5000);}
@@ -3255,6 +3352,7 @@ function mpLeave(){
   G.invisUntil=0; G.skillCoolUntil=0; G.radarPings=null;
   G.smellMarks=null; G.smellTarget=null; G.smellPath=null; $('smellHud').style.display='none';
   $('skillBtn').style.display='none'; $('hpWrap').style.display='none';
+  G.whistles=0; $('whistleBtn').style.display='none';
   G.stunnedUntil=0; G.treasureMesh=null; G.myGem=null;
   $('stunOverlay').style.display='none'; $('treasureBanner').style.display='none';
   $('atkBtn').style.display='none';
