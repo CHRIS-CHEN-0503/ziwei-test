@@ -526,8 +526,8 @@ button{font-family:var(--font);}
       ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕；最多帶 1 把，工程師用掉 45 秒後自動補充，特大以上地圖 35 秒）<br>
       🗺️ 魔法地圖：顯示通往出口的路線<br>🧭 指南針：箭頭指向出口<br>👻 穿牆斗篷：可以穿過牆壁<br>
       ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100<br>
-      😜 調皮鬼：吃到就把<b>所有人</b>隨機傳送到別的地方（自己也會被傳走！）<br>
-      📣 集合口哨（鬼抓人／尋寶限定）：存起來，按按鈕把<b>所有人叫到你身邊</b>
+      😜 調皮鬼（鬼抓人／尋寶限定）：吃到就把<b>所有人</b>隨機傳送到別的地方（自己也會被傳走！）<br>
+      📣 集合口哨（鬼抓人／尋寶限定）：<b>全場只有一個</b>，存起來按按鈕（電腦 G）把<b>所有人叫到你身邊</b>；有人拿著還沒用掉，迷宮變換也不會再出現
     </div>
     <div>🍗 <b>飽足感</b>會隨時間減少，歸零就闖關失敗！低於 50% 速度變慢（×0.8），低於 25% 更慢（×0.75）。</div>
     <div>🍎 迷宮變形時會出現<b>食物</b>：🍬糖果+10%、🍪餅乾+15%、🍎蘋果+20%、🍙飯糰+30%、🍜拉麵+40%、🍗雞腿+50%、🍱超級便當+80%。</div>
@@ -558,7 +558,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.10.0';
+const GAME_VERSION='1.10.1';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -615,7 +615,8 @@ const ITEM_TYPES=[
  {id:'ghost', emoji:'👻', name:'穿牆斗篷',  weight:8,  dur:5,  msg:'👻 穿牆 5 秒！快穿過去！'},
  {id:'timegem',emoji:'⏱️',name:'時間寶石', weight:10, dur:0,  msg:'⏱️ 時間倒退 15 秒！'},
  {id:'star',  emoji:'⭐', name:'幸運星',    weight:12, dur:0,  msg:'⭐ 分數 +100！'},
- {id:'prank', emoji:'😜', name:'調皮鬼',    weight:9,  dur:0,  msg:'😜 調皮鬼！大家的位置被打亂了！'},
+ {id:'prank', emoji:'😜', name:'調皮鬼',    weight:9,  dur:0,  msg:'😜 調皮鬼！大家的位置被打亂了！',
+  modes:['tag','treasure']},
  {id:'whistle',emoji:'📣',name:'集合口哨',  weight:9,  dur:0,  msg:'📣 拿到集合口哨！按按鈕把大家叫過來',
   modes:['tag','treasure']}, // 只在鬼抓人／尋寶出現
 ];
@@ -1248,9 +1249,9 @@ function buildEnvironment(theme){
 /* =====================================================
    道具系統
    ===================================================== */
-function pickItemType(){
+function pickItemType(exclude){
   const mode=MP.on?MP.mode:'classic';
-  const pool=ITEM_TYPES.filter(it=>!it.modes||it.modes.includes(mode));
+  const pool=ITEM_TYPES.filter(it=>(!it.modes||it.modes.includes(mode))&&!(exclude&&exclude.has(it.id)));
   const tot=pool.reduce((a,b)=>a+b.weight,0);
   let r=RNG()*tot;
   for(const it of pool){ if((r-=it.weight)<0) return it; }
@@ -1259,6 +1260,9 @@ function pickItemType(){
 function spawnItems(){
   if(itemGroup){scene.remove(itemGroup);}
   itemGroup=new THREE.Group(); G.items=[];
+  // 集合口哨全場只有一個：還有人拿著沒用掉，這輪就不再出現
+  const spawnExcl=new Set();
+  if(MP.whistleHolder)spawnExcl.add('whistle');
   const pc=worldToCell(G.px,G.pz);
   const used=MP.on?new Set([G.exitCell.x+','+G.exitCell.y])
                   :new Set([pc.x+','+pc.y, G.exitCell.x+','+G.exitCell.y]);
@@ -1267,7 +1271,8 @@ function spawnItems(){
     tries++;
     const cx=Math.floor(RNG()*G.mazeW), cy=Math.floor(RNG()*G.mazeH);
     const key=cx+','+cy; if(used.has(key))continue; used.add(key);
-    const type=pickItemType(), p=cellToWorld(cx,cy);
+    const type=pickItemType(spawnExcl), p=cellToWorld(cx,cy);
+    if(type.id==='whistle')spawnExcl.add('whistle'); // 一輪只放一個
     const sp=makeEmojiSprite(type.emoji,1.5); sp.position.set(p.x,1.2,p.z);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.06,8,20),
       new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.55}));
@@ -1375,7 +1380,7 @@ function applyItem(it){
   else if(t.id==='timegem'){ AudioEng.sfxUse(); G.timeOffset+=15; }
   else if(t.id==='star'){ G.starBonus+=100; }
   else if(t.id==='prank'){ doPrank(); }
-  else if(t.id==='whistle'){ G.whistles=Math.min(2,G.whistles+1); updateWhistleBtn(); }
+  else if(t.id==='whistle'){ G.whistles=1; updateWhistleBtn(); mpSend({t:'wget'}); }
   else if(t.id==='envkey'){ AudioEng.sfxUse(); useMagicKey(); }
   else if(t.id==='envkite'){ G.kites++; updateKiteBtn(); }
   else if(t.id==='envlight'){ AudioEng.sfxUse(); G.visionUntil=performance.now()+dur*1000; addEffect('vision','🔦探照燈',dur); }
@@ -2767,7 +2772,7 @@ const MP={
   taggedId:null, tagImmuneUntil:0, raceEndAt:0, finishers:[],
   meFinished:false, meOut:false,
   treasure:null, bots:null, stunSec:3, pingSec:3, twinSent:false,
-  itPower:null, hp:{}, itRegenAt:0,
+  itPower:null, hp:{}, itRegenAt:0, whistleHolder:null,
   net:null, posTimer:null, helloTimer:null,
 };
 function mpTopic(){return 'ziwei-maze3d/'+MP.room;}
@@ -2857,7 +2862,7 @@ function mpHandle(m){
       MP.hungerMin=m.hungerMin; MP.roundMs=m.roundMs;
       MP.order=m.order; MP.roster=m.players; MP.round=0;
       MP.taggedId=m.it||null; MP.itPower=m.itpw||null; MP.tagImmuneUntil=0;
-      MP.hp={}; MP.itRegenAt=performance.now()+15000;
+      MP.hp={}; MP.itRegenAt=performance.now()+15000; MP.whistleHolder=null;
       MP.stunSec=m.stunSec||3; MP.pingSec=m.pingSec||3;
       MP.bots=null;
       if(MP.host&&(m.mode==='treasure'||m.mode==='tag')){
@@ -2988,8 +2993,13 @@ function mpHandle(m){
       if(!MP.started||MP.ended)break;
       applyPrank(m.list||[],m.f);
       break;
+    case 'wget': // 集合口哨全場唯一：記錄誰拿著
+      MP.whistleHolder=m.f;
+      if(m.f!==MP.id)showToast('📣 '+mpName(m.f)+' 撿到集合口哨了！小心被叫過去',2600);
+      break;
     case 'gather':
       if(!MP.started||MP.ended)break;
+      MP.whistleHolder=null; // 用掉了，下次變形才會再出現
       applyGather(m.x,m.z,m.f);
       break;
     case 'inv':{ // 隱身（別人看不到，但位置照常同步、仍會被打中）
@@ -3019,6 +3029,7 @@ function mpHandle(m){
         if(MP.host)mpSend({t:'lobby',players:MP.roster,mode:MP.mode});
         mpRenderLobby();
       }else{
+        if(MP.whistleHolder===m.f)MP.whistleHolder=null; // 持有者離線→口哨釋放
         const p=MP.players[m.f];
         if(p&&p.mesh)p.mesh.visible=false;
         MP.outs[m.f]=1;
@@ -3348,7 +3359,7 @@ function mpLeave(){
   MP.players={}; MP.roster=[]; MP.on=false; MP.started=false; MP.ended=false; MP.endSent=false;
   MP.taggedId=null; MP.finishers=[]; MP.outs={}; MP.meFinished=false; MP.meOut=false; MP.raceEndAt=0;
   MP.treasure=null; MP.bots=null; MP.twinSent=false;
-  MP.itPower=null; MP.hp={}; MP.itRegenAt=0;
+  MP.itPower=null; MP.hp={}; MP.itRegenAt=0; MP.whistleHolder=null;
   G.invisUntil=0; G.skillCoolUntil=0; G.radarPings=null;
   G.smellMarks=null; G.smellTarget=null; G.smellPath=null; $('smellHud').style.display='none';
   $('skillBtn').style.display='none'; $('hpWrap').style.display='none';
