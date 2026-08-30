@@ -511,7 +511,7 @@ button{font-family:var(--font);}
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
     <div>🎁 道具（每次變形會重新出現）：</div>
     <div style="padding-left:14px;">
-      ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕；最多帶 1 把，工程師用掉 45 秒後自動補充）<br>
+      ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕；最多帶 1 把，工程師用掉 45 秒後自動補充，特大以上地圖 35 秒）<br>
       🗺️ 魔法地圖：顯示通往出口的路線<br>🧭 指南針：箭頭指向出口<br>👻 穿牆斗篷：可以穿過牆壁<br>
       ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100
     </div>
@@ -544,7 +544,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.9.1';
+const GAME_VERSION='1.9.3';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,smellCells:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -563,7 +563,7 @@ const CHARS=[
  {id:'liya', name:'莉亞', emoji:'👩', desc:'聰明女孩，紫色洋裝', skin:0xc68642, hair:0x111111, shirt:0x7e57c2, pants:0xd1c4e9, type:'girl',
   job:'小魔法師', abilText:'魔力加持：所有道具效果時間 ×1.5', itemDurMul:1.5, weapon:'✨', wname:'魔法棒', gender:'f'},
  {id:'robot',name:'鐵蛋', emoji:'🤖', desc:'迷宮探測機器人', skin:0x9e9e9e, hair:0x616161, shirt:0x78909c, pants:0x455a64, type:'robot',
-  job:'工程師', abilText:'工具專家：開局 1 把鐵鍬，用掉 45 秒後自動補充', startShovels:1, weapon:'🔧', wname:'大扳手', gender:'m'},
+  job:'工程師', abilText:'工具專家：開局 1 把鐵鍬，用掉 45 秒後自動補充（特大以上地圖 35 秒）', startShovels:1, weapon:'🔧', wname:'大扳手', gender:'m'},
  {id:'cat',  name:'喵喵', emoji:'🐱', desc:'橘色小貓咪，有尾巴喔', skin:0xffa040, hair:0xef6c00, shirt:0xffb74d, pants:0xef6c00, type:'cat',
   job:'尋路貓', abilText:'貓的直覺：迷宮變形後自動看見出口路線 6 秒', pathOnShift:6, weapon:'🐾', wname:'貓爪', gender:'f'},
 ];
@@ -1453,23 +1453,37 @@ function shovelCap(){
 function hasShovelKit(){
   return CH().id==='robot'||(MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id&&MP.itPower==='shovel');
 }
-function tickShovelRecharge(){
+/* 鐵鍬補充時間：特大(19×19)以上的地圖比較大，縮短成 35 秒 */
+function shovelCdMs(){ return (G.mazeW>=19)?35000:45000; }
+/* 拿到鐵鍬工具箱（工程師開局、或當鬼抽到鐵鍬能力）→ 立刻先有一把 */
+function grantShovelKit(quiet){
   if(!hasShovelKit())return;
+  if(G.shovels<1){
+    G.shovels=1; G.shovelRechargeAt=0; updateShovelBtn();
+    if(!quiet)showToast('⛏️ 工具箱到手！先給你一把鐵鍬');
+  }
+}
+function tickShovelRecharge(){
+  if(!hasShovelKit()){ G.shovelRechargeAt=0; return; }
   const now=performance.now();
-  if(G.shovels<shovelCap()){
-    if(!G.shovelRechargeAt)G.shovelRechargeAt=now+45000;
-    else if(now>=G.shovelRechargeAt){
-      G.shovels++; G.shovelRechargeAt=0; updateShovelBtn();
+  grantShovelKit(true); // 保險：有工具箱卻是空手（沒在倒數）就補一把
+  if(G.shovelRechargeAt&&now>=G.shovelRechargeAt){
+    if(G.shovels<shovelCap()){
+      G.shovels++; updateShovelBtn();
       showToast('⛏️ 鐵鍬補充好了！');
     }
-  }else G.shovelRechargeAt=0;
+    G.shovelRechargeAt=0;
+  }
+  if(G.shovels>=shovelCap())G.shovelRechargeAt=0;
 }
 /* 鐵鍬敲牆 */
 function useShovel(){
   if(G.shovels<=0||G.frozen)return;
   const best=findWallAhead();
   if(best){
-    G.shovels--; updateShovelBtn();
+    G.shovels--;
+    if(hasShovelKit()&&!G.shovelRechargeAt)G.shovelRechargeAt=performance.now()+shovelCdMs(); // 用掉才開始 CD
+    updateShovelBtn();
     removeWallBox(best); AudioEng.sfxBreak();
     burstParticles((best.minX+best.maxX)/2,(best.minZ+best.maxZ)/2);
     showToast('⛏️ 牆壁被敲破了！');
@@ -2774,7 +2788,10 @@ function mpHandle(m){
         if(MP.taggedId){ // 公告初始鬼並讓他定住 3 秒
           MP.tagImmuneUntil=performance.now()+3000;
           setTimeout(()=>announceTag(mpName(MP.taggedId),genderOf(MP.taggedId)),600);
-          if(MP.taggedId===MP.id)G.stunnedUntil=Math.max(G.stunnedUntil,performance.now()+3000);
+          if(MP.taggedId===MP.id){
+            G.stunnedUntil=Math.max(G.stunnedUntil,performance.now()+3000);
+            if(MP.itPower==='shovel')grantShovelKit(true);
+          }
           else if(MP.host&&MP.bots){const b=MP.bots.find(x=>x.id===MP.taggedId);if(b)b.stunnedUntil=performance.now()+3000;}
         }
       }
@@ -2830,6 +2847,11 @@ function mpHandle(m){
         }else{
           const pl=MP.players[m.to]; if(pl)pl.stunnedUntil=now+3000;
           if(MP.host&&MP.bots){const b=MP.bots.find(x=>x.id===m.to);if(b)b.stunnedUntil=now+3000;}
+        }
+        if(m.to===MP.id&&MP.itPower==='shovel')grantShovelKit(); // 鬼能力：鐵鍬工具箱 → 馬上有一把
+        if(G.shovels>shovelCap()){ // 卸任後上限變小 → 收回超過的鐵鍬
+          G.shovels=shovelCap();
+          showToast('⛏️ 鬼的工具箱收走了，鐵鍬只能帶 '+shovelCap()+' 把');
         }
         mpUpdateTagVisuals(); updateHpHud(); updateAtkBtn(); updateSkillBtn(); updateShovelBtn();
       }
