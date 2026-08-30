@@ -283,6 +283,7 @@ button{font-family:var(--font);}
     <div class="view-row" id="spModeRow">
       <button class="view-btn sel" data-m="classic">🚩 經典闖關</button>
       <button class="view-btn" data-m="treasure">💎 尋寶對戰</button>
+      <button class="view-btn" data-m="tag">👹 鬼抓人</button>
     </div>
     <div class="sec-label">4️⃣ 選擇初始視角</div>
     <div class="view-row" id="viewRow">
@@ -490,6 +491,7 @@ button{font-family:var(--font);}
     <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
     <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空看到整個迷宮8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
     <div>👁️ 視角是公平的：第三人稱是跟在你身後的平視視角、俯視只看得到腳邊一圈，都不會看到牆壁後面的東西（只有🦉貓頭鷹道具例外）。</div>
+    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（頭上有👹、跑速+15%），碰到別人就換對方當鬼；時間到還是鬼的人就輸了。此模式不用擔心肚子餓。</div>
     <div>💎 <b>尋寶模式</b>：小地圖會顯示寶藏位置，撿到寶藏後帶到出口 🚩 就贏！別人拿寶藏時你會出現<b>攻擊鍵</b>（每個職業武器不同），打中就把人暈眩 3 秒；打中持有者還能搶走寶藏（拿寶藏的人不能攻擊）。持有者位置每 3 秒在小地圖上更新。單機可以跟電腦對戰！</div>
     <div>🌀 迷宮變形時<b>出口也會搬家</b>（外圈的角落或邊線上），記得看小地圖。</div>
     <div>👥 <b>多人連線</b>（2~3人，視角可自由切換）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了；💎 尋寶：搶寶藏帶出口（大地圖人數不足電腦會補位）。</div>
@@ -507,7 +509,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.7.0';
+const GAME_VERSION='1.7.1';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -2343,16 +2345,19 @@ function wireUI(){
 }
 /* 單機開始：經典直接開；尋寶＝建立一場「沒有網路的多人局」跟電腦對戰（重用多人邏輯） */
 function launchGame(){
-  if(G.spMode==='treasure'){
+  if(G.spMode==='treasure'||G.spMode==='tag'){
     if(MP.on)mpLeave();
+    const mode=G.spMode;
     const me={id:MP.id,name:getPlayerName(),charIdx:G.charIdx};
-    const bots=makeBots(CFG.mazeSize>=15?2:1,[me]);
+    const bots=makeBots(mode==='tag'?2:(CFG.mazeSize>=15?2:1),[me]); // 鬼抓人固定 3 人比較好玩
     MP.on=true; MP.host=true; MP.net=null; MP.started=false; MP.ended=false;
-    MP.mode='treasure'; MP.roster=[me,...bots];
-    mpHandle({t:'start',f:MP.id,seed:(Math.random()*2**31)|0,mode:'treasure',lvl:G.lvlIdx,size:CFG.mazeSize,
-      shiftMs:CFG.shiftMin*60000,hungerMin:CFG.hungerMin,roundMs:0,
+    MP.mode=mode; MP.roster=[me,...bots];
+    const order=MP.roster.map(r=>r.id);
+    mpHandle({t:'start',f:MP.id,seed:(Math.random()*2**31)|0,mode,lvl:G.lvlIdx,size:CFG.mazeSize,
+      shiftMs:CFG.shiftMin*60000,hungerMin:CFG.hungerMin,roundMs:150000,
       stunSec:CFG.stunSec,pingSec:CFG.pingSec,
-      order:MP.roster.map(r=>r.id),players:MP.roster,it:null});
+      order,players:MP.roster,
+      it:mode==='tag'?order[Math.floor(Math.random()*order.length)]:null});
   }else{
     if(MP.on)mpLeave();
     startGame();
@@ -2511,7 +2516,7 @@ function mpHandle(m){
       MP.taggedId=m.it||null; MP.tagImmuneUntil=0;
       MP.stunSec=m.stunSec||3; MP.pingSec=m.pingSec||3;
       MP.bots=null;
-      if(MP.host&&m.mode==='treasure'){
+      if(MP.host&&(m.mode==='treasure'||m.mode==='tag')){
         const corners=[[0,0],[m.size-1,0],[0,m.size-1]];
         MP.bots=m.players.filter(pl=>pl.bot).map(pl=>{
           const ci=Math.max(0,m.order.indexOf(pl.id))%3, cp2={x:corners[ci][0],y:corners[ci][1]};
@@ -2694,6 +2699,8 @@ function mpFrame(dt){
       }
     }
   }
+  // 鬼抓人：電腦 AI（房主端模擬）
+  if(MP.mode==='tag'&&MP.started&&MP.host&&MP.bots&&!G.frozen)botSimTag(dt,now);
   // 鬼抓人倒數 + 時間到（房主宣布結果）
   if(MP.mode==='tag'&&MP.started){
     const left=Math.max(0,(G.roundEndsAt-now)/1000);
@@ -2703,7 +2710,58 @@ function mpFrame(dt){
   // 比賽：第一名抵達後 20 秒收場
   if(MP.mode==='race'&&MP.raceEndAt&&now>MP.raceEndAt)mpEndRace();
 }
-/* 電腦對手：BFS 尋路。沒人拿寶藏→去搶寶藏；自己拿到→衝出口；別人拿到→追過去用武器搶 */
+/* 電腦共用：往目標格沿 BFS 路徑走 */
+function botWalk(b,goal,goalKey,dt,now,spMul){
+  if(!goal)return;
+  if(!b.path||b.goalKey!==goalKey||now>b.repathAt||b.pathI>=b.path.length){
+    const bc=worldToCell(b.x,b.z);
+    b.path=solveMaze(bc.x,bc.y,goal.x,goal.y); b.pathI=1; b.goalKey=goalKey; b.repathAt=now+2000;
+  }
+  if(b.path&&b.pathI<b.path.length){
+    const [nx,ny]=b.path[b.pathI], np=cellToWorld(nx,ny);
+    const dx=np.x-b.x,dz=np.z-b.z,dl=Math.hypot(dx,dz);
+    if(dl<0.3)b.pathI++;
+    else{const sp=4.3*(spMul||1)*dt;b.x+=dx/dl*sp;b.z+=dz/dl*sp;b.h=Math.atan2(dx,dz);}
+  }
+}
+function botPosOf(id){ // 房主端查任何人的位置
+  if(id===MP.id)return {x:G.px,z:G.pz};
+  if(MP.bots){const bb=MP.bots.find(x=>x.id===id);if(bb)return {x:bb.x,z:bb.z};}
+  const pl=MP.players[id];
+  return pl&&pl.mesh?{x:pl.mesh.position.x,z:pl.mesh.position.z}:null;
+}
+/* 鬼抓人 AI：當鬼→追最近的人；不是鬼→往離鬼最遠的角落逃 */
+function botSimTag(dt,now){
+  for(const b of MP.bots){
+    if(MP.taggedId===b.id){
+      let best=null,bd=1e9,bpos=null;
+      for(const r of MP.roster){
+        if(r.id===b.id)continue;
+        const p2=botPosOf(r.id); if(!p2)continue;
+        const d=(p2.x-b.x)**2+(p2.z-b.z)**2;
+        if(d<bd){bd=d;best=r.id;bpos=p2;}
+      }
+      if(bpos){
+        const c=worldToCell(bpos.x,bpos.z);
+        botWalk(b,c,'c'+c.x+','+c.y,dt,now,1.15); // 鬼跑快 15%
+        if(bd<1.44&&now>MP.tagImmuneUntil){MP.tagImmuneUntil=now+3000;mpSend({t:'tag',to:best});}
+      }
+    }else{
+      const ip=botPosOf(MP.taggedId); if(!ip)continue;
+      const dNow=(ip.x-b.x)**2+(ip.z-b.z)**2;
+      if(!b.fleeGoal||now>(b.fleeAt||0)||dNow<36){ // 鬼靠近就馬上換逃跑路線
+        b.fleeAt=now+2500;
+        const ic=worldToCell(ip.x,ip.z), W=G.mazeW,H=G.mazeH;
+        const cands=[[1,1],[W-2,1],[1,H-2],[W-2,H-2],[W>>1,1],[1,H>>1],[W-2,H>>1],[W>>1,H-2]];
+        let bestC=cands[0],bd2=-1;
+        for(const c of cands){const d=Math.abs(c[0]-ic.x)+Math.abs(c[1]-ic.y);if(d>bd2){bd2=d;bestC=c;}}
+        b.fleeGoal={x:bestC[0],y:bestC[1]};
+      }
+      botWalk(b,b.fleeGoal,'f'+b.fleeGoal.x+','+b.fleeGoal.y,dt,now,1);
+    }
+  }
+}
+/* 尋寶 AI：沒人拿寶藏→去搶；自己拿到→衝出口；別人拿到→追過去用武器搶 */
 function botSim(dt,now){
   for(const b of MP.bots){
     if(now<(b.stunnedUntil||0))continue;
@@ -2712,21 +2770,11 @@ function botSim(dt,now){
     if(hid===b.id){goal=G.exitCell;goalKey='e'+G.exitCell.x+','+G.exitCell.y;}
     else if(!hid){goal=MP.treasure.cell;goalKey='t';}
     else{
-      let hp=(hid===MP.id)?{x:G.px,z:G.pz}
-            :(MP.players[hid]&&MP.players[hid].mesh?{x:MP.players[hid].mesh.position.x,z:MP.players[hid].mesh.position.z}:null);
+      const hp=botPosOf(hid);
       if(hp){b._hpos=hp;const c=worldToCell(hp.x,hp.z);goal=c;goalKey='h'+c.x+','+c.y;}
     }
     if(!goal)continue;
-    if(!b.path||b.goalKey!==goalKey||now>b.repathAt||b.pathI>=b.path.length){
-      const bc=worldToCell(b.x,b.z);
-      b.path=solveMaze(bc.x,bc.y,goal.x,goal.y); b.pathI=1; b.goalKey=goalKey; b.repathAt=now+2000;
-    }
-    if(b.path&&b.pathI<b.path.length){
-      const [nx,ny]=b.path[b.pathI], np=cellToWorld(nx,ny);
-      const dx=np.x-b.x,dz=np.z-b.z,dl=Math.hypot(dx,dz);
-      if(dl<0.3)b.pathI++;
-      else{const sp=4.3*dt;b.x+=dx/dl*sp;b.z+=dz/dl*sp;b.h=Math.atan2(dx,dz);}
-    }
+    botWalk(b,goal,goalKey,dt,now,1);
     if(!hid){ // 撿寶藏
       const tp=cellToWorld(MP.treasure.cell.x,MP.treasure.cell.y);
       if((tp.x-b.x)**2+(tp.z-b.z)**2<1.5)mpSend({t:'tres',holder:b.id});
