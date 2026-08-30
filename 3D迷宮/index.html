@@ -40,6 +40,7 @@ button{font-family:var(--font);}
   font-size:.8rem;color:#5d4037;transition:transform .12s;
 }
 .char-btn .ce{font-size:1.7rem;display:block;}
+.char-btn .cj{display:block;font-size:.62rem;color:#7e57c2;font-weight:bold;}
 .char-btn.sel{border-color:#ff9800;background:#fff3e0;transform:scale(1.06);box-shadow:0 3px 10px rgba(255,152,0,.4);}
 #charPreviewWrap{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px;}
 #charPreview{width:120px;height:130px;border-radius:18px;background:linear-gradient(180deg,#c5e8ff,#e8f9e8);border:3px solid #90caf9;}
@@ -134,6 +135,8 @@ button{font-family:var(--font);}
   background:rgba(20,16,50,.7);border-radius:50%;width:56px;height:56px;border:2px solid #ffd54f;
 }
 #compassArrow{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.7rem;}
+#satietyWrap{display:inline-block;width:58px;height:12px;background:rgba(255,255,255,.22);border-radius:6px;overflow:hidden;vertical-align:middle;margin:0 4px;}
+#satietyFill{display:block;height:100%;width:100%;background:#8bc34a;transition:width .3s,background .3s;}
 
 /* ===== 變換警告 ===== */
 #shiftWarn{
@@ -253,6 +256,7 @@ button{font-family:var(--font);}
   <div class="hud" id="hudTop">
     <div id="hudInfo">
       <span>⏱ <b id="hudTime">0:00</b></span>
+      <span>🍗<span id="satietyWrap"><span id="satietyFill"></span></span><b id="satietyPct">100%</b></span>
       <span>🌀 <span id="shiftCountdown">--</span></span>
       <span id="hudLvlName"></span>
     </div>
@@ -299,6 +303,20 @@ button{font-family:var(--font);}
   </div>
 </div>
 
+<!-- ============ 失敗畫面 ============ -->
+<div id="failScreen" class="screen" style="background:radial-gradient(circle at 50% 30%,#546e7a,#263238 70%);flex-direction:column;align-items:center;justify-content:center;padding:14px;">
+  <div class="win-card" style="border-color:#90a4ae;">
+    <div class="confetti">😵🍽️😵</div>
+    <h2 style="color:#607d8b;">肚子太餓了…闖關失敗</h2>
+    <div class="win-stats">
+      <div>這次撐了 <b id="failTime"></b></div>
+      <div style="font-size:.95rem;color:#7e57c2;margin-top:6px;">💡 迷宮變形時會出現食物，記得撿來吃補充飽足感！</div>
+    </div>
+    <button class="start-btn" id="failAgainBtn">🔁 再挑戰一次</button>
+    <button class="mini-btn" id="failHomeBtn">🏠 回到選單</button>
+  </div>
+</div>
+
 <!-- ============ 分數牆 ============ -->
 <div class="modal" id="lbModal">
   <div class="m-card">
@@ -319,6 +337,8 @@ button{font-family:var(--font);}
     <h3>⚙️ 後台設定</h3>
     <div class="adm-row"><label>🌀 迷宮每幾分鐘變換一次</label><input type="number" id="cfgShiftMin" min="0.5" max="10" step="0.5"></div>
     <div class="adm-row"><label>🎁 每次出現的道具數量</label><input type="number" id="cfgItems" min="3" max="12" step="1"></div>
+    <div class="adm-row"><label>🍎 每次出現的食物數量</label><input type="number" id="cfgFood" min="2" max="10" step="1"></div>
+    <div class="adm-row"><label>🍗 飽足感可以撐幾分鐘（歸零＝失敗）</label><input type="number" id="cfgHunger" min="1" max="10" step="0.5"></div>
     <div class="adm-row"><label>🧱 迷宮大小</label>
       <select id="cfgSize"><option value="11">小 11×11</option><option value="13">中 13×13</option><option value="15">大 15×15</option></select>
     </div>
@@ -347,6 +367,9 @@ button{font-family:var(--font);}
       🗺️ 魔法地圖：顯示通往出口的路線<br>🧭 指南針：箭頭指向出口<br>👻 穿牆斗篷：可以穿過牆壁<br>
       ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100
     </div>
+    <div>🍗 <b>飽足感</b>會隨時間減少，歸零就闖關失敗！低於 50% 速度變慢（×0.8），低於 25% 更慢（×0.75）。</div>
+    <div>🍎 迷宮變形時會出現<b>食物</b>：🍬糖果+10%、🍪餅乾+15%、🍎蘋果+20%、🍙飯糰+30%、🍜拉麵+40%、🍗雞腿+50%、🍱超級便當+80%。</div>
+    <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
     <div>🗺️ 點右上角小地圖可以放大。</div>
     <button class="m-close" id="helpClose" style="display:block;margin:10px auto 0;">知道了！</button>
   </div>
@@ -363,20 +386,27 @@ button{font-family:var(--font);}
 const $=id=>document.getElementById(id);
 
 /* ---------- 設定（後台可調） ---------- */
-const DEFAULT_CFG={shiftMin:3,itemCount:6,mazeSize:13,musicOn:1,apiUrl:''};
+const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,mazeSize:13,musicOn:1,apiUrl:''};
 let CFG={...DEFAULT_CFG};
 try{const s=JSON.parse(localStorage.getItem('maze3d_cfg')||'{}');CFG={...DEFAULT_CFG,...s};}catch(e){}
 function saveCfg(){localStorage.setItem('maze3d_cfg',JSON.stringify(CFG));}
 
 /* ---------- 角色資料 ---------- */
 const CHARS=[
- {id:'yong', name:'小勇', emoji:'👦', desc:'活力小男孩，藍色上衣', skin:0xffcc99, hair:0x4a3220, shirt:0x2196f3, pants:0x37474f, type:'human'},
- {id:'hua',  name:'小花', emoji:'👧', desc:'愛笑女孩，粉紅洋裝＋雙馬尾', skin:0xffd9b3, hair:0x8d5524, shirt:0xf06292, pants:0xf8bbd0, type:'girl'},
- {id:'dan',  name:'阿丹', emoji:'🧒', desc:'跑步高手，綠色運動服', skin:0x8d5524, hair:0x1a1a1a, shirt:0x43a047, pants:0x263238, type:'human'},
- {id:'liya', name:'莉亞', emoji:'👩', desc:'聰明女孩，紫色洋裝', skin:0xc68642, hair:0x111111, shirt:0x7e57c2, pants:0xd1c4e9, type:'girl'},
- {id:'robot',name:'鐵蛋', emoji:'🤖', desc:'迷宮探測機器人', skin:0x9e9e9e, hair:0x616161, shirt:0x78909c, pants:0x455a64, type:'robot'},
- {id:'cat',  name:'喵喵', emoji:'🐱', desc:'橘色小貓咪，有尾巴喔', skin:0xffa040, hair:0xef6c00, shirt:0xffb74d, pants:0xef6c00, type:'cat'},
+ {id:'yong', name:'小勇', emoji:'👦', desc:'活力小男孩，藍色上衣', skin:0xffcc99, hair:0x4a3220, shirt:0x2196f3, pants:0x37474f, type:'human',
+  job:'疾風跑者', abilText:'天生跑得快：移動速度 +12%', speedBonus:1.12},
+ {id:'hua',  name:'小花', emoji:'👧', desc:'愛笑女孩，粉紅洋裝＋雙馬尾', skin:0xffd9b3, hair:0x8d5524, shirt:0xf06292, pants:0xf8bbd0, type:'girl',
+  job:'美食家', abilText:'超會品嘗：吃食物回復的飽足感 ×1.5', foodMul:1.5},
+ {id:'dan',  name:'阿丹', emoji:'🧒', desc:'跑步高手，綠色運動服', skin:0x8d5524, hair:0x1a1a1a, shirt:0x43a047, pants:0x263238, type:'human',
+  job:'耐力王', abilText:'體力超好：肚子餓得比別人慢 35%', drainMul:0.65},
+ {id:'liya', name:'莉亞', emoji:'👩', desc:'聰明女孩，紫色洋裝', skin:0xc68642, hair:0x111111, shirt:0x7e57c2, pants:0xd1c4e9, type:'girl',
+  job:'小魔法師', abilText:'魔力加持：所有道具效果時間 ×1.5', itemDurMul:1.5},
+ {id:'robot',name:'鐵蛋', emoji:'🤖', desc:'迷宮探測機器人', skin:0x9e9e9e, hair:0x616161, shirt:0x78909c, pants:0x455a64, type:'robot',
+  job:'工程師', abilText:'工具專家：一出發就帶著 2 把鐵鍬', startShovels:2},
+ {id:'cat',  name:'喵喵', emoji:'🐱', desc:'橘色小貓咪，有尾巴喔', skin:0xffa040, hair:0xef6c00, shirt:0xffb74d, pants:0xef6c00, type:'cat',
+  job:'尋路貓', abilText:'貓的直覺：迷宮變形後自動看見出口路線 6 秒', pathOnShift:6},
 ];
+const CH=()=>CHARS[G.charIdx];
 
 /* ---------- 關卡環境 ---------- */
 const LEVELS=[
@@ -404,6 +434,17 @@ const ITEM_TYPES=[
  {id:'star',  emoji:'⭐', name:'幸運星',    weight:12, dur:0,  msg:'⭐ 分數 +100！'},
 ];
 
+/* ---------- 食物（迷宮變形時出現，補充飽足感） ---------- */
+const FOOD_TYPES=[
+ {id:'candy',  emoji:'🍬', name:'糖果',    restore:10, weight:22},
+ {id:'cookie', emoji:'🍪', name:'餅乾',    restore:15, weight:20},
+ {id:'apple',  emoji:'🍎', name:'蘋果',    restore:20, weight:18},
+ {id:'onigiri',emoji:'🍙', name:'飯糰',    restore:30, weight:15},
+ {id:'noodle', emoji:'🍜', name:'拉麵',    restore:40, weight:12},
+ {id:'chicken',emoji:'🍗', name:'雞腿',    restore:50, weight:8},
+ {id:'bento',  emoji:'🍱', name:'超級便當', restore:80, weight:5},
+];
+
 /* ---------- 遊戲狀態 ---------- */
 const G={
  running:false, frozen:false, charIdx:0, lvlIdx:0, view:'tp',
@@ -414,7 +455,8 @@ const G={
  baseSpeed:5.2, speedMul:1,
  exitCell:{x:0,y:0}, startTime:0, elapsed:0, timeOffset:0,
  nextShiftAt:0, shifting:false, preWarned:false,
- items:[], effects:{}, shovels:0, starBonus:0,
+ items:[], foods:[], effects:{}, shovels:0, starBonus:0,
+ satiety:100, drainPerSec:100/180, hungerMul:1,
  visited:null, solutionPath:null, mapUntil:0, compassUntil:0, ghostUntil:0,
  muted:!CFG.musicOn,
 };
@@ -504,6 +546,8 @@ const AudioEng={
  sfxAlarm(){ this.tone(880,0.28,'square',this.fxGain,0.3); setTimeout(()=>this.tone(660,0.28,'square',this.fxGain,0.3),300); },
  sfxTick(){ this.tone(1200,0.06,'square',this.fxGain,0.25); },
  sfxWin(){ [523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,0.3,'triangle',this.fxGain,0.5),i*130)); },
+ sfxEat(){ this.noise(0.09,0.55,900); setTimeout(()=>this.noise(0.09,0.5,700),110); setTimeout(()=>this.tone(880,0.12,'triangle',this.fxGain,0.35),230); },
+ sfxLose(){ [392,330,262,196].forEach((f,i)=>setTimeout(()=>this.tone(f,0.34,'sawtooth',this.fxGain,0.4),i*230)); },
  sfxStep(){ this.tone(180,0.04,'sine',this.fxGain,0.06); },
 };
 </script>
@@ -914,7 +958,48 @@ function spawnItems(){
     itemGroup.add(sp); itemGroup.add(ring);
     G.items.push({type,sprite:sp,ring,x:p.x,z:p.z,taken:false});
   }
+  // 食物（綠色光圈）
+  G.foods=[]; tries=0;
+  while(G.foods.length<CFG.foodCount&&tries<300){
+    tries++;
+    const cx=Math.floor(Math.random()*G.mazeW), cy=Math.floor(Math.random()*G.mazeH);
+    const key=cx+','+cy; if(used.has(key))continue; used.add(key);
+    const type=pickFoodType(), p=cellToWorld(cx,cy);
+    const sp=makeEmojiSprite(type.emoji,1.4); sp.position.set(p.x,1.1,p.z);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(0.65,0.06,8,20),
+      new THREE.MeshBasicMaterial({color:0x8bc34a,transparent:true,opacity:0.6}));
+    ring.rotation.x=Math.PI/2; ring.position.set(p.x,0.25,p.z);
+    itemGroup.add(sp); itemGroup.add(ring);
+    G.foods.push({type,sprite:sp,ring,x:p.x,z:p.z,taken:false});
+  }
   scene.add(itemGroup);
+}
+function pickFoodType(){
+  const tot=FOOD_TYPES.reduce((a,b)=>a+b.weight,0);
+  let r=Math.random()*tot;
+  for(const f of FOOD_TYPES){ if((r-=f.weight)<0) return f; }
+  return FOOD_TYPES[0];
+}
+/* 飽足感 */
+function updateSatietyBar(){
+  const v=Math.max(0,Math.min(100,G.satiety));
+  $('satietyFill').style.width=v+'%';
+  $('satietyFill').style.background=v<=25?'#ef5350':(v<=50?'#ffa726':'#8bc34a');
+  $('satietyPct').textContent=Math.ceil(v)+'%'+(v<=50?' 🐢':'');
+}
+function applyFood(f){
+  AudioEng.sfxEat();
+  const gain=Math.round(f.type.restore*(CH().foodMul||1));
+  G.satiety=Math.min(100,G.satiety+gain);
+  updateSatietyBar();
+  showToast(`${f.type.emoji} ${f.type.name}！飽足感 +${gain}%`);
+}
+function loseGame(){
+  if(!G.running)return;
+  G.running=false; G.frozen=true;
+  AudioEng.stopMusic(); AudioEng.stopItemLoop(); AudioEng.sfxLose();
+  $('failTime').textContent=fmtTime(G.elapsed);
+  switchScreen('failScreen');
 }
 function showToast(msg,ms=1800){
   const t=$('toast'); t.textContent=msg; t.style.display='block';
@@ -938,13 +1023,14 @@ function renderChips(){
 function applyItem(it){
   AudioEng.sfxPickup();
   const t=it.type;
+  const dur=t.dur*(CH().itemDurMul||1); // 小魔法師：道具時間 ×1.5
   showToast(t.msg);
-  if(t.id==='speed'){ AudioEng.sfxUse(); addEffect('speed','⚡加速',t.dur); }
-  else if(t.id==='superspeed'){ AudioEng.sfxUse(); addEffect('superspeed','🚀強力加速',t.dur); }
+  if(t.id==='speed'){ AudioEng.sfxUse(); addEffect('speed','⚡加速',dur); }
+  else if(t.id==='superspeed'){ AudioEng.sfxUse(); addEffect('superspeed','🚀強力加速',dur); }
   else if(t.id==='shovel'){ G.shovels++; updateShovelBtn(); }
-  else if(t.id==='map'){ AudioEng.sfxUse(); const pc=worldToCell(G.px,G.pz); G.solutionPath=solveMaze(pc.x,pc.y); G.mapUntil=performance.now()+t.dur*1000; addEffect('map','🗺️地圖',t.dur); }
-  else if(t.id==='compass'){ AudioEng.sfxUse(); G.compassUntil=performance.now()+t.dur*1000; $('compassHud').style.display='block'; addEffect('compass','🧭指南針',t.dur); }
-  else if(t.id==='ghost'){ AudioEng.sfxUse(); G.ghostUntil=performance.now()+t.dur*1000; setGhostLook(true); addEffect('ghost','👻穿牆',t.dur); }
+  else if(t.id==='map'){ AudioEng.sfxUse(); const pc=worldToCell(G.px,G.pz); G.solutionPath=solveMaze(pc.x,pc.y); G.mapUntil=performance.now()+dur*1000; addEffect('map','🗺️地圖',dur); }
+  else if(t.id==='compass'){ AudioEng.sfxUse(); G.compassUntil=performance.now()+dur*1000; $('compassHud').style.display='block'; addEffect('compass','🧭指南針',dur); }
+  else if(t.id==='ghost'){ AudioEng.sfxUse(); G.ghostUntil=performance.now()+dur*1000; setGhostLook(true); addEffect('ghost','👻穿牆',dur); }
   else if(t.id==='timegem'){ AudioEng.sfxUse(); G.timeOffset+=15; }
   else if(t.id==='star'){ G.starBonus+=100; }
 }
@@ -1042,10 +1128,11 @@ function updatePlayer(dt,t){
   }
   const mag=Math.min(1,Math.hypot(ix,iy));
   if(mag>0.12){
-    // 速度效果
+    // 速度效果：飽足感 ≤50% 速度 ×0.8、≤25% 速度 ×0.75，加速道具乘在降速後的數值上
+    G.hungerMul=G.satiety<=25?0.75:(G.satiety<=50?0.8:1);
     G.speedMul=1;
     if(G.effects.superspeed)G.speedMul=2.3; else if(G.effects.speed)G.speedMul=1.6;
-    const sp=G.baseSpeed*G.speedMul*mag;
+    const sp=G.baseSpeed*(CH().speedBonus||1)*G.hungerMul*G.speedMul*mag;
     // 相對於相機方向移動（俯視時相機固定朝北）
     const base=(G.view==='top')?Math.PI:G.camYaw+Math.PI;
     const ang=base+Math.atan2(-ix,-iy);
@@ -1073,6 +1160,12 @@ function updatePlayer(dt,t){
     if(it.taken)continue;
     if((it.x-G.px)**2+(it.z-G.pz)**2<1.3){
       it.taken=true; it.sprite.visible=false; it.ring.visible=false; applyItem(it);
+    }
+  }
+  for(const f of G.foods){
+    if(f.taken)continue;
+    if((f.x-G.px)**2+(f.z-G.pz)**2<1.3){
+      f.taken=true; f.sprite.visible=false; f.ring.visible=false; applyFood(f);
     }
   }
   // 到出口了嗎？
@@ -1279,7 +1372,13 @@ function doShift(){
             $('shiftWarn').style.display='none';
             G.shifting=false; G.frozen=false;
             scheduleNextShift();
-            showToast('🌀 新迷宮出現了！道具也重新出現囉');
+            if(CH().pathOnShift){ // 尋路貓：變形後自動看見出口路線
+              const pc2=worldToCell(G.px,G.pz);
+              G.solutionPath=solveMaze(pc2.x,pc2.y);
+              G.mapUntil=performance.now()+CH().pathOnShift*1000;
+              addEffect('catpath','🐱出口路線',CH().pathOnShift);
+            }
+            showToast('🌀 新迷宮出現了！道具和食物也重新出現囉');
           }
         };
         animUp();
@@ -1401,7 +1500,7 @@ function buildTitleUI(){
   CHARS.forEach((c,i)=>{
     const b=document.createElement('button');
     b.className='char-btn'+(i===G.charIdx?' sel':'');
-    b.innerHTML=`<span class="ce">${c.emoji}</span>${c.name}`;
+    b.innerHTML=`<span class="ce">${c.emoji}</span>${c.name}<span class="cj">${c.job}</span>`;
     b.onclick=()=>{G.charIdx=i;document.querySelectorAll('.char-btn').forEach((x,j)=>x.classList.toggle('sel',j===i));updatePreview();};
     cr.appendChild(b);
   });
@@ -1445,7 +1544,8 @@ function updatePreview(){
   if(previewChar)previewScene.remove(previewChar);
   previewChar=buildCharacter(CHARS[G.charIdx]);
   previewScene.add(previewChar);
-  $('charDesc').innerHTML=`<b>${CHARS[G.charIdx].name}</b><br>${CHARS[G.charIdx].desc}`;
+  const c=CHARS[G.charIdx];
+  $('charDesc').innerHTML=`<b>${c.name}</b>｜${c.job}<br>${c.desc}<br><span style="color:#e65100;">✨ ${c.abilText}</span>`;
 }
 
 /* =====================================================
@@ -1473,7 +1573,8 @@ function startGame(){
   const cGroup=new THREE.Group(); cGroup.add(compass3D); compass3D.position.z=0.35;
   scene.add(cGroup); compass3D=cGroup;
   // 狀態重設
-  G.items=[]; G.effects={}; G.shovels=0; G.starBonus=0; G.timeOffset=0;
+  G.items=[]; G.foods=[]; G.effects={}; G.shovels=CH().startShovels||0; G.starBonus=0; G.timeOffset=0;
+  G.satiety=100; G.hungerMul=1; G.drainPerSec=100/(CFG.hungerMin*60); updateSatietyBar();
   G.mapUntil=0; G.compassUntil=0; G.ghostUntil=0; G.solutionPath=null;
   G.startTime=performance.now(); G.elapsed=0;
   G.running=true; G.frozen=false; G.shifting=false;
@@ -1498,6 +1599,11 @@ function loop(tms){
     G.elapsed=(performance.now()-G.startTime)/1000-G.timeOffset;
     $('hudTime').textContent=fmtTime(G.elapsed);
   }
+  if(G.running&&!G.frozen){
+    G.satiety=Math.max(0,G.satiety-G.drainPerSec*(CH().drainMul||1)*dt); // 耐力王餓得慢
+    updateSatietyBar();
+    if(G.satiety<=0)loseGame();
+  }
   updateShiftTimer();
   updatePlayer(dt,t);
   updateCamera(dt);
@@ -1510,6 +1616,7 @@ function loop(tms){
   // 道具漂浮動畫
   const bob=Math.sin(t*3)*0.15;
   for(const it of G.items)if(!it.taken){it.sprite.position.y=1.2+bob;it.ring.rotation.z=t;}
+  for(const f of G.foods)if(!f.taken){f.sprite.position.y=1.1-bob;f.ring.rotation.z=-t;}
   if(exitGroup){exitGroup.userData.ring.rotation.z=t*1.5;exitGroup.rotation.y=t*0.5;}
   if(envGroup)envGroup.userData.anim.forEach(f=>f(t));
   // 小地圖（每 0.15 秒重畫）
@@ -1532,6 +1639,8 @@ function wireUI(){
   };
   $('orientOk').onclick=()=>{$('orientTip').style.display='none';startGame();};
   $('againBtn').onclick=()=>startGame();
+  $('failAgainBtn').onclick=()=>startGame();
+  $('failHomeBtn').onclick=()=>switchScreen('titleScreen');
   $('winHomeBtn').onclick=()=>{switchScreen('titleScreen');};
   $('quitBtn').onclick=()=>{
     if(confirm('要離開這一局回到選單嗎？')){
@@ -1561,6 +1670,7 @@ function wireUI(){
   // 後台
   $('admBtn').onclick=()=>{
     $('cfgShiftMin').value=CFG.shiftMin; $('cfgItems').value=CFG.itemCount;
+    $('cfgFood').value=CFG.foodCount; $('cfgHunger').value=CFG.hungerMin;
     $('cfgSize').value=CFG.mazeSize; $('cfgMusic').value=CFG.musicOn?'1':'0';
     $('cfgApi').value=CFG.apiUrl;
     $('admModal').style.display='flex';
@@ -1568,6 +1678,8 @@ function wireUI(){
   $('admSave').onclick=()=>{
     CFG.shiftMin=Math.max(0.5,Math.min(10,parseFloat($('cfgShiftMin').value)||3));
     CFG.itemCount=Math.max(3,Math.min(12,parseInt($('cfgItems').value)||6));
+    CFG.foodCount=Math.max(2,Math.min(10,parseInt($('cfgFood').value)||4));
+    CFG.hungerMin=Math.max(1,Math.min(10,parseFloat($('cfgHunger').value)||3));
     CFG.mazeSize=parseInt($('cfgSize').value)||13;
     CFG.musicOn=$('cfgMusic').value==='1'?1:0;
     CFG.apiUrl=$('cfgApi').value.trim();
