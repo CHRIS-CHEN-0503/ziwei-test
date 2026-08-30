@@ -103,7 +103,13 @@ button{font-family:var(--font);}
 #minimapWrap{pointer-events:auto;position:relative;}
 #minimap{
   width:120px;height:120px;border-radius:14px;border:3px solid rgba(255,255,255,.75);
-  background:rgba(10,8,30,.78);display:block;
+  background:rgba(10,8,30,.78);display:block;transition:width .2s,height .2s;
+}
+#minimapWrap.big #minimap{width:144px;height:144px;} /* 特大以上地圖用：1.2 倍 */
+#mapSizeBtn{
+  position:absolute;top:-6px;left:-6px;width:28px;height:28px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.8);background:rgba(30,24,70,.85);color:#fff;
+  font-size:.85rem;cursor:pointer;z-index:7;line-height:24px;padding:0;
 }
 #minimapHint{position:absolute;bottom:2px;right:6px;font-size:.6rem;color:#fff;opacity:.8;}
 #hudRightBtns{
@@ -162,6 +168,13 @@ button{font-family:var(--font);}
   font-size:2rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5);
 }
 #atkBtn:active{transform:scale(.9);}
+#skillBtn{
+  position:absolute;right:calc(186px + env(safe-area-inset-right));bottom:calc(96px + env(safe-area-inset-bottom));
+  width:70px;height:70px;border-radius:50%;
+  border:4px solid #fff;background:linear-gradient(145deg,#ba68c8,#7b1fa2);color:#fff;
+  font-size:1.7rem;display:none;z-index:7;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);
+}
+#skillBtn:active{transform:scale(.9);}
 #stunOverlay{
   position:absolute;inset:0;z-index:15;display:none;pointer-events:none;
   background:radial-gradient(circle at 50% 50%, rgba(120,80,255,0) 35%, rgba(90,60,200,.55) 100%);
@@ -312,11 +325,13 @@ button{font-family:var(--font);}
     <div id="hudInfo">
       <span>⏱ <b id="hudTime">0:00</b></span>
       <span>🍗<span id="satietyWrap"><span id="satietyFill"></span></span><b id="satietyPct">100%</b></span>
+      <span id="hpWrap" style="display:none;">體力 <b id="hpHearts">❤️</b></span>
       <span>🌀 <span id="shiftCountdown">--</span></span>
       <span id="hudLvlName"></span>
     </div>
     <div id="minimapWrap">
       <canvas id="minimap" width="240" height="240"></canvas>
+      <button id="mapSizeBtn">⤢</button>
     </div>
   </div>
   <div id="effectChips"></div>
@@ -331,6 +346,7 @@ button{font-family:var(--font);}
   <button id="shovelBtn">⛏️<span class="cnt" id="shovelCnt">1</span></button>
   <button id="kiteBtn">🪁<span class="cnt" id="kiteCnt">1</span></button>
   <button id="atkBtn">🐾</button>
+  <button id="skillBtn">🫥</button>
   <div id="stunOverlay"></div>
   <div id="joyZone"><div id="joyBase"></div><div id="joyStick"></div></div>
   <div id="lookZone"></div>
@@ -477,12 +493,12 @@ button{font-family:var(--font);}
   <div class="m-card" style="text-align:left;font-size:.95rem;line-height:1.7;">
     <h3 style="text-align:center;">❓ 玩法說明</h3>
     <div>🕹️ <b>平板/手機</b>：左半邊拖曳搖桿移動；右半邊拖曳轉視角；俯視時雙指開合拉近拉遠。</div>
-    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶模式）· <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
+    <div>⌨️ <b>電腦</b>：WASD / 方向鍵移動 · 滑鼠按住右半邊拖曳（或 Q / E）轉視角 · <b>空白鍵</b>用鐵鍬 · <b>F</b> 用風箏 · <b>X</b> 攻擊（尋寶／鬼抓人）· <b>C</b> 隱身技能 · <b>M</b> 開關大地圖 · <b>V</b> 切換視角 · 俯視時<b>滾輪</b>或 <b>＋/－</b> 拉近拉遠。</div>
     <div>🚩 目標：走到發光的<b>金色傳送門</b>就過關，越快分數越高！</div>
     <div>🌀 迷宮每隔一段時間會<b>變形</b>！變形時不能移動，但你絕對不會被牆壁困住。</div>
     <div>🎁 道具（每次變形會重新出現）：</div>
     <div style="padding-left:14px;">
-      ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕）<br>
+      ⚡ 加速藥水：跑得更快<br>🚀 強力加速：跑超級快<br>⛏️ 鐵鍬：敲破一面牆（按右下角按鈕；最多帶 1 把，工程師用掉 45 秒後自動補充）<br>
       🗺️ 魔法地圖：顯示通往出口的路線<br>🧭 指南針：箭頭指向出口<br>👻 穿牆斗篷：可以穿過牆壁<br>
       ⏱️ 時間寶石：時間倒退 15 秒<br>⭐ 幸運星：分數 +100
     </div>
@@ -491,11 +507,16 @@ button{font-family:var(--font);}
     <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
     <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空看到整個迷宮8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
     <div>👁️ 視角是公平的：第三人稱是跟在你身後的平視視角、俯視只看得到腳邊一圈，都不會看到牆壁後面的東西（只有🦉貓頭鷹道具例外）。</div>
-    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（頭上有👹、跑速+15%），碰到別人就換對方當鬼；時間到還是鬼的人就輸了。此模式不用擔心肚子餓。</div>
+    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速+15%），碰到別人就換對方當鬼；時間到還是鬼的人就輸了。此模式不用擔心肚子餓。</div>
+    <div style="padding-left:14px;">
+      ⚔️ 大家可以<b>互相攻擊</b>（攻擊鍵／X）。體力歸零就暈眩，暈完恢復。一般人 1 格體力不會自己回復；<b>鬼每 15 秒回 1 格</b>。<br>
+      👺 <b>當鬼會戴上面具並隨機獲得一種鬼能力</b>（面具樣子跟能力對應）：⚡疾風、🫥隱身、❤️體力+1、✨道具時間、⛏️鐵鍬工具箱、📡雷達。跟自己職業一樣就<b>疊加</b>！<br>
+      🔁 鬼抓人的職業能力：阿丹＝體力 2 格、小花＝隱身 5 秒（技能鍵／C，隱身可移動但仍會被打中）、喵喵＝每 5 秒在小地圖看到大家位置。
+    </div>
     <div>💎 <b>尋寶模式</b>：小地圖會顯示寶藏位置，撿到寶藏後帶到出口 🚩 就贏！別人拿寶藏時你會出現<b>攻擊鍵</b>（每個職業武器不同），打中就把人暈眩 3 秒；打中持有者還能搶走寶藏（拿寶藏的人不能攻擊）。持有者位置每 3 秒在小地圖上更新。單機可以跟電腦對戰！</div>
     <div>🌀 迷宮變形時<b>出口也會搬家</b>（外圈的角落或邊線上），記得看小地圖。</div>
     <div>👥 <b>多人連線</b>（2~3人，視角可自由切換）：標題按「多人連線」，房主建房間唸房號給朋友加入。🏁 比賽搶終點：從不同角落出發搶中間的傳送門；👹 鬼抓人：被抓到就換你當鬼，時間到還是鬼就輸了；💎 尋寶：搶寶藏帶出口（大地圖人數不足電腦會補位）。</div>
-    <div>🗺️ 點右上角小地圖可以放大。</div>
+    <div>🗺️ 點右上角小地圖可以放大成全螢幕；小地圖左上角的 ⤢ 鈕可以切換 1.2 倍大小（特大地圖好用）。</div>
     <button class="m-close" id="helpClose" style="display:block;margin:10px auto 0;">知道了！</button>
   </div>
 </div>
@@ -509,7 +530,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.7.1';
+const GAME_VERSION='1.8.0';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -528,7 +549,7 @@ const CHARS=[
  {id:'liya', name:'莉亞', emoji:'👩', desc:'聰明女孩，紫色洋裝', skin:0xc68642, hair:0x111111, shirt:0x7e57c2, pants:0xd1c4e9, type:'girl',
   job:'小魔法師', abilText:'魔力加持：所有道具效果時間 ×1.5', itemDurMul:1.5, weapon:'✨', wname:'魔法棒'},
  {id:'robot',name:'鐵蛋', emoji:'🤖', desc:'迷宮探測機器人', skin:0x9e9e9e, hair:0x616161, shirt:0x78909c, pants:0x455a64, type:'robot',
-  job:'工程師', abilText:'工具專家：一出發就帶著 2 把鐵鍬', startShovels:2, weapon:'🔧', wname:'大扳手'},
+  job:'工程師', abilText:'工具專家：開局 1 把鐵鍬，用掉 45 秒後自動補充', startShovels:1, weapon:'🔧', wname:'大扳手'},
  {id:'cat',  name:'喵喵', emoji:'🐱', desc:'橘色小貓咪，有尾巴喔', skin:0xffa040, hair:0xef6c00, shirt:0xffb74d, pants:0xef6c00, type:'cat',
   job:'尋路貓', abilText:'貓的直覺：迷宮變形後自動看見出口路線 6 秒', pathOnShift:6, weapon:'🐾', wname:'貓爪'},
 ];
@@ -1300,11 +1321,17 @@ function renderChips(){
 function applyItem(it){
   AudioEng.sfxPickup();
   const t=it.type;
-  const dur=t.dur*(CH().itemDurMul||1); // 小魔法師：道具時間 ×1.5
+  let durMul=CH().itemDurMul||1; // 小魔法師：道具時間 ×1.5
+  if(MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id&&MP.itPower==='dur')durMul*=1.5; // 鬼能力：魔法
+  const dur=t.dur*durMul;
   showToast(t.msg);
   if(t.id==='speed'){ AudioEng.sfxUse(); addEffect('speed','⚡加速',dur); }
   else if(t.id==='superspeed'){ AudioEng.sfxUse(); addEffect('superspeed','🚀強力加速',dur); }
-  else if(t.id==='shovel'){ G.shovels++; updateShovelBtn(); }
+  else if(t.id==='shovel'){
+    if(G.shovels>=shovelCap())showToast('⛏️ 鐵鍬最多只能帶 '+shovelCap()+' 把');
+    else G.shovels++;
+    updateShovelBtn();
+  }
   else if(t.id==='map'){ AudioEng.sfxUse(); const pc=worldToCell(G.px,G.pz); G.solutionPath=solveMaze(pc.x,pc.y); G.mapUntil=performance.now()+dur*1000; addEffect('map','🗺️地圖',dur); }
   else if(t.id==='compass'){ AudioEng.sfxUse(); G.compassUntil=performance.now()+dur*1000; $('compassHud').style.display='block'; addEffect('compass','🧭指南針',dur); }
   else if(t.id==='ghost'){ AudioEng.sfxUse(); G.ghostUntil=performance.now()+dur*1000; setGhostLook(true); addEffect('ghost','👻穿牆',dur); }
@@ -1377,8 +1404,12 @@ function setGhostLook(on){
   playerGroup.traverse(o=>{ if(o.material){o.material.transparent=on;o.material.opacity=on?0.45:1;} });
 }
 function updateShovelBtn(){
-  $('shovelBtn').style.display=G.shovels>0?'block':'none';
-  $('shovelCnt').textContent=G.shovels;
+  const recharging=hasShovelKit()&&G.shovels<shovelCap()&&G.shovelRechargeAt>0;
+  $('shovelBtn').style.display=(G.shovels>0||recharging)?'block':'none';
+  $('shovelCnt').textContent=recharging&&G.shovels===0
+    ?Math.max(1,Math.ceil((G.shovelRechargeAt-performance.now())/1000))
+    :G.shovels;
+  $('shovelBtn').style.opacity=G.shovels>0?'1':'0.5';
 }
 /* 找面前 2.4 單位內最近的內牆（鐵鍬 / 風箏共用） */
 function findWallAhead(){
@@ -1397,6 +1428,25 @@ function findWallAhead(){
     if(best)break;
   }
   return best;
+}
+/* 鐵鍬上限：一般 1 把；工程師當鬼又抽到鐵鍬能力＝2 把 */
+function shovelCap(){
+  return (MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id&&MP.itPower==='shovel'&&CH().id==='robot')?2:1;
+}
+/* 有「鐵鍬工具箱」的人（工程師，或當鬼抽到鐵鍬能力）用掉後 45 秒自動補充 */
+function hasShovelKit(){
+  return CH().id==='robot'||(MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id&&MP.itPower==='shovel');
+}
+function tickShovelRecharge(){
+  if(!hasShovelKit())return;
+  const now=performance.now();
+  if(G.shovels<shovelCap()){
+    if(!G.shovelRechargeAt)G.shovelRechargeAt=now+45000;
+    else if(now>=G.shovelRechargeAt){
+      G.shovels++; G.shovelRechargeAt=0; updateShovelBtn();
+      showToast('⛏️ 鐵鍬補充好了！');
+    }
+  }else G.shovelRechargeAt=0;
 }
 /* 鐵鍬敲牆 */
 function useShovel(){
@@ -1513,7 +1563,11 @@ function updatePlayer(dt,t){
     G.hungerMul=G.satiety<=25?0.75:(G.satiety<=50?0.8:1);
     G.speedMul=1;
     if(G.effects.superspeed)G.speedMul=2.3; else if(G.effects.speed)G.speedMul=1.6;
-    const tagBoost=(MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id)?1.15:1; // 鬼跑快一點
+    let tagBoost=1;
+    if(MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id){
+      tagBoost=1.15; // 鬼跑快一點
+      if(MP.itPower==='speed')tagBoost*=1.12; // 鬼能力：疾風
+    }
     const sp=G.baseSpeed*(CH().speedBonus||1)*G.hungerMul*G.speedMul*tagBoost*mag;
     // 相對於相機方向移動（俯視時相機固定朝北）
     const base=(G.view==='top')?Math.PI:G.camYaw+Math.PI;
@@ -1574,27 +1628,54 @@ function updatePlayer(dt,t){
    尋寶模式：攻擊（各職業武器不同）
    ===================================================== */
 function updateAtkBtn(){
-  const on=MP.on&&MP.mode==='treasure'&&MP.started&&!MP.ended&&
-           MP.treasure&&MP.treasure.holder&&MP.treasure.holder!==MP.id;
+  const tre=MP.mode==='treasure'&&MP.treasure&&MP.treasure.holder&&MP.treasure.holder!==MP.id;
+  const tag=MP.mode==='tag'; // 鬼抓人：大家隨時可以互相攻擊
+  const on=MP.on&&MP.started&&!MP.ended&&(tre||tag);
   $('atkBtn').style.display=on?'block':'none';
 }
 function doAttack(){
   const now=performance.now();
-  if(!MP.on||MP.mode!=='treasure'||MP.ended||G.frozen)return;
+  if(!MP.on||MP.ended||G.frozen)return;
+  if(MP.mode!=='treasure'&&MP.mode!=='tag')return;
   if(now<G.atkCoolUntil||now<G.stunnedUntil)return;
-  if(!MP.treasure||!MP.treasure.holder||MP.treasure.holder===MP.id)return; // 拿寶藏的人不能攻擊
+  if(MP.mode==='treasure'&&(!MP.treasure||!MP.treasure.holder||MP.treasure.holder===MP.id))return; // 拿寶藏的人不能攻擊
   G.atkCoolUntil=now+1500;
   swingWeapon();
-  // 找最近的目標（其他玩家或電腦）
+  // 找最近的目標（隱身的也打得中，只是看不到）
   let best=null,bd=1.9*1.9;
   for(const id in MP.players){
     const pl=MP.players[id];
-    if(!pl.mesh||!pl.mesh.visible)continue;
+    if(!pl.mesh||now-pl.lastSeen>6000)continue;
     const d=(pl.mesh.position.x-G.px)**2+(pl.mesh.position.z-G.pz)**2;
     if(d<bd){bd=d;best=id;}
   }
-  if(best)mpSend({t:'hit',to:best,steal:MP.treasure.holder===best});
+  if(best)mpSend({t:'hit',to:best,steal:MP.mode==='treasure'&&MP.treasure.holder===best});
   else showToast('💨 揮空了！要靠近一點再攻擊');
+}
+/* 技能鍵：隱身（小花的鬼抓人能力；當鬼抽到隱身能力也可用） */
+function myInvisSecs(){
+  if(!(MP.on&&MP.mode==='tag'))return 0;
+  const own=tagAbilOf(MP.id)==='invis';
+  const ghost=MP.taggedId===MP.id&&MP.itPower==='invis';
+  if(own&&ghost)return 10;
+  return (own||ghost)?5:0;
+}
+function useSkill(){
+  const now=performance.now();
+  const secs=myInvisSecs();
+  if(!secs||now<G.skillCoolUntil||G.frozen||now<G.stunnedUntil||MP.ended)return;
+  G.skillCoolUntil=now+30000; // 30 秒冷卻
+  G.invisUntil=now+secs*1000;
+  mpSend({t:'inv',ms:secs*1000});
+  playerGroup.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=0.35;}});
+  setTimeout(()=>{if(performance.now()>=G.invisUntil)playerGroup.traverse(o=>{if(o.material){o.material.opacity=1;}});},secs*1000);
+  AudioEng.sfxUse();
+  showToast('🫥 隱身 '+secs+' 秒！別人看不到你');
+  updateSkillBtn();
+}
+function updateSkillBtn(){
+  const on=myInvisSecs()>0&&MP.started&&!MP.ended;
+  $('skillBtn').style.display=on?'block':'none';
 }
 function swingWeapon(){
   AudioEng.sfxHit();
@@ -1720,6 +1801,7 @@ function setupTouch(){
     if(c==='Space'){e.preventDefault();useShovel();}
     if(c==='KeyF')useKite();
     if(c==='KeyX')doAttack();
+    if(c==='KeyC')useSkill();
     if(c==='KeyV')$('viewToggle').click();
     if(c==='KeyM'){
       if($('bigMapOverlay').style.display==='flex')$('bigMapOverlay').style.display='none';
@@ -1766,6 +1848,16 @@ function drawMap(cv,big){
   // 出口
   ctx.font=(big?26:12)+'px sans-serif'; ctx.textAlign='center';
   ctx.fillText('🚩',gx(G.exitCell.x)+cw/2,gy(G.exitCell.y)+ch*0.85);
+  // 鬼抓人雷達：顯示大家的位置（喵喵能力 / 鬼的雷達能力）
+  if(MP.on&&MP.mode==='tag'&&G.radarPings){
+    for(const pg of G.radarPings){
+      const mx=pad+(pg.x/G.cell+(W-1)/2)*cw+cw*0.5;
+      const my=pad+(pg.z/G.cell+(H-1)/2)*ch+ch*0.5;
+      ctx.beginPath();ctx.arc(mx,my,(big?9:5),0,6.28);
+      ctx.fillStyle='rgba(255,213,79,.9)';ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=big?2:1;ctx.stroke();
+    }
+  }
   // 尋寶模式：寶藏位置（沒人拿＝精確位置；有人拿＝每 N 秒更新的追蹤點）
   if(MP.on&&MP.mode==='treasure'&&MP.treasure){
     ctx.font=(big?24:12)+'px sans-serif';
@@ -2152,6 +2244,7 @@ function startGame(){
   $('satietyPct').parentElement.style.display=G.hungerOn?'':'none';
   G.kites=0; G.visionUntil=0; G.owlUntil=0; G.viewBefore=null; updateKiteBtn();
   G.stunnedUntil=0; G.atkCoolUntil=0; MP.twinSent=false;
+  G.shovelRechargeAt=0; G.skillCoolUntil=0; G.invisUntil=0; G.radarNextAt=0; G.radarPings=null;
   $('stunOverlay').style.display='none';
   if(MP.on&&MP.mode==='treasure'){
     // 寶藏放在離三個出生角落都夠遠的隨機格（種子亂數，多人完全同步）
@@ -2176,7 +2269,13 @@ function startGame(){
     playerGroup.add(G.myGem);
     $('atkBtn').textContent=CH().weapon;
   }else{ MP.treasure=null; G.treasureMesh=null; G.myGem=null; }
-  updateAtkBtn(); $('treasureBanner').style.display='none';
+  G.myMask=null;
+  if(MP.on&&MP.mode==='tag'){
+    G.myMask=makeEmojiSprite('👹',1.3); G.myMask.position.y=3.0; G.myMask.visible=false;
+    playerGroup.add(G.myMask);
+    $('atkBtn').textContent=CH().weapon;
+  }
+  updateAtkBtn(); updateSkillBtn(); updateHpHud(); $('treasureBanner').style.display='none';
   G.mapUntil=0; G.compassUntil=0; G.ghostUntil=0; G.solutionPath=null;
   G.startTime=performance.now(); G.elapsed=0;
   G.running=true; G.frozen=false; G.shifting=false;
@@ -2224,6 +2323,14 @@ function loop(tms){
     $('zoomInBtn').style.display=isTop?'':'none';
     $('zoomOutBtn').style.display=isTop?'':'none';
     fitRenderer(); // 轉向/尺寸自我修復
+    tickShovelRecharge(); updateShovelBtn();
+    if(MP.on&&MP.mode==='tag')updateHpHud();
+    // 技能冷卻顯示
+    if($('skillBtn').style.display==='block'){
+      const left=Math.ceil((G.skillCoolUntil-performance.now())/1000);
+      $('skillBtn').textContent=left>0?left:'🫥';
+      $('skillBtn').style.opacity=left>0?'0.5':'1';
+    }
   }
   // 道具漂浮動畫
   const bob=Math.sin(t*3)*0.15;
@@ -2289,6 +2396,7 @@ function wireUI(){
   $('shovelBtn').onclick=useShovel;
   $('kiteBtn').onclick=useKite;
   $('atkBtn').onclick=doAttack;
+  $('skillBtn').onclick=useSkill;
   const zoomBy=d=>{G.topZoom=Math.max(10,Math.min(48,G.topZoom+d));};
   $('zoomInBtn').onclick=()=>zoomBy(-5);
   $('zoomOutBtn').onclick=()=>zoomBy(5);
@@ -2305,6 +2413,7 @@ function wireUI(){
   },{passive:true});
   $('gameScreen').addEventListener('touchend',()=>{pinchDist=0;});
   $('minimapWrap').onclick=()=>{$('bigMapOverlay').style.display='flex';sizeBigMap();drawMap($('bigMap'),true);};
+  $('mapSizeBtn').onclick=e=>{e.stopPropagation();$('minimapWrap').classList.toggle('big');};
   $('bigMapClose').onclick=()=>$('bigMapOverlay').style.display='none';
   $('bigMapOverlay').onclick=e=>{if(e.target===$('bigMapOverlay'))$('bigMapOverlay').style.display='none';};
   // 分數牆
@@ -2356,7 +2465,7 @@ function launchGame(){
     mpHandle({t:'start',f:MP.id,seed:(Math.random()*2**31)|0,mode,lvl:G.lvlIdx,size:CFG.mazeSize,
       shiftMs:CFG.shiftMin*60000,hungerMin:CFG.hungerMin,roundMs:150000,
       stunSec:CFG.stunSec,pingSec:CFG.pingSec,
-      order,players:MP.roster,
+      order,players:MP.roster,itpw:mode==='tag'?randPower():null,
       it:mode==='tag'?order[Math.floor(Math.random()*order.length)]:null});
   }else{
     if(MP.on)mpLeave();
@@ -2455,10 +2564,41 @@ const MP={
   taggedId:null, tagImmuneUntil:0, raceEndAt:0, finishers:[],
   meFinished:false, meOut:false,
   treasure:null, bots:null, stunSec:3, pingSec:3, twinSent:false,
+  itPower:null, hp:{}, itRegenAt:0,
   net:null, posTimer:null, helloTimer:null,
 };
 function mpTopic(){return 'ziwei-maze3d/'+MP.room;}
 function modeLabel(m){return m==='race'?'🏁 比賽搶終點':(m==='tag'?'👹 鬼抓人':'💎 尋寶大作戰');}
+/* ===== 鬼抓人：職業能力（鬼抓人版）與鬼面具 ===== */
+const TAG_POWERS={
+  speed:{mask:'👺',label:'⚡ 疾風（跑更快）'},
+  invis:{mask:'🎭',label:'🫥 隱身'},
+  hp:   {mask:'😈',label:'❤️ 體力 +1'},
+  dur:  {mask:'🎃',label:'✨ 道具時間變長'},
+  shovel:{mask:'💀',label:'⛏️ 鐵鍬工具箱'},
+  radar:{mask:'👁️',label:'📡 雷達（看見大家位置）'},
+};
+const TAG_ABIL_BY_CHAR={yong:'speed',hua:'invis',dan:'hp',liya:'dur',robot:'shovel',cat:'radar'};
+function tagAbilOf(id){ // 該玩家在鬼抓人模式的職業能力
+  const r=MP.roster.find(x=>x.id===id);
+  return r?TAG_ABIL_BY_CHAR[CHARS[r.charIdx||0].id]:null;
+}
+function randPower(){ const k=Object.keys(TAG_POWERS); return k[Math.floor(Math.random()*k.length)]; }
+function hpMaxOf(id){ // 體力上限：基本1；阿丹(耐力)+1；當鬼抽到體力能力+1
+  let m=1;
+  if(tagAbilOf(id)==='hp')m++;
+  if(id===MP.taggedId&&MP.itPower==='hp')m++;
+  return m;
+}
+function hpOf(id){ return MP.hp[id]!==undefined?MP.hp[id]:hpMaxOf(id); }
+function updateHpHud(){
+  const on=MP.on&&MP.mode==='tag'&&MP.started&&!MP.ended;
+  $('hpWrap').style.display=on?'':'none';
+  if(on){
+    const mx=hpMaxOf(MP.id),cur=Math.max(0,hpOf(MP.id));
+    $('hpHearts').textContent='❤️'.repeat(cur)+'🖤'.repeat(Math.max(0,mx-cur));
+  }
+}
 function makeBots(n,taken){
   const used=new Set(taken.map(r=>r.charIdx));
   const names=['電腦1號','電腦2號'];
@@ -2513,7 +2653,8 @@ function mpHandle(m){
       MP.seed=m.seed; MP.mode=m.mode; MP.size=m.size; MP.shiftMs=m.shiftMs;
       MP.hungerMin=m.hungerMin; MP.roundMs=m.roundMs;
       MP.order=m.order; MP.roster=m.players; MP.round=0;
-      MP.taggedId=m.it||null; MP.tagImmuneUntil=0;
+      MP.taggedId=m.it||null; MP.itPower=m.itpw||null; MP.tagImmuneUntil=0;
+      MP.hp={}; MP.itRegenAt=performance.now()+15000;
       MP.stunSec=m.stunSec||3; MP.pingSec=m.pingSec||3;
       MP.bots=null;
       if(MP.host&&(m.mode==='treasure'||m.mode==='tag')){
@@ -2563,10 +2704,17 @@ function mpHandle(m){
       break;
     case 'tag':
       if(MP.mode!=='tag'||MP.ended)break;
-      MP.taggedId=m.to; MP.tagImmuneUntil=now+3000;
-      AudioEng.sfxAlarm();
-      showToast('👹 '+mpName(m.to)+' 變成鬼了！');
-      mpUpdateTagVisuals();
+      {
+        const prevIt=MP.taggedId;
+        MP.taggedId=m.to; MP.itPower=m.pw||randPower(); MP.tagImmuneUntil=now+3000;
+        MP.itRegenAt=now+15000;
+        if(prevIt)MP.hp[prevIt]=Math.min(hpOf(prevIt),hpMaxOf(prevIt)); // 卸下鬼身份後上限可能變小
+        MP.hp[m.to]=hpMaxOf(m.to); // 新鬼滿血
+        AudioEng.sfxAlarm();
+        const pw=TAG_POWERS[MP.itPower];
+        showToast('👹 '+mpName(m.to)+' 變成鬼了！獲得能力：'+pw.label);
+        mpUpdateTagVisuals(); updateHpHud(); updateAtkBtn(); updateSkillBtn(); updateShovelBtn();
+      }
       break;
     case 'end':
       if(MP.mode==='tag'&&MP.started&&!MP.ended)mpTagEnd(m.loser);
@@ -2580,18 +2728,37 @@ function mpHandle(m){
       }
       break;
     case 'hit':{
-      if(!MP.started||MP.mode!=='treasure'||MP.ended)break;
+      if(!MP.started||MP.ended||(MP.mode!=='treasure'&&MP.mode!=='tag'))break;
       const ms=(MP.stunSec||3)*1000;
-      applyStun(m.to,ms);
       const atk=MP.roster.find(r=>r.id===m.f), wpn=atk?CHARS[atk.charIdx||0].weapon:'👊';
       if(m.f!==MP.id)AudioEng.sfxHit();
-      if(m.steal&&MP.treasure&&MP.treasure.holder===m.to){
-        setTreasureHolder(m.f);
-        AudioEng.sfxSteal();
-        showToast(wpn+' '+mpName(m.f)+' 搶到寶藏了！');
-      }else{
-        showToast(wpn+' '+mpName(m.f)+' 打暈了 '+mpName(m.to)+'！');
+      if(MP.mode==='tag'){ // 鬼抓人：扣體力，歸零才暈眩；暈眩結束體力恢復
+        const nhp=hpOf(m.to)-1;
+        MP.hp[m.to]=nhp;
+        if(nhp<=0){
+          applyStun(m.to,ms);
+          const tid=m.to;
+          setTimeout(()=>{MP.hp[tid]=hpMaxOf(tid);updateHpHud();},ms);
+          showToast(wpn+' '+mpName(m.f)+' 打暈了 '+mpName(m.to)+'！');
+        }else{
+          showToast(wpn+' '+mpName(m.f)+' 打中 '+mpName(m.to)+'（剩 '+nhp+' 格體力）');
+        }
+        updateHpHud();
+      }else{ // 尋寶：直接暈眩＋搶寶藏
+        applyStun(m.to,ms);
+        if(m.steal&&MP.treasure&&MP.treasure.holder===m.to){
+          setTreasureHolder(m.f);
+          AudioEng.sfxSteal();
+          showToast(wpn+' '+mpName(m.f)+' 搶到寶藏了！');
+        }else{
+          showToast(wpn+' '+mpName(m.f)+' 打暈了 '+mpName(m.to)+'！');
+        }
       }
+      break;}
+    case 'inv':{ // 隱身（別人看不到，但位置照常同步、仍會被打中）
+      const pl=MP.players[m.f];
+      if(pl){pl.invisUntil=now+(m.ms||5000);}
+      if(m.f!==MP.id)showToast('🫥 '+mpName(m.f)+' 隱身了！');
       break;}
     case 'twin':
       if(!MP.started||MP.mode!=='treasure'||MP.ended)break;
@@ -2694,10 +2861,40 @@ function mpFrame(dt){
       if(!p.mesh||!p.mesh.visible||MP.outs[id])continue;
       if((p.mesh.position.x-G.px)**2+(p.mesh.position.z-G.pz)**2<1.44){
         MP.tagImmuneUntil=now+3000;
-        mpSend({t:'tag',to:id});
+        mpSend({t:'tag',to:id,pw:randPower()});
         break;
       }
     }
+  }
+  // 隱身：別人看不到（位置照常同步）
+  for(const id in MP.players){
+    const p=MP.players[id];
+    if(!p.mesh)continue;
+    const invis=now<(p.invisUntil||0);
+    if(invis)p.mesh.visible=false;
+    else if(!p.mesh.visible&&now-p.lastSeen<6000)p.mesh.visible=true;
+  }
+  if(MP.mode==='tag'&&MP.started&&!MP.ended){
+    // 鬼每 15 秒回 1 格體力
+    if(MP.taggedId&&now>MP.itRegenAt){
+      MP.itRegenAt=now+15000;
+      const cur=hpOf(MP.taggedId),mx=hpMaxOf(MP.taggedId);
+      if(cur<mx){MP.hp[MP.taggedId]=cur+1;updateHpHud();
+        if(MP.taggedId===MP.id)showToast('❤️ 鬼的體力恢復了一格');}
+    }
+    // 雷達：喵喵（或鬼抽到雷達能力）定時看到大家位置
+    const own=tagAbilOf(MP.id)==='radar', ghost=(MP.taggedId===MP.id&&MP.itPower==='radar');
+    if(own||ghost){
+      const every=(own&&ghost)?2500:5000;
+      if(now>G.radarNextAt){
+        G.radarNextAt=now+every;
+        G.radarPings=[];
+        for(const id in MP.players){
+          const p=MP.players[id];
+          if(p.mesh&&now-p.lastSeen<6000)G.radarPings.push({x:p.mesh.position.x,z:p.mesh.position.z});
+        }
+      }
+    }else G.radarPings=null;
   }
   // 鬼抓人：電腦 AI（房主端模擬）
   if(MP.mode==='tag'&&MP.started&&MP.host&&MP.bots&&!G.frozen)botSimTag(dt,now);
@@ -2733,6 +2930,7 @@ function botPosOf(id){ // 房主端查任何人的位置
 /* 鬼抓人 AI：當鬼→追最近的人；不是鬼→往離鬼最遠的角落逃 */
 function botSimTag(dt,now){
   for(const b of MP.bots){
+    if(now<(b.stunnedUntil||0))continue; // 暈眩中不能動
     if(MP.taggedId===b.id){
       let best=null,bd=1e9,bpos=null;
       for(const r of MP.roster){
@@ -2743,8 +2941,8 @@ function botSimTag(dt,now){
       }
       if(bpos){
         const c=worldToCell(bpos.x,bpos.z);
-        botWalk(b,c,'c'+c.x+','+c.y,dt,now,1.15); // 鬼跑快 15%
-        if(bd<1.44&&now>MP.tagImmuneUntil){MP.tagImmuneUntil=now+3000;mpSend({t:'tag',to:best});}
+        botWalk(b,c,'c'+c.x+','+c.y,dt,now,MP.itPower==='speed'?1.29:1.15); // 鬼跑快 15%（疾風能力再加成）
+        if(bd<1.44&&now>MP.tagImmuneUntil){MP.tagImmuneUntil=now+3000;mpSend({t:'tag',to:best,pw:randPower()});}
       }
     }else{
       const ip=botPosOf(MP.taggedId); if(!ip)continue;
@@ -2786,13 +2984,18 @@ function botSim(dt,now){
     }
   }
 }
+function getEmojiTex(emoji){ makeEmojiSprite(emoji,1); return spriteCache[emoji]; } // 只要貼圖
 function mpUpdateTagVisuals(){
+  const mask=MP.itPower?TAG_POWERS[MP.itPower].mask:'👹';
   for(const id in MP.players){
     const p=MP.players[id], isIt=(MP.mode==='tag'&&id===MP.taggedId);
-    if(p.oni)p.oni.visible=isIt;
+    if(p.oni){p.oni.visible=isIt;if(isIt)p.oni.material.map=getEmojiTex(mask);}
     if(p.ring)p.ring.visible=isIt;
   }
-  $('tagBanner').style.display=(MP.mode==='tag'&&MP.started&&!MP.ended&&MP.taggedId===MP.id)?'block':'none';
+  const meIt=(MP.mode==='tag'&&MP.started&&!MP.ended&&MP.taggedId===MP.id);
+  if(G.myMask){G.myMask.visible=meIt;if(meIt)G.myMask.material.map=getEmojiTex(mask);}
+  $('tagBanner').style.display=meIt?'block':'none';
+  if(meIt&&MP.itPower)$('tagBanner').textContent='👹 你是鬼！快去抓人！你的鬼能力：'+TAG_POWERS[MP.itPower].label;
 }
 
 /* ---- 結果 ---- */
@@ -2860,6 +3063,9 @@ function mpLeave(){
   MP.players={}; MP.roster=[]; MP.on=false; MP.started=false; MP.ended=false; MP.endSent=false;
   MP.taggedId=null; MP.finishers=[]; MP.outs={}; MP.meFinished=false; MP.meOut=false; MP.raceEndAt=0;
   MP.treasure=null; MP.bots=null; MP.twinSent=false;
+  MP.itPower=null; MP.hp={}; MP.itRegenAt=0;
+  G.invisUntil=0; G.skillCoolUntil=0; G.radarPings=null;
+  $('skillBtn').style.display='none'; $('hpWrap').style.display='none';
   G.stunnedUntil=0; G.treasureMesh=null; G.myGem=null;
   $('stunOverlay').style.display='none'; $('treasureBanner').style.display='none';
   $('atkBtn').style.display='none';
@@ -2910,7 +3116,7 @@ $('mpStart').onclick=()=>{
   mpSend({t:'start',seed:(Math.random()*2**31)|0,mode:MP.mode,lvl:G.lvlIdx,size:CFG.mazeSize,
     shiftMs:CFG.shiftMin*60000,hungerMin:CFG.hungerMin,roundMs:150000,
     stunSec:CFG.stunSec,pingSec:CFG.pingSec,
-    order,players,it:MP.roster.map(r=>r.id)[Math.floor(Math.random()*MP.roster.length)]});
+    order,players,itpw:randPower(),it:MP.roster.map(r=>r.id)[Math.floor(Math.random()*MP.roster.length)]});
 };
 window.addEventListener('pagehide',()=>{ if(MP.on)try{mpSend({t:'bye'});}catch(e){} });
 </script>
