@@ -510,7 +510,7 @@ button{font-family:var(--font);}
     <div>✨ 每個角色都有不同的<b>職業能力</b>，選角色時看看說明，找到最適合你的打法！</div>
     <div>🎁 每個環境還有<b>專屬道具</b>（金色光圈）：🗝️城堡魔法鑰匙（傳送到出口路線中間）、🪁草原大風箏（飛過牆）、🔦山洞探照燈（照亮20秒）、🦉森林貓頭鷹（升空看到整個迷宮8秒）、🌬️迷霧驅霧號角（吹散霧15秒）。</div>
     <div>👁️ 視角是公平的：第三人稱是跟在你身後的平視視角、俯視只看得到腳邊一圈，都不會看到牆壁後面的東西（只有🦉貓頭鷹道具例外）。</div>
-    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速+15%），<b>鬼要用攻擊鍵打中別人才算抓到</b>（碰到沒有用）；時間到還是鬼的人就輸了。剛變成鬼會定住 3 秒（全場公告＋語音），大家快跑！鬼的攻擊冷卻比一般人快一倍。此模式不用擔心肚子餓。</div>
+    <div>👹 <b>鬼抓人</b>（單機跟兩個電腦玩，或多人連線）：一人當鬼（跑速為一般玩家 1.1 倍），<b>鬼要用攻擊鍵打中別人才算抓到</b>（碰到沒有用）；時間到還是鬼的人就輸了。剛變成鬼會定住 3 秒（全場公告＋語音），大家快跑！鬼的攻擊冷卻比一般人快一倍。此模式不用擔心肚子餓。</div>
     <div style="padding-left:14px;">
       ⚔️ 大家可以<b>互相攻擊</b>（攻擊鍵／X）。體力歸零就暈眩，暈完恢復。一般人 1 格體力不會自己回復；<b>鬼每 15 秒回 1 格</b>。<br>
       👺 <b>當鬼會戴上面具並隨機獲得一種鬼能力</b>（面具樣子跟能力對應）：⚡疾風、🫥隱身、❤️體力+1、✨道具時間、⛏️鐵鍬工具箱、📡雷達。跟自己職業一樣就<b>疊加</b>！<br>
@@ -533,7 +533,7 @@ button{font-family:var(--font);}
    3D移動迷宮 — 給小朋友的變形迷宮冒險
    ===================================================== */
 const $=id=>document.getElementById(id);
-const GAME_VERSION='1.8.1';
+const GAME_VERSION='1.8.2';
 
 /* ---------- 設定（後台可調） ---------- */
 const DEFAULT_CFG={shiftMin:3,itemCount:6,foodCount:4,hungerMin:3,stunSec:3,pingSec:3,mazeSize:13,musicOn:1,apiUrl:'',views:{fp:1,tp:1,top:1},broker:'wss://broker.emqx.io:8084/mqtt'};
@@ -1568,7 +1568,7 @@ function updatePlayer(dt,t){
     if(G.effects.superspeed)G.speedMul=2.3; else if(G.effects.speed)G.speedMul=1.6;
     let tagBoost=1;
     if(MP.on&&MP.mode==='tag'&&MP.taggedId===MP.id){
-      tagBoost=1.15; // 鬼跑快一點
+      tagBoost=1.1; // 鬼＝一般玩家的 1.1 倍速
       if(MP.itPower==='speed')tagBoost*=1.12; // 鬼能力：疾風
     }
     const sp=G.baseSpeed*(CH().speedBonus||1)*G.hungerMul*G.speedMul*tagBoost*mag;
@@ -2965,7 +2965,7 @@ function botSimTag(dt,now){
       const bpos=b.chaseId?botPosOf(b.chaseId):null;
       if(bpos){
         const c=worldToCell(bpos.x,bpos.z);
-        botWalk(b,c,'c'+c.x+','+c.y,dt,now,MP.itPower==='speed'?1.29:1.15); // 鬼跑快 15%（疾風能力再加成）
+        botWalk(b,c,'c'+c.x+','+c.y,dt,now,MP.itPower==='speed'?1.232:1.1); // 鬼＝1.1 倍速（疾風能力再 ×1.12）
       }
       // 攻擊抓人：範圍內任何有效目標
       if(now>MP.tagImmuneUntil&&now>(b.atkAt||0)){
